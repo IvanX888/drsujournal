@@ -2718,26 +2718,36 @@ async function generateOrderDoc() {
   const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const monthName = monthNames[parseInt(monthNum)-1];
 
-  // --- собираем работы ---
+  // --- собираем работы с агрегацией по (название работы + единица измерения) ---
   let filtered = entries.filter(e => e.date.startsWith(month));
   if (object !== 'Содержание') {
     filtered = filtered.filter(e => e.squads && e.squads.some(s => s.objects && s.objects.some(o => o.toLowerCase().includes(object.toLowerCase()))));
   }
-  const workRows = [];
+
+  // Объект для агрегации: ключ = name + '|' + unit
+  const workMap = new Map(); // key -> { name, unit, volume, laborCost, directCost, toolCost }
   filtered.forEach(entry => {
     (entry.squads || []).forEach(squad => {
       (squad.works || []).forEach(w => {
-        workRows.push({
-          name: w.name,
-          unit: w.unit || '',
-          volume: w.volume,
-          laborCost: w.laborCost || 0,
-          directCost: w.directCost || 0,
-          toolCost: w.toolCost || 0
-        });
+        const key = w.name + '|' + (w.unit || '');
+        if (!workMap.has(key)) {
+          workMap.set(key, {
+            name: w.name,
+            unit: w.unit || '',
+            volume: 0,
+            laborCost: w.laborCost || 0,      // норма на единицу (одинаковая для одной работы)
+            directCost: w.directCost || 0,
+            toolCost: w.toolCost || 0
+          });
+        }
+        const item = workMap.get(key);
+        item.volume += w.volume;
+        // laborCost, directCost, toolCost оставляем как есть (они одинаковы для данной работы)
       });
     });
   });
+
+  const workRows = Array.from(workMap.values());
 
   let totalNorm = 0, totalCost = 0;
   workRows.forEach(w => {
@@ -2784,7 +2794,7 @@ async function generateOrderDoc() {
   ws.getCell('L11').value = 'норма времени чел/час'; ws.getCell('M11').value = 'расценка'; ws.getCell('N11').value = 'норма времени чел/час';
   for (let col = 10; col <= 18; col++) { ws.getCell(10, col).style = headerStyle; ws.getCell(11, col).style = headerStyle; }
   
-  // --- Данные работ ---
+  // --- Данные работ (агрегированные) ---
   let rowIdx = 12;
   for (const w of workRows) {
     ws.insertRow(rowIdx, []);
