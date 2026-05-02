@@ -2703,180 +2703,256 @@ async function exportTimesheetExcel() {
   showToast('Табель сформирован');
 }
 
-async function generateOrderDoc() {
-  const monthElem = document.getElementById('docMonth');
-  const objectElem = document.getElementById('docObject');
-  if (!monthElem.value) { showToast('Выберите месяц документа'); return; }
-  const month = monthElem.value;
-  let object = objectElem.value.trim();
-  if (!object) object = 'Содержание';
-  const [year, monthNum] = month.split('-');
-  const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  const monthName = monthNames[parseInt(monthNum)-1];
+function generateOrderDoc() {
+  const month = safeGet('docMonth').value;
+  const object = safeGet('docObject').value.trim();
+  if (!month) { showToast('Выберите месяц документа'); return; }
 
-  // --- Собираем данные работ и людей за выбранный месяц (аналогично старой логике) ---
-  let filtered = entries.filter(e => e.date.startsWith(month));
-  if (object !== 'Содержание') {
-    filtered = filtered.filter(e => e.squads && e.squads.some(s => s.objects && s.objects.some(o => o.toLowerCase().includes(object.toLowerCase()))));
-  }
-  const workRows = [];
-  const workerMap = {}; // для табеля и расчёта зарплаты
+  // Фильтруем записи за месяц
+  let filtered = entries.filter(e => e.date.indexOf(month) === 0);
+  if (object) filtered = filtered.filter(e => (e.squads || []).some(s => (s.objects || []).some(o => o.toLowerCase().includes(object.toLowerCase()))));
+  if (!filtered.length) { showToast('Нет данных за выбранный месяц/объект'); return; }
 
-  filtered.forEach(entry => {
-    (entry.squads || []).forEach(squad => {
-      (squad.works || []).forEach(w => {
-        workRows.push({
-          name: w.name,
-          unit: w.unit || '',
-          volume: w.volume,
-          laborCost: w.laborCost || 0,
-          directCost: w.directCost || 0,
-          toolCost: w.toolCost || 0
+  showToast('Загрузка шаблона...');
+
+  // ЗАГРУЖАЕМ ШАБЛОН (для GitHub Pages — путь относительный)
+  fetch('template_naryad.xls')
+    .then(response => {
+      if (!response.ok) throw new Error('Шаблон не найден. Убедитесь, что template_naryad.xls загружен на GitHub рядом с index.html');
+      return response.arrayBuffer();
+    })
+    .then(arrayBuffer => {
+      const data = new Uint8Array(arrayBuffer);
+      const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+
+      // Используем лист "Рабочие" как базу (там есть структура табеля и расчёта)
+      // Если его нет — берём первый лист
+      let wsName = workbook.SheetNames.includes('Рабочие') ? 'Рабочие' : workbook.SheetNames[0];
+      const ws = workbook.Sheets[wsName];
+
+      const parts = month.split('-');
+      const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+      const monthName = monthNames[parseInt(parts[1]) - 1];
+      const year = parts[0]; // 2026
+
+      // ====== ОЧИЩАЕМ СТАРЫЕ ДАННЫЕ ======
+      // Очищаем таблицу работ (строки 12-30)
+      for (let r = 12; r <= 30; r++) {
+        ['A','B','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA'].forEach(col => {
+          delete ws[col + r];
+        });
+      }
+      // Очищаем итого работ
+      delete ws['S31']; delete ws['AA31'];
+
+      // Очищаем табель (строки 43-56) — старые фамилии
+      for (let r = 43; r <= 56; r++) {
+        ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z',
+         'AA','AB','AC','AD','AE','AF','AG','AH','AI','AJ'].forEach(col => {
+          delete ws[col + r];
+        });
+      }
+      // Очищаем итого табеля
+      ['AF','AG','AH','AI','AJ'].forEach(col => delete ws[col + '57']);
+
+      // Очищаем расчёт зарплаты (строки 68-81)
+      for (let r = 68; r <= 81; r++) {
+        ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA'].forEach(col => {
+          delete ws[col + r];
+        });
+      }
+
+      // ====== ЗАПОЛНЯЕМ ШАПКУ ======
+      ws['A1'] = { t: 's', v: 'КУП Гроднооблдорстрой' };
+      ws['A2'] = { t: 's', v: 'ДРСУ № 161 г. Щучин' };
+      ws['J2'] = { t: 's', v: 'Наряд № _________________' };
+      ws['C3'] = { t: 's', v: monthName };
+      ws['F3'] = { t: 's', v: year + ' г.' };
+      ws['AF3'] = { t: 's', v: '1' };
+      ws['AG3'] = { t: 's', v: '1' };
+      ws['B4'] = { t: 's', v: 'Объект: ' + (object || 'Содержание') };
+      ws['AF4'] = { t: 's', v: '30' };
+      ws['AG4'] = { t: 's', v: '30' };
+
+      // Прорабство и бригада — из настроек или дефолт
+      const prorab = settings.master || '_______________';
+      const podrazdelenie = settings.org || 'ПУ-3';
+      ws['B5'] = { t: 's', v: 'Прорабство: ' + podrazdelenie };
+      ws['B6'] = { t: 's', v: 'Бригада: ' + podrazdelenie };
+
+      // ====== ЗАПОЛНЯЕМ РАБОТЫ (строки 12-30) ======
+      let row = 12;
+      let totalNorm = 0, totalCost = 0;
+
+      // Собираем все работы из всех записей
+      const allWorks = [];
+      filtered.forEach(e => {
+        (e.squads || []).forEach(sq => {
+          (sq.works || []).forEach(w => {
+            allWorks.push({
+              code: w.code || '',
+              name: w.name,
+              unit: w.unit || '',
+              volume: w.volume,
+              laborCost: w.laborCost || 0,
+              directCost: w.directCost || 0
+            });
+          });
         });
       });
-      (squad.people || []).forEach(p => {
-        if (!workerMap[p.name]) {
-          const wRec = workers.find(w => w.name === p.name);
-          workerMap[p.name] = {
-            name: p.name,
-            grade: wRec ? wRec.grade : '',
-            tariff: wRec ? wRec.tariff : 0,
-            days: 0,
-            hours: 0,
-            dates: []
-          };
-        }
-        workerMap[p.name].hours += parseFloat(p.hours) || 8;
-        workerMap[p.name].days++;
-        workerMap[p.name].dates.push(entry.date);
+
+      // Если работ больше 19 — обрезаем (ограничение шаблона)
+      const limitedWorks = allWorks.slice(0, 19);
+
+      limitedWorks.forEach(w => {
+        const normHours = w.laborCost * w.volume;
+        const cost = w.directCost * w.volume;
+
+        ws['A' + row] = { t: 's', v: w.code };
+        ws['B' + row] = { t: 's', v: w.name };
+        ws['L' + row] = { t: 's', v: w.unit };
+        ws['M' + row] = { t: 'n', v: w.volume };
+        ws['O' + row] = { t: 'n', v: w.laborCost };
+        ws['Q' + row] = { t: 'n', v: w.directCost };
+        ws['S' + row] = { t: 'n', v: normHours };
+        // U — пусто (количество исполнено, пока = задано)
+        ws['W' + row] = { t: 'n', v: normHours };
+        ws['Y' + row] = { t: 'n', v: normHours };
+        ws['AA' + row] = { t: 'n', v: cost };
+
+        totalNorm += normHours;
+        totalCost += cost;
+        row++;
       });
-    });
-  });
 
-  let totalNorm = 0, totalCost = 0;
-  workRows.forEach(w => {
-    totalNorm += w.laborCost * w.volume;
-    totalCost += (w.directCost - w.toolCost) * w.volume;
-  });
+      // ИТОГО работ
+      ws['S31'] = { t: 'n', v: totalNorm };
+      ws['AA31'] = { t: 'n', v: totalCost };
 
-  // --- Загружаем шаблон ---
-  const templateResponse = await fetch('template_naryad.xlsx');
-  const templateBuffer = await templateResponse.arrayBuffer();
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(templateBuffer);
+      // ====== ЗАПОЛНЯЕМ ТАБЕЛЬ (строки 43-56) ======
+      // Собираем уникальных работников с часами по дням
+      const workerMap = {};
+      filtered.forEach(e => {
+        const day = parseInt(e.date.split('-')[2]);
+        (e.squads || []).forEach(sq => {
+          (sq.people || []).forEach(p => {
+            if (!workerMap[p.name]) {
+              workerMap[p.name] = { name: p.name, days: {}, totalHours: 0 };
+            }
+            const h = parseFloat(p.hours) || 8;
+            workerMap[p.name].days[day] = (workerMap[p.name].days[day] || 0) + h;
+            workerMap[p.name].totalHours += h;
+          });
+        });
+      });
 
-  // --- Работаем с листом "Наряд-задание" ---
-  const ws = workbook.getWorksheet('Наряд-задание');
-  if (!ws) { showToast('В шаблоне нет листа "Наряд-задание"'); return; }
+      let wRow = 43;
+      const sortedWorkers = Object.values(workerMap).sort((a, b) => a.name.localeCompare(b.name));
+      const maxWorkers = 14; // ограничение шаблона
 
-  // Заполняем статические поля (подберите правильные координаты по вашему шаблону)
-  // Пример: в вашем образце месяц и год находятся в C3 и E3, объект в B4, начало/конец работы в P3, Q3, P4 и т.д.
-  ws.getCell('C3').value = monthName;
-  ws.getCell('E3').value = parseInt(year);
-  ws.getCell('B4').value = object;
-  ws.getCell('P3').value = 1;   // начало
-  ws.getCell('Q3').value = 1;
-  ws.getCell('P4').value = 30;  // конец
-  ws.getCell('B5').value = 'ПУ-2'; // прорабство (можно из настроек)
-  ws.getCell('B6').value = 'ПУ-2'; // бригада
+      sortedWorkers.slice(0, maxWorkers).forEach((w, idx) => {
+        const wRec = workers.find(x => x.name === w.name);
+        const grade = wRec ? (wRec.grade || '') : '';
 
-  // --- Вставка строк работ (начинаем, например, с 12 строки) ---
-  let rowIdx = 12;
-  for (const w of workRows) {
-    // Вставляем новую строку перед строкой rowIdx, чтобы не затереть итоги и подписи
-    ws.insertRow(rowIdx, []);
-    const row = ws.getRow(rowIdx);
-    row.getCell(2).value = w.name;               // B
-    row.getCell(10).value = w.unit;              // J
-    row.getCell(12).value = w.volume;            // L
-    row.getCell(13).value = w.laborCost;         // M
-    row.getCell(14).value = w.laborCost * w.volume; // N
-    row.getCell(15).value = w.volume;            // O
-    row.getCell(16).value = w.laborCost * w.volume; // P
-    row.getCell(17).value = (w.directCost - w.toolCost) * w.volume; // Q
-    // Скопировать стили с соседней ячейки (например, с A11)
-    const styleSource = ws.getCell(11, 2);
-    for (let c = 1; c <= 18; c++) {
-      const cell = row.getCell(c);
-      if (styleSource.style) cell.style = { ...styleSource.style };
-      cell.border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
-    }
-    rowIdx++;
-  }
+        ws['A' + wRow] = { t: 'n', v: idx + 1 };
+        ws['B' + wRow] = { t: 's', v: w.name };
+        ws['C' + wRow] = { t: 'n', v: grade };
 
-  // Обновляем строку с ИТОГО (найдите её по тексту в колонке B)
-  let totalRowNumber = rowIdx;
-  for (let r = rowIdx; r <= rowIdx + 5; r++) {
-    const cellB = ws.getCell(r, 2);
-    if (cellB.value && cellB.value.toString().includes('ИТОГО')) {
-      totalRowNumber = r;
-      break;
-    }
-  }
-  ws.getCell(totalRowNumber, 16).value = totalNorm;   // колонка P (норма времени)
-  ws.getCell(totalRowNumber, 17).value = totalCost;   // колонка Q (сумма зарплаты)
+        // Заполняем часы по дням (D=3 по AH=33, дни 1-31)
+        for (let d = 1; d <= 31; d++) {
+          const colCode = 3 + (d - 1); // D = 3
+          const col = XLSX.utils.encode_col(colCode);
+          if (w.days[d]) {
+            ws[col + wRow] = { t: 'n', v: w.days[d] };
+          }
+        }
 
-  // --- Лист "Табель расчёт" ---
-  const ts = workbook.getWorksheet('Табель расчёт');
-  if (ts) {
-    // Найти строку, после которой вставлять работников (например, строка 5 с заголовками)
-    let startRow = 6;
-    // Удалить старые данные (если есть) – можно очистить строки, начиная с startRow
-    while (ts.getRow(startRow).getCell(1).value) {
-      ts.spliceRows(startRow, 1);
-    }
-    let row = startRow;
-    for (const w of Object.values(workerMap)) {
-      const newRow = ts.insertRow(row, []);
-      newRow.getCell(1).value = row - startRow + 1; // Табельный №
-      newRow.getCell(2).value = w.name;
-      newRow.getCell(3).value = w.grade;
-      // Здесь нужно заполнить часы по дням – это сложнее, можно оставить пустыми или заполнить суммарно
-      newRow.getCell(3 + 31 + 1).value = w.hours.toFixed(1); // всего часов
-      newRow.getCell(3 + 31 + 3).value = w.days; // дней
-      // Применить стили
-      for (let c = 1; c <= 3+31+4; c++) {
-        newRow.getCell(c).border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+        // Итоги (AF=31, AG=32, AH=33, AI=34, AJ=35)
+        const totalDays = Object.values(w.days).filter(h => h > 0).length;
+        ws['AF' + wRow] = { t: 'n', v: w.totalHours }; // отработано урочно
+        ws['AH' + wRow] = { t: 'n', v: totalDays };    // дней
+
+        // Зарплата — пропорционально от общей суммы
+        const totalAllHours = sortedWorkers.reduce((s, ww) => s + ww.totalHours, 0);
+        const share = totalAllHours > 0 ? w.totalHours / totalAllHours : 0;
+        const workerSalary = totalCost * share;
+        ws['AJ' + wRow] = { t: 'n', v: Math.round(workerSalary * 100) / 100 };
+
+        wRow += 2; // пустая строка между работниками в шаблоне
+      });
+
+      // ИТОГО табеля (строка 57)
+      const totalAllHours = sortedWorkers.reduce((s, w) => s + w.totalHours, 0);
+      const totalAllDays = sortedWorkers.reduce((s, w) => s + Object.values(w.days).filter(h => h > 0).length, 0);
+      ws['AF57'] = { t: 'n', v: totalAllHours };
+      ws['AH57'] = { t: 'n', v: totalAllDays };
+      ws['AJ57'] = { t: 'n', v: totalCost };
+
+      // ====== ЗАПОЛНЯЕМ РАСЧЁТ ЗАРПЛАТЫ (строки 68-81) ======
+      let zRow = 68;
+      const catName = sortedWorkers.length > 0 ? 'Рабочие' : 'Рабочие'; // можно взять из категории
+
+      // Заголовок
+      ws['C62'] = { t: 's', v: 'Расчёт' };
+      ws['C63'] = { t: 's', v: 'заработной платы ' + catName };
+      ws['E64'] = { t: 's', v: 'за ' + monthName };
+      ws['H64'] = { t: 's', v: year + ' г.' };
+      ws['B65'] = { t: 's', v: 'Объект: ' + (object || 'Содержание') };
+
+      sortedWorkers.slice(0, maxWorkers).forEach((w, idx) => {
+        const wRec = workers.find(x => x.name === w.name);
+        const grade = wRec ? (wRec.grade || '') : '';
+        const tariff = wRec ? (wRec.tariff || '') : '';
+        const totalDays = Object.values(w.days).filter(h => h > 0).length;
+
+        ws['A' + zRow] = { t: 'n', v: idx + 1 };
+        ws['B' + zRow] = { t: 's', v: w.name };
+        ws['H' + zRow] = { t: 'n', v: grade };
+        ws['J' + zRow] = { t: 'n', v: tariff };
+        ws['N' + zRow] = { t: 'n', v: totalDays };
+        ws['P' + zRow] = { t: 'n', v: w.totalHours };
+
+        // Зарплата по тарифу = часы * тариф * коэффициент (коэффициент берём из настроек или 1)
+        const koeff = settings.koeff || 1;
+        const tariffPay = w.totalHours * tariff * koeff;
+        ws['T' + zRow] = { t: 'n', v: Math.round(tariffPay * 100) / 100 };
+        ws['X' + zRow] = { t: 'n', v: koeff };
+
+        // Сумма заработной платы (пропорция от общей)
+        const share = totalAllHours > 0 ? w.totalHours / totalAllHours : 0;
+        const salary = totalCost * share;
+        ws['Z' + zRow] = { t: 'n', v: Math.round(salary * 100) / 100 };
+
+        zRow++;
+      });
+
+      // Итого расчёта
+      ws['Z82'] = { t: 'n', v: totalCost }; // начислено
+
+      // ====== ПОДПИСИ ======
+      ws['C33'] = { t: 's', v: 'Задание выдал прораб (мастер) ' + (settings.master || '_______________') };
+      ws['F33'] = { t: 's', v: monthName + ' ' + year + ' г.' };
+      ws['AG33'] = { t: 's', v: 'Задание принял бригадир ________________' };
+      ws['C35'] = { t: 's', v: 'Прораб (мастер) ' + (settings.master || '_______________') };
+      ws['F35'] = { t: 's', v: monthName + ' ' + year + ' г.' };
+      ws['AG35'] = { t: 's', v: 'Работу сдал бригадир ______________________' };
+      ws['C36'] = { t: 's', v: 'Нормы, расценки и сумма заработной платы проверил экономист: ' + (settings.economist || '_______________') };
+
+      // ====== СОХРАНЯЕМ ======
+      // Переименовываем лист в "Наряд"
+      if (wsName !== 'Наряд') {
+        workbook.SheetNames[workbook.SheetNames.indexOf(wsName)] = 'Наряд';
+        workbook.Sheets['Наряд'] = ws;
+        delete workbook.Sheets[wsName];
       }
-      row++;
-      row++; // пустая строка
-    }
-  }
 
-  // --- Лист "Расчёт зарплаты" ---
-  const salary = workbook.getWorksheet('Расчёт зарплаты');
-  if (salary) {
-    let startRow = 6;
-    while (salary.getRow(startRow).getCell(1).value) {
-      salary.spliceRows(startRow, 1);
-    }
-    let row = startRow;
-    for (const w of Object.values(workerMap)) {
-      const newRow = salary.insertRow(row, []);
-      newRow.getCell(1).value = row - startRow + 1;
-      newRow.getCell(2).value = w.name;
-      newRow.getCell(8).value = w.grade;       // разряд
-      newRow.getCell(10).value = w.tariff;     // тарифная ставка
-      newRow.getCell(14).value = w.days;       // отработано дней
-      newRow.getCell(18).value = w.hours;      // отработано часов
-      newRow.getCell(20).value = (w.tariff * w.hours).toFixed(2); // зарплата по тарифу
-      // Суммарная зарплата (коэффициент) – можно оставить пустым или заполнить
-      newRow.getCell(26).value = 1;
-      newRow.getCell(28).value = (w.tariff * w.hours).toFixed(2);
-      row++;
-      row++;
-    }
-  }
-
-  // --- Сохраняем файл ---
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `наряд_${month}.xlsx`;
-  link.click();
-  URL.revokeObjectURL(link.href);
-  showToast('Наряд-задание сформирован из шаблона');
+      XLSX.writeFile(workbook, 'наряд_' + month + (object ? '_' + object : '') + '_' + year + '.xlsx');
+      showToast('✅ Наряд-задание сформирован по вашему шаблону!');
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('❌ Ошибка: ' + err.message);
+    });
 }
 
 function generateTimesheetDoc() {
