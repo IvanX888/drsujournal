@@ -2714,27 +2714,41 @@ async function generateOrderDoc() {
   const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const monthName = monthNames[parseInt(monthNum)-1];
 
-  // --- собираем работы из записей за этот месяц ---
+  // --- Собираем данные работ и людей за выбранный месяц (аналогично старой логике) ---
   let filtered = entries.filter(e => e.date.startsWith(month));
   if (object !== 'Содержание') {
     filtered = filtered.filter(e => e.squads && e.squads.some(s => s.objects && s.objects.some(o => o.toLowerCase().includes(object.toLowerCase()))));
   }
   const workRows = [];
+  const workerMap = {}; // для табеля и расчёта зарплаты
+
   filtered.forEach(entry => {
     (entry.squads || []).forEach(squad => {
       (squad.works || []).forEach(w => {
-        const tool = tools.find(t => t.id === w.toolId);
         workRows.push({
           name: w.name,
           unit: w.unit || '',
           volume: w.volume,
           laborCost: w.laborCost || 0,
           directCost: w.directCost || 0,
-          toolCost: w.toolCost || 0,
-          fuelLiters: w.fuelLiters || 0,
-          toolHours: w.toolHours || 0,
-          machineCost: tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0
+          toolCost: w.toolCost || 0
         });
+      });
+      (squad.people || []).forEach(p => {
+        if (!workerMap[p.name]) {
+          const wRec = workers.find(w => w.name === p.name);
+          workerMap[p.name] = {
+            name: p.name,
+            grade: wRec ? wRec.grade : '',
+            tariff: wRec ? wRec.tariff : 0,
+            days: 0,
+            hours: 0,
+            dates: []
+          };
+        }
+        workerMap[p.name].hours += parseFloat(p.hours) || 8;
+        workerMap[p.name].days++;
+        workerMap[p.name].dates.push(entry.date);
       });
     });
   });
@@ -2742,107 +2756,119 @@ async function generateOrderDoc() {
   let totalNorm = 0, totalCost = 0;
   workRows.forEach(w => {
     totalNorm += w.laborCost * w.volume;
-    totalCost += ((w.directCost - w.toolCost) * w.volume);
+    totalCost += (w.directCost - w.toolCost) * w.volume;
   });
 
-  // --- создаём Excel ---
+  // --- Загружаем шаблон ---
+  const templateResponse = await fetch('template_naryad.xlsx');
+  const templateBuffer = await templateResponse.arrayBuffer();
   const workbook = new ExcelJS.Workbook();
-  const ws = workbook.addWorksheet('Наряд-задание');
-  
-  // стили
-  const borderAll = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
-  const titleStyle = { font: { bold: true, size: 12 }, alignment: { horizontal: 'center', vertical: 'middle' } };
-  const headerStyle = { font: { bold: true }, alignment: { horizontal: 'center', vertical: 'middle', wrapText: true }, border: borderAll };
-  const cellStyle = { border: borderAll, alignment: { vertical: 'middle' } };
+  await workbook.xlsx.load(templateBuffer);
 
-  ws.columns = [
-    { width: 6 },  // A
-    { width: 45 }, // B
-    { width: 10 }, // C
-    { width: 8 },  // D
-    { width: 10 }, // E
-    { width: 10 }, // F
-    { width: 10 }, // G
-    { width: 10 }, // H
-    { width: 10 }, // I
-    { width: 10 }, // J
-  ];
+  // --- Работаем с листом "Наряд-задание" ---
+  const ws = workbook.getWorksheet('Наряд-задание');
+  if (!ws) { showToast('В шаблоне нет листа "Наряд-задание"'); return; }
 
-  // --- строки шапки (строго по вашему образцу) ---
-  ws.mergeCells('A1:J1'); ws.getCell('A1').value = 'КУП Гроднооблдорстрой'; ws.getCell('A1').style = titleStyle;
-  ws.mergeCells('A2:I2'); ws.getCell('A2').value = 'ДРСУ № 161 г. Щучин'; ws.getCell('A2').style = titleStyle;
-  ws.getCell('J2').value = 'Наряд № _________________'; ws.getCell('J2').style = { font: { bold: true }, alignment: { horizontal: 'right' } };
-  
-  ws.getCell('A3').value = 'на'; ws.getCell('C3').value = monthName; ws.getCell('E3').value = year; ws.getCell('E3').numFmt = '0';
-  ws.getCell('M3').value = 'Начало работы'; ws.getCell('P3').value = 1; ws.getCell('Q3').value = 1;
-  ws.mergeCells('A3:B3'); ws.mergeCells('C3:D3'); ws.mergeCells('E3:F3'); ws.mergeCells('M3:O3');
-  
-  ws.getCell('A4').value = 'Объект:'; ws.getCell('B4').value = object; ws.getCell('M4').value = 'Окончание работы'; ws.getCell('P4').value = 30;
-  ws.mergeCells('A4:B4'); ws.mergeCells('M4:O4');
-  
-  ws.getCell('A5').value = 'Прорабство:'; ws.getCell('B5').value = 'ПУ-2'; ws.mergeCells('A5:B5');
-  ws.getCell('A6').value = 'Бригада:'; ws.getCell('B6').value = 'ПУ-2'; ws.mergeCells('A6:B6');
+  // Заполняем статические поля (подберите правильные координаты по вашему шаблону)
+  // Пример: в вашем образце месяц и год находятся в C3 и E3, объект в B4, начало/конец работы в P3, Q3, P4 и т.д.
+  ws.getCell('C3').value = monthName;
+  ws.getCell('E3').value = parseInt(year);
+  ws.getCell('B4').value = object;
+  ws.getCell('P3').value = 1;   // начало
+  ws.getCell('Q3').value = 1;
+  ws.getCell('P4').value = 30;  // конец
+  ws.getCell('B5').value = 'ПУ-2'; // прорабство (можно из настроек)
+  ws.getCell('B6').value = 'ПУ-2'; // бригада
 
-  // --- шапка таблицы ---
-  ws.mergeCells('A9:A11'); ws.getCell('A9').value = 'Шифр нормативного источника'; ws.getCell('A9').style = headerStyle;
-  ws.mergeCells('B9:I9'); ws.getCell('B9').value = 'Описание работ и условий производства'; ws.getCell('B9').style = headerStyle;
-  ws.mergeCells('J9:J11'); ws.getCell('J9').value = 'Ед. изм'; ws.getCell('J9').style = headerStyle;
-  ws.mergeCells('K9:K11'); ws.getCell('K9').value = 'Задано'; ws.getCell('K9').style = headerStyle;
-
-  ws.getCell('L10').value = 'количество работ'; ws.getCell('M10').value = 'на единицу'; ws.getCell('N10').value = 'на весь объём';
-  ws.getCell('O10').value = 'количество работ'; ws.getCell('P10').value = 'норма на выполненный объём, чел/час';
-  ws.getCell('Q10').value = 'норма времени, чел/час'; ws.getCell('R10').value = 'сумма зарплаты';
-  
-  ws.getCell('L11').value = 'норма времени чел/час'; ws.getCell('M11').value = 'расценка'; ws.getCell('N11').value = 'норма времени чел/час';
-  for (let col = 10; col <= 18; col++) {
-    ws.getCell(10, col).style = headerStyle;
-    ws.getCell(11, col).style = headerStyle;
-  }
-
-  // --- данные работ ---
+  // --- Вставка строк работ (начинаем, например, с 12 строки) ---
   let rowIdx = 12;
   for (const w of workRows) {
+    // Вставляем новую строку перед строкой rowIdx, чтобы не затереть итоги и подписи
+    ws.insertRow(rowIdx, []);
     const row = ws.getRow(rowIdx);
-    row.getCell(1).value = '';
-    row.getCell(2).value = w.name;
-    row.getCell(10).value = w.unit;
-    row.getCell(12).value = w.volume;
-    row.getCell(13).value = w.laborCost;
-    row.getCell(14).value = w.laborCost * w.volume;
-    row.getCell(15).value = w.volume;
-    row.getCell(16).value = w.laborCost * w.volume;
-    row.getCell(17).value = (w.directCost - w.toolCost) * w.volume;
-    for (let c = 1; c <= 18; c++) row.getCell(c).style = cellStyle;
+    row.getCell(2).value = w.name;               // B
+    row.getCell(10).value = w.unit;              // J
+    row.getCell(12).value = w.volume;            // L
+    row.getCell(13).value = w.laborCost;         // M
+    row.getCell(14).value = w.laborCost * w.volume; // N
+    row.getCell(15).value = w.volume;            // O
+    row.getCell(16).value = w.laborCost * w.volume; // P
+    row.getCell(17).value = (w.directCost - w.toolCost) * w.volume; // Q
+    // Скопировать стили с соседней ячейки (например, с A11)
+    const styleSource = ws.getCell(11, 2);
+    for (let c = 1; c <= 18; c++) {
+      const cell = row.getCell(c);
+      if (styleSource.style) cell.style = { ...styleSource.style };
+      cell.border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+    }
     rowIdx++;
   }
 
-  // --- итого ---
-  const totalRow = ws.getRow(rowIdx);
-  totalRow.getCell(2).value = 'ИТОГО';
-  totalRow.getCell(16).value = totalNorm.toFixed(2);
-  totalRow.getCell(17).value = totalCost.toFixed(2);
-  for (let c = 1; c <= 18; c++) totalRow.getCell(c).style = cellStyle;
-  totalRow.getCell(2).style = { ...cellStyle, font: { bold: true } };
-  rowIdx++;
+  // Обновляем строку с ИТОГО (найдите её по тексту в колонке B)
+  let totalRowNumber = rowIdx;
+  for (let r = rowIdx; r <= rowIdx + 5; r++) {
+    const cellB = ws.getCell(r, 2);
+    if (cellB.value && cellB.value.toString().includes('ИТОГО')) {
+      totalRowNumber = r;
+      break;
+    }
+  }
+  ws.getCell(totalRowNumber, 16).value = totalNorm;   // колонка P (норма времени)
+  ws.getCell(totalRowNumber, 17).value = totalCost;   // колонка Q (сумма зарплаты)
 
-  // --- подписи ---
-  ws.getCell(rowIdx, 2).value = 'Задание выдал прораб (мастер) _______________';
-  ws.mergeCells(rowIdx, 2, rowIdx, 10);
-  ws.getCell(rowIdx, 15).value = 'Задание принял бригадир ________________';
-  ws.mergeCells(rowIdx, 15, rowIdx, 18);
-  rowIdx++;
-  ws.getCell(rowIdx, 2).value = 'Работу принял с оценкой качества _______________________________________________';
-  ws.mergeCells(rowIdx, 2, rowIdx, 18);
-  rowIdx++;
-  ws.getCell(rowIdx, 2).value = `Прораб (мастер) ___________________   ${monthName}   ${year} г.`;
-  ws.mergeCells(rowIdx, 2, rowIdx, 9);
-  ws.getCell(rowIdx, 15).value = `Работу сдал бригадир ______________________   "____"   ${year} г.`;
-  ws.mergeCells(rowIdx, 15, rowIdx, 18);
-  rowIdx++;
-  ws.getCell(rowIdx, 2).value = `Нормы, расценки и сумма заработной платы проверил экономист: ${settings.master || '_______________'}  ____________________   " _____ "     ${year} г.`;
-  ws.mergeCells(rowIdx, 2, rowIdx, 18);
+  // --- Лист "Табель расчёт" ---
+  const ts = workbook.getWorksheet('Табель расчёт');
+  if (ts) {
+    // Найти строку, после которой вставлять работников (например, строка 5 с заголовками)
+    let startRow = 6;
+    // Удалить старые данные (если есть) – можно очистить строки, начиная с startRow
+    while (ts.getRow(startRow).getCell(1).value) {
+      ts.spliceRows(startRow, 1);
+    }
+    let row = startRow;
+    for (const w of Object.values(workerMap)) {
+      const newRow = ts.insertRow(row, []);
+      newRow.getCell(1).value = row - startRow + 1; // Табельный №
+      newRow.getCell(2).value = w.name;
+      newRow.getCell(3).value = w.grade;
+      // Здесь нужно заполнить часы по дням – это сложнее, можно оставить пустыми или заполнить суммарно
+      newRow.getCell(3 + 31 + 1).value = w.hours.toFixed(1); // всего часов
+      newRow.getCell(3 + 31 + 3).value = w.days; // дней
+      // Применить стили
+      for (let c = 1; c <= 3+31+4; c++) {
+        newRow.getCell(c).border = { top: {style:'thin'}, left:{style:'thin'}, bottom:{style:'thin'}, right:{style:'thin'} };
+      }
+      row++;
+      row++; // пустая строка
+    }
+  }
 
-  // --- сохраняем файл ---
+  // --- Лист "Расчёт зарплаты" ---
+  const salary = workbook.getWorksheet('Расчёт зарплаты');
+  if (salary) {
+    let startRow = 6;
+    while (salary.getRow(startRow).getCell(1).value) {
+      salary.spliceRows(startRow, 1);
+    }
+    let row = startRow;
+    for (const w of Object.values(workerMap)) {
+      const newRow = salary.insertRow(row, []);
+      newRow.getCell(1).value = row - startRow + 1;
+      newRow.getCell(2).value = w.name;
+      newRow.getCell(8).value = w.grade;       // разряд
+      newRow.getCell(10).value = w.tariff;     // тарифная ставка
+      newRow.getCell(14).value = w.days;       // отработано дней
+      newRow.getCell(18).value = w.hours;      // отработано часов
+      newRow.getCell(20).value = (w.tariff * w.hours).toFixed(2); // зарплата по тарифу
+      // Суммарная зарплата (коэффициент) – можно оставить пустым или заполнить
+      newRow.getCell(26).value = 1;
+      newRow.getCell(28).value = (w.tariff * w.hours).toFixed(2);
+      row++;
+      row++;
+    }
+  }
+
+  // --- Сохраняем файл ---
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const link = document.createElement('a');
@@ -2850,7 +2876,7 @@ async function generateOrderDoc() {
   link.download = `наряд_${month}.xlsx`;
   link.click();
   URL.revokeObjectURL(link.href);
-  showToast('Наряд-задание сформирован');
+  showToast('Наряд-задание сформирован из шаблона');
 }
 
 function generateTimesheetDoc() {
