@@ -2712,42 +2712,68 @@ function generateOrderDoc() {
   if (object) filtered = filtered.filter(e => (e.squads || []).some(s => (s.objects || []).some(o => o.toLowerCase().includes(object.toLowerCase()))));
   if (!filtered.length) { showToast('Нет данных за выбранный месяц/объект'); return; }
 
+  // Проверяем, загрузился ли ExcelJS
+  if (typeof ExcelJS === 'undefined') {
+    showToast('Загрузка библиотеки ExcelJS...');
+    // Fallback на старый метод
+    generateOrderDocOld();
+    return;
+  }
+
   showToast('Загрузка шаблона...');
 
-  fetch('template_naryad.xlsx')  // <-- .xlsx !
-    .then(r => r.arrayBuffer())
+  fetch('template_naryad.xlsx')  // <-- должен быть .xlsx !
+    .then(r => {
+      if (!r.ok) throw new Error('Шаблон template_naryad.xlsx не найден. Загрузите его на GitHub рядом с index.html');
+      return r.arrayBuffer();
+    })
     .then(arrayBuffer => {
       const workbook = new ExcelJS.Workbook();
-      return workbook.xlsx.load(arrayBuffer);
+      return workbook.xlsx.load(arrayBuffer).then(() => workbook);
     })
     .then(workbook => {
-      const ws = workbook.getWorksheet(1); // первый лист
+      // Получаем первый лист
+      const ws = workbook.worksheets[0];
+      if (!ws) throw new Error('В шаблоне нет листов');
 
       const parts = month.split('-');
       const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
       const monthName = monthNames[parseInt(parts[1]) - 1];
       const year = parts[0];
 
-      // ===== ЗАПОЛНЯЕМ ЯЧЕЙКИ (стили сохранятся!) =====
+      // ===== ШАПКА =====
       ws.getCell('C3').value = monthName;
       ws.getCell('F3').value = year + ' г.';
+      ws.getCell('AF3').value = '1';
+      ws.getCell('AG3').value = '1';
       ws.getCell('B4').value = 'Объект: ' + (object || 'Содержание');
+      ws.getCell('AF4').value = '30';
+      ws.getCell('AG4').value = '30';
       ws.getCell('B5').value = 'Прорабство: ' + (settings.org || 'ПУ-3');
       ws.getCell('B6').value = 'Бригада: ' + (settings.org || 'ПУ-3');
 
-      // Очищаем старые данные работ (строки 12-30)
+      // ===== ОЧИЩАЕМ РАБОТЫ (строки 12-30) =====
       for (let r = 12; r <= 30; r++) {
         ['A','B','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','AA'].forEach(col => {
           ws.getCell(col + r).value = null;
         });
       }
+      ws.getCell('S31').value = null;
+      ws.getCell('AA31').value = null;
 
-      // Заполняем работы
+      // ===== ЗАПОЛНЯЕМ РАБОТЫ =====
       const allWorks = [];
       filtered.forEach(e => {
         (e.squads || []).forEach(sq => {
           (sq.works || []).forEach(w => {
-            allWorks.push({ code: w.code || '', name: w.name, unit: w.unit || '', volume: w.volume, laborCost: w.laborCost || 0, directCost: w.directCost || 0 });
+            allWorks.push({
+              code: w.code || '',
+              name: w.name,
+              unit: w.unit || '',
+              volume: w.volume,
+              laborCost: w.laborCost || 0,
+              directCost: w.directCost || 0
+            });
           });
         });
       });
@@ -2774,23 +2800,21 @@ function generateOrderDoc() {
         row++;
       });
 
-      // ИТОГО
       ws.getCell('S31').value = totalNorm;
       ws.getCell('AA31').value = totalCost;
 
-      // ТАБЕЛЬ — очищаем старые фамилии
+      // ===== ОЧИЩАЕМ ТАБЕЛЬ =====
       for (let r = 43; r <= 56; r += 2) {
-        ws.getCell('A' + r).value = null;
-        ws.getCell('B' + r).value = null;
-        ws.getCell('C' + r).value = null;
+        ['A','B','C'].forEach(col => ws.getCell(col + r).value = null);
         for (let d = 1; d <= 31; d++) {
-          const col = String.fromCharCode(68 + d - 1); // D=68
-          if (d > 22) break; // Z=90, дальше AA, AB...
+          const col = d <= 23 ? String.fromCharCode(68 + d - 1) : (d <= 49 ? 'A' + String.fromCharCode(64 + d - 23) : 'B' + String.fromCharCode(64 + d - 49));
           ws.getCell(col + r).value = null;
         }
+        ['AF','AG','AH','AI','AJ'].forEach(col => ws.getCell(col + r).value = null);
       }
+      ['AF','AG','AH','AI','AJ'].forEach(col => ws.getCell(col + '57').value = null);
 
-      // Заполняем табель
+      // ===== ЗАПОЛНЯЕМ ТАБЕЛЬ =====
       const workerMap = {};
       filtered.forEach(e => {
         const day = parseInt(e.date.split('-')[2]);
@@ -2805,62 +2829,61 @@ function generateOrderDoc() {
       });
 
       let wRow = 43;
-      Object.values(workerMap).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 14).forEach((w, idx) => {
+      const sortedWorkers = Object.values(workerMap).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 14);
+
+      sortedWorkers.forEach((w, idx) => {
         const wRec = workers.find(x => x.name === w.name);
+
         ws.getCell('A' + wRow).value = idx + 1;
         ws.getCell('B' + wRow).value = w.name;
         ws.getCell('C' + wRow).value = wRec ? (wRec.grade || '') : '';
 
         for (let d = 1; d <= 31; d++) {
           if (w.days[d]) {
-            const col = d <= 23 ? String.fromCharCode(68 + d - 1) : 'A' + String.fromCharCode(64 + d - 23); // Z, AA, AB...
+            const col = d <= 23 ? String.fromCharCode(68 + d - 1) : (d <= 49 ? 'A' + String.fromCharCode(64 + d - 23) : 'B' + String.fromCharCode(64 + d - 49));
             ws.getCell(col + wRow).value = w.days[d];
           }
         }
 
         const totalDays = Object.values(w.days).filter(h => h > 0).length;
+        const totalAllHours = sortedWorkers.reduce((s, ww) => s + ww.totalHours, 0);
+        const share = totalAllHours > 0 ? w.totalHours / totalAllHours : 0;
+
         ws.getCell('AF' + wRow).value = w.totalHours;
         ws.getCell('AH' + wRow).value = totalDays;
-
-        const totalAllHours = Object.values(workerMap).reduce((s, ww) => s + ww.totalHours, 0);
-        const share = totalAllHours > 0 ? w.totalHours / totalAllHours : 0;
         ws.getCell('AJ' + wRow).value = Math.round(totalCost * share * 100) / 100;
 
         wRow += 2;
       });
 
       // Итого табеля
-      const totalAllHours = Object.values(workerMap).reduce((s, w) => s + w.totalHours, 0);
-      const totalAllDays = Object.values(workerMap).reduce((s, w) => s + Object.values(w.days).filter(h => h > 0).length, 0);
+      const totalAllHours = sortedWorkers.reduce((s, w) => s + w.totalHours, 0);
+      const totalAllDays = sortedWorkers.reduce((s, w) => s + Object.values(w.days).filter(h => h > 0).length, 0);
       ws.getCell('AF57').value = totalAllHours;
       ws.getCell('AH57').value = totalAllDays;
       ws.getCell('AJ57').value = totalCost;
 
-      // РАСЧЁТ ЗАРПЛАТЫ
+      // ===== РАСЧЁТ ЗАРПЛАТЫ =====
       ws.getCell('C63').value = 'заработной платы ' + (settings.org || 'Рабочие');
       ws.getCell('E64').value = 'за ' + monthName;
       ws.getCell('H64').value = year + ' г.';
       ws.getCell('B65').value = 'Объект: ' + (object || 'Содержание');
 
-      // Очищаем старые фамилии
+      // Очищаем
       for (let r = 68; r <= 81; r++) {
-        ws.getCell('A' + r).value = null;
-        ws.getCell('B' + r).value = null;
-        ws.getCell('H' + r).value = null;
-        ws.getCell('J' + r).value = null;
-        ws.getCell('N' + r).value = null;
-        ws.getCell('P' + r).value = null;
-        ws.getCell('T' + r).value = null;
-        ws.getCell('X' + r).value = null;
-        ws.getCell('Z' + r).value = null;
+        ['A','B','H','J','N','P','T','X','Z'].forEach(col => {
+          ws.getCell(col + r).value = null;
+        });
       }
+      ws.getCell('Z82').value = null;
 
       let zRow = 68;
-      Object.values(workerMap).sort((a, b) => a.name.localeCompare(b.name)).slice(0, 14).forEach((w, idx) => {
+      sortedWorkers.forEach((w, idx) => {
         const wRec = workers.find(x => x.name === w.name);
         const grade = wRec ? (wRec.grade || '') : '';
         const tariff = wRec ? (wRec.tariff || '') : '';
         const totalDays = Object.values(w.days).filter(h => h > 0).length;
+        const koeff = settings.koeff || 1;
 
         ws.getCell('A' + zRow).value = idx + 1;
         ws.getCell('B' + zRow).value = w.name;
@@ -2868,12 +2891,10 @@ function generateOrderDoc() {
         ws.getCell('J' + zRow).value = tariff;
         ws.getCell('N' + zRow).value = totalDays;
         ws.getCell('P' + zRow).value = w.totalHours;
-
-        const koeff = settings.koeff || 1;
         ws.getCell('T' + zRow).value = Math.round(w.totalHours * tariff * koeff * 100) / 100;
         ws.getCell('X' + zRow).value = koeff;
 
-        const totalAllHours = Object.values(workerMap).reduce((s, ww) => s + ww.totalHours, 0);
+        const totalAllHours = sortedWorkers.reduce((s, ww) => s + ww.totalHours, 0);
         const share = totalAllHours > 0 ? w.totalHours / totalAllHours : 0;
         ws.getCell('Z' + zRow).value = Math.round(totalCost * share * 100) / 100;
 
@@ -2882,21 +2903,26 @@ function generateOrderDoc() {
 
       ws.getCell('Z82').value = totalCost;
 
-      // Сохраняем
-      workbook.xlsx.writeBuffer().then(buffer => {
-        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'наряд_' + month + (object ? '_' + object : '') + '_' + year + '.xlsx';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✅ Наряд-задание сформирован с сохранением стилей!');
-      });
+      // ===== СОХРАНЯЕМ =====
+      return workbook.xlsx.writeBuffer();
+    })
+    .then(buffer => {
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'наряд_' + month + (object ? '_' + object : '') + '_' + year + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✅ Наряд-задание сформирован!');
     })
     .catch(err => {
       console.error(err);
-      showToast('❌ Ошибка: ' + err.message);
+      showToast('❌ ' + err.message);
+      // Fallback на старый метод
+      // generateOrderDocOld();
     });
 }
 
