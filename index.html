@@ -4,157 +4,165 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v14.0 (полная версия)</title>
-
+<title>Журнал производства работ — ДРСУ v15.0 (Километраж)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
 <style>
-:root { 
-  --primary: #1565c0; --primary-light: #1976d2; --primary-dark: #0d47a1; 
-  --accent: #ff6f00; --bg: #f5f5f5; --card: #fff; --text: #212121; 
-  --text-secondary: #616161; --border: #e0e0e0; 
-  --success: #2e7d32; --danger: #c62828; --warning: #f9a825; 
-  --edit: #00695c; --info: #0277bd; 
-  --shadow: 0 2px 8px rgba(0,0,0,.12); --radius: 16px; 
-}
-@media (prefers-color-scheme: dark) { 
-  :root { --bg: #121212; --card: #1e1e1e; --text: #eee; --text-secondary: #aaa; --border: #333; --shadow: 0 2px 8px rgba(0,0,0,.5); } 
-}
-.dark-mode { --bg: #121212; --card: #1e1e1e; --text: #eee; --text-secondary: #aaa; --border: #333; --shadow: 0 2px 8px rgba(0,0,0,.5); }
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
-body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:90px; overflow-x:hidden; transition:background .3s,color .3s; }
-.app-header { background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%); color:#fff; padding:16px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow); display:flex; justify-content:space-between; align-items:center; }
-.app-header h1 { font-size:1.1rem; font-weight:600; }
-.app-header .date-today { font-size:.8rem; opacity:.9; }
-#netStatus { font-size:.7rem; padding:2px 8px; border-radius:12px; background:rgba(255,255,255,.2); }
-.bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--card); display:flex; justify-content:space-around; padding:8px 0; box-shadow:0 -2px 10px rgba(0,0,0,.15); z-index:100; border-top:1px solid var(--border); transition:background .3s; }
-.nav-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; background:none; border:none; color:var(--text-secondary); font-size:.65rem; padding:4px; cursor:pointer; transition:color .2s; }
-.nav-btn.active { color:var(--primary); }
-.nav-btn svg { width:22px; height:22px; }
-.page { display:none; padding:16px; animation:fadeIn .3s; }
-.page.active { display:block; }
-@keyframes fadeIn { from { opacity:0; transform:translateY(10px);} to { opacity:1; transform:translateY(0);} }
-.card { background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px; box-shadow:0 1px 3px rgba(0,0,0,.08); border:1px solid var(--border); transition:background .3s; }
-.card-title { font-size:.9rem; font-weight:600; color:var(--primary); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.form-group { margin-bottom:14px; }
-.form-group label { display:block; font-size:.8rem; font-weight:500; color:var(--text-secondary); margin-bottom:4px; text-transform:uppercase; letter-spacing:.3px; }
-.form-group input,.form-group textarea,.form-group select { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px; font-size:1rem; background:var(--card); color:var(--text); transition:border-color .2s,box-shadow .2s; }
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(21,101,192,.15); }
-.form-group textarea { min-height:80px; resize:vertical; }
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 24px; border:none; border-radius:12px; font-size:1rem; font-weight:600; cursor:pointer; transition:transform .1s,opacity .2s,background .2s; width:100%; touch-action:manipulation; }
-.btn:active { transform:scale(.98); }
-.btn-primary { background:var(--primary); color:#fff; }
-.btn-accent { background:var(--accent); color:#fff; }
-.btn-success { background:var(--success); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
-.btn-edit { background:var(--edit); color:#fff; }
-.btn-info { background:var(--info); color:#fff; }
-.btn-secondary { background:var(--bg); color:var(--text); border:1.5px solid var(--border); }
-.btn-small { padding:8px 14px; font-size:.85rem; width:auto; }
-.btn-ghost { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
-.row-btns { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
-.row-btns .btn { flex:1; min-width:100px; }
-.entry-item { background:var(--card); border-radius:var(--radius); margin-bottom:8px; border-left:4px solid var(--primary); box-shadow:0 1px 3px rgba(0,0,0,.08); transition:box-shadow .2s; cursor:pointer; }
-.entry-item.important { border-left-color:var(--danger); }
-.entry-item.expanded { box-shadow:var(--shadow); }
-.entry-header { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; padding:12px; }
-.entry-object { font-weight:700; font-size:1rem; color:var(--text); word-break:break-word; }
-.entry-date { font-size:.8rem; color:var(--text-secondary); background:var(--bg); padding:2px 8px; border-radius:20px; white-space:nowrap; }
-.entry-meta-line { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; font-size:.8rem; color:var(--text-secondary); }
-.entry-meta-line span { background:var(--bg); padding:3px 10px; border-radius:20px; }
-.entry-toggle-icon { font-size:1.2rem; color:var(--primary); transition:transform .3s; flex-shrink:0; margin-top:2px; }
-.entry-item.expanded .entry-toggle-icon { transform:rotate(180deg); }
-.entry-details { display:none; padding:0 12px 12px; border-top:1px dashed var(--border); }
-.entry-item.expanded .entry-details { display:block; }
-.norm-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600; white-space:nowrap; }
-.norm-badge.ok { background:#e8f5e9; color:var(--success); }
-.norm-badge.warn { background:#fff3e0; color:var(--accent); }
-.norm-badge.bad { background:#ffebee; color:var(--danger); }
-.month-group { margin-bottom:20px; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; background:var(--card); }
-.month-header { background:var(--primary); color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; font-weight:700; font-size:1rem; }
-.month-header .month-delete { background:rgba(255,255,255,0.2); border:none; color:#fff; padding:4px 10px; border-radius:20px; font-size:.8rem; cursor:pointer; margin-left:12px; }
-.month-header .month-delete:hover { background:var(--danger); }
-.month-content { display:none; padding:12px; }
-.month-group.expanded .month-content { display:block; }
-.kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:12px; }
-.kpi-item { background:var(--card); border-radius:12px; padding:10px 8px; text-align:center; border:1px solid var(--border); }
-.kpi-item .kpi-value { font-size:1.3rem; font-weight:700; color:var(--primary); }
-.road-scale-container { background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px; border:1px solid var(--border); }
-.road-scale-title { font-size:.9rem; font-weight:600; color:var(--primary); margin-bottom:12px; }
-.road-scale-bar { position:relative; height:32px; background:var(--bg); border-radius:16px; overflow:hidden; margin-bottom:8px; border:1px solid var(--border); }
-.road-scale-fill { position:absolute; left:0; top:0; height:100%; border-radius:16px; background:linear-gradient(90deg, var(--success) 0%, var(--primary) 100%); transition:width .6s ease; display:flex; align-items:center; justify-content:flex-end; padding-right:8px; }
-.road-scale-fill span { color:#fff; font-size:.75rem; font-weight:700; }
-.road-scale-labels { display:flex; justify-content:space-between; font-size:.75rem; color:var(--text-secondary); margin-bottom:12px; }
-.road-scale-segments { display:flex; gap:4px; flex-wrap:wrap; margin-top:8px; }
-.road-segment { padding:4px 10px; border-radius:20px; font-size:.75rem; font-weight:500; background:var(--bg); border:1px solid var(--border); }
-.road-segment.done { background:#e8f5e9; color:var(--success); border-color:var(--success); }
-.people-tag { padding:3px 8px; border-radius:20px; font-size:.8rem; font-weight:500; display:inline-flex; align-items:center; gap:4px; margin:2px; background:#e3f2fd; }
-.people-tag input.hours-inp { width:42px; padding:2px 4px; border:1px solid var(--border); border-radius:6px; font-size:.75rem; text-align:center; background:var(--card); }
-.filter-bar { display:flex; gap:8px; margin-bottom:8px; overflow-x:auto; padding-bottom:4px; }
-.filter-chip { padding:8px 16px; border-radius:20px; border:1.5px solid var(--border); background:var(--card); font-size:.85rem; white-space:nowrap; cursor:pointer; flex-shrink:0; color:var(--text); }
-.filter-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-.empty-state { text-align:center; padding:40px 20px; color:var(--text-secondary); }
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
-.modal-overlay.active { display:flex; }
-.modal { background:var(--card); border-radius:20px; width:100%; max-height:85vh; overflow-y:auto; padding:20px; animation:modalIn .3s; box-shadow:var(--shadow); }
-@keyframes modalIn { from { transform:scale(.9); opacity:0;} to { transform:scale(1); opacity:1;} }
-.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; font-weight:700; font-size:1.1rem; color:var(--primary); }
-.close-modal { background:var(--bg); border:none; width:36px; height:36px; border-radius:50%; font-size:1.2rem; cursor:pointer; color:var(--text); display:flex; align-items:center; justify-content:center; }
-.report-table { width:100%; border-collapse:collapse; font-size:.9rem; }
-.report-table th,.report-table td { padding:10px; text-align:left; border-bottom:1px solid var(--border); }
-.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; font-size:.85rem; }
-.calendar-day { padding:8px; border-radius:10px; position:relative; cursor:pointer; min-height:40px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:var(--bg); }
-.calendar-day.header { color:var(--text-secondary); font-weight:600; font-size:.75rem; cursor:default; background:transparent; }
-.calendar-day.has-entry { background:#e3f2fd; color:var(--primary); font-weight:700; }
-.dark-mode .calendar-day.has-entry { background:#1565c0; color:#fff; }
-.calendar-day.has-task { background:#fff3e0; color:var(--accent); font-weight:700; }
-.calendar-day.today { background:var(--primary); color:#fff; }
-.toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(100px); background:#323232; color:#fff; padding:12px 24px; border-radius:24px; font-size:.9rem; z-index:300; opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap; }
-.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
-.timesheet-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px; }
-.timesheet-table { border-collapse:collapse; font-size:.72rem; min-width:100%; }
-.timesheet-table th,.timesheet-table td { border:1px solid var(--border); padding:4px 2px; text-align:center; min-width:34px; color:var(--text); }
-.timesheet-table th { background:#e3f2fd; font-weight:600; color:var(--text-secondary); position:sticky; top:0; z-index:3; }
-.dark-mode .timesheet-table th { background:#1565c0; color:#fff; }
-.timesheet-table td:first-child,.timesheet-table th:first-child { position:sticky; left:0; background:var(--card); z-index:4; min-width:140px; text-align:left; padding-left:10px; font-weight:500; border-right:2px solid var(--border); }
-.ts-cell-editable { cursor:pointer; background:rgba(21,101,192,.05); }
-.ts-edit-inp { width:100%; border:none; background:transparent; text-align:center; font-weight:700; color:var(--primary); font-size:.75rem; padding:0; }
-.subtabs { display:flex; gap:8px; margin-bottom:16px; overflow-x:auto; padding-bottom:4px; }
-.subtab { padding:10px 18px; border-radius:24px; border:1.5px solid var(--border); background:var(--card); font-size:.9rem; font-weight:500; cursor:pointer; white-space:nowrap; color:var(--text); }
-.subtab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-.subpanel { display:none; }
-.subpanel.active { display:block; }
-.catalog-item { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border); }
-.squad-card { background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:16px; border:2px solid var(--primary); box-shadow:var(--shadow); }
-.squad-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:2px solid var(--border); }
-.squad-title { font-size:1.1rem; font-weight:700; color:var(--primary); }
-.squad-category { font-size:.8rem; background:var(--primary); color:#fff; padding:4px 12px; border-radius:20px; }
-.object-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-.object-tag { background:#e3f2fd; color:var(--primary-dark); padding:4px 12px; border-radius:20px; font-size:.85rem; font-weight:500; display:flex; align-items:center; gap:6px; }
-.object-tag .del-tag { background:rgba(0,0,0,.15); border:none; width:18px; height:18px; border-radius:50%; color:#fff; font-size:.7rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.plan-box { background:var(--bg); border-radius:12px; padding:12px; margin-top:12px; font-size:.85rem; border:1px solid var(--border); }
-.plan-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dashed var(--border); }
-.road-block { background:var(--bg); border-radius:12px; padding:12px; margin:8px 0; border:1px solid var(--border); }
-.road-title { font-weight:700; color:var(--primary); margin-bottom:8px; font-size:.9rem; }
-.preview-item { display:flex; align-items:center; gap:8px; padding:10px; background:#e3f2fd; border-radius:10px; margin-bottom:6px; }
-.dark-mode .preview-item { background:#1565c033; }
-.preview-item-name { flex:1; font-weight:500; font-size:.9rem; }
-.preview-item .del-btn { background:none; border:none; color:var(--danger); font-size:1.1rem; cursor:pointer; padding:0 4px; }
-.task-item { display:flex; align-items:center; gap:10px; padding:12px; background:var(--card); border-radius:12px; margin-bottom:8px; border-left:4px solid var(--border); }
-.task-item.important { border-left-color:var(--danger); background:#fff5f5; }
-.task-item.done { opacity:.7; }
-.task-check { width:22px; height:22px; accent-color:var(--success); }
-.worker-report-card { background:var(--card); border-radius:var(--radius); padding:16px; margin-bottom:12px; border-left:4px solid var(--primary); }
-.edit-badge { background:var(--edit); color:#fff; padding:4px 12px; border-radius:20px; font-size:.8rem; font-weight:600; display:inline-flex; align-items:center; gap:6px; margin-bottom:12px; }
-.draft-badge { background:var(--warning); color:#000; padding:4px 12px; border-radius:20px; font-size:.8rem; font-weight:600; margin-bottom:12px; display:inline-flex; align-items:center; gap:6px; }
-.squad-dup-btn { margin-left:8px; background:var(--bg); border:1.5px solid var(--border); border-radius:8px; padding:4px 10px; font-size:.8rem; cursor:pointer; color:var(--text); font-weight:500; }
-.sw-item { display:block; margin:8px 0; }
-.sw-item input { margin-right:8px; }
-.work-item { margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-.work-item input[type="number"] { width:80px; padding:4px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); }
+:root{--primary:#1565c0;--primary-light:#1976d2;--primary-dark:#0d47a1;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
+@media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}}
+.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;overflow-x:hidden;transition:background .3s,color .3s}
+.app-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%);color:#fff;padding:16px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center}
+.app-header h1{font-size:1.1rem;font-weight:600}
+.app-header .date-today{font-size:.8rem;opacity:.9}
+#netStatus{font-size:.7rem;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.2)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 10px rgba(0,0,0,.15);z-index:100;border-top:1px solid var(--border);transition:background .3s}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text-secondary);font-size:.65rem;padding:4px;cursor:pointer;transition:color .2s}
+.nav-btn.active{color:var(--primary)}
+.nav-btn svg{width:22px;height:22px}
+.page{display:none;padding:16px;animation:fadeIn .3s}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--border);transition:background .3s}
+.card-title{font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--card);color:var(--text);transition:border-color .2s,box-shadow .2s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(21,101,192,.15)}
+.form-group textarea{min-height:80px;resize:vertical}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s,background .2s;width:100%;touch-action:manipulation}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-accent{background:var(--accent);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-edit{background:var(--edit);color:#fff}
+.btn-info{background:var(--info);color:#fff}
+.btn-secondary{background:var(--bg);color:var(--text);border:1.5px solid var(--border)}
+.btn-small{padding:8px 14px;font-size:.85rem;width:auto}
+.row-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.row-btns .btn{flex:1;min-width:100px}
+.entry-item{background:var(--card);border-radius:var(--radius);margin-bottom:8px;border-left:4px solid var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08);transition:box-shadow .2s;cursor:pointer}
+.entry-item.important{border-left-color:var(--danger)}
+.entry-item.expanded{box-shadow:var(--shadow)}
+.entry-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px}
+.entry-object{font-weight:700;font-size:1rem;color:var(--text);word-break:break-word}
+.entry-date{font-size:.8rem;color:var(--text-secondary);background:var(--bg);padding:2px 8px;border-radius:20px;white-space:nowrap}
+.entry-meta-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:.8rem;color:var(--text-secondary)}
+.entry-meta-line span{background:var(--bg);padding:3px 10px;border-radius:20px}
+.entry-toggle-icon{font-size:1.2rem;color:var(--primary);transition:transform .3s;flex-shrink:0;margin-top:2px}
+.entry-item.expanded .entry-toggle-icon{transform:rotate(180deg)}
+.entry-details{display:none;padding:0 12px 12px;border-top:1px dashed var(--border)}
+.entry-item.expanded .entry-details{display:block}
+.norm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.norm-badge.ok{background:#e8f5e9;color:var(--success)}
+.norm-badge.warn{background:#fff3e0;color:var(--accent)}
+.norm-badge.bad{background:#ffebee;color:var(--danger)}
+.month-group{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+.month-header{background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;font-size:1rem}
+.month-header .month-delete{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:20px;font-size:.8rem;cursor:pointer;margin-left:12px}
+.month-header .month-delete:hover{background:var(--danger)}
+.month-content{display:none;padding:12px}
+.month-group.expanded .month-content{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpi-item{background:var(--card);border-radius:12px;padding:10px 8px;text-align:center;border:1px solid var(--border)}
+.kpi-item .kpi-value{font-size:1.3rem;font-weight:700;color:var(--primary)}
+.road-scale-container{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
+.road-scale-title{font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:12px}
+.road-scale-bar{position:relative;height:32px;background:var(--bg);border-radius:16px;overflow:hidden;margin-bottom:8px;border:1px solid var(--border)}
+.road-scale-fill{position:absolute;left:0;top:0;height:100%;border-radius:16px;background:linear-gradient(90deg,var(--success) 0%,var(--primary) 100%);transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
+.road-scale-fill span{color:#fff;font-size:.75rem;font-weight:700}
+.road-scale-labels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-secondary);margin-bottom:12px}
+.road-scale-segments{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.road-segment{padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:500;background:var(--bg);border:1px solid var(--border)}
+.road-segment.done{background:#e8f5e9;color:var(--success);border-color:var(--success)}
+.people-tag{padding:3px 8px;border-radius:20px;font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin:2px;background:#e3f2fd}
+.people-tag input.hours-inp{width:42px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;text-align:center;background:var(--card)}
+.filter-bar{display:flex;gap:8px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}
+.filter-chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:.85rem;white-space:nowrap;cursor:pointer;flex-shrink:0;color:var(--text)}
+.filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-secondary)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:20px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;animation:modalIn .3s;box-shadow:var(--shadow)}
+@keyframes modalIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:700;font-size:1.1rem;color:var(--primary)}
+.close-modal{background:var(--bg);border:none;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
+.report-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.report-table th,.report-table td{padding:10px;text-align:left;border-bottom:1px solid var(--border)}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:.85rem}
+.calendar-day{padding:8px;border-radius:10px;position:relative;cursor:pointer;min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg)}
+.calendar-day.header{color:var(--text-secondary);font-weight:600;font-size:.75rem;cursor:default;background:transparent}
+.calendar-day.has-entry{background:#e3f2fd;color:var(--primary);font-weight:700}
+.dark-mode .calendar-day.has-entry{background:#1565c0;color:#fff}
+.calendar-day.has-task{background:#fff3e0;color:var(--accent);font-weight:700}
+.calendar-day.today{background:var(--primary);color:#fff}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(100px);background:#323232;color:#fff;padding:12px 24px;border-radius:24px;font-size:.9rem;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.timesheet-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
+.timesheet-table{border-collapse:collapse;font-size:.72rem;min-width:100%}
+.timesheet-table th,.timesheet-table td{border:1px solid var(--border);padding:4px 2px;text-align:center;min-width:34px;color:var(--text)}
+.timesheet-table th{background:#e3f2fd;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:3}
+.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
+.timesheet-table td:first-child,.timesheet-table th:first-child{position:sticky;left:0;background:var(--card);z-index:4;min-width:140px;text-align:left;padding-left:10px;font-weight:500;border-right:2px solid var(--border)}
+.ts-cell-editable{cursor:pointer;background:rgba(21,101,192,.05)}
+.ts-edit-inp{width:100%;border:none;background:transparent;text-align:center;font-weight:700;color:var(--primary);font-size:.75rem;padding:0}
+.subtabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
+.subtab{padding:10px 18px;border-radius:24px;border:1.5px solid var(--border);background:var(--card);font-size:.9rem;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text)}
+.subtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.subpanel{display:none}
+.subpanel.active{display:block}
+.catalog-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.squad-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:2px solid var(--primary);box-shadow:var(--shadow)}
+.squad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:2px solid var(--border)}
+.squad-title{font-size:1.1rem;font-weight:700;color:var(--primary)}
+.squad-category{font-size:.8rem;background:var(--primary);color:#fff;padding:4px 12px;border-radius:20px}
+.object-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.object-tag{background:#e3f2fd;color:var(--primary-dark);padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:6px}
+.object-tag .del-tag{background:rgba(0,0,0,.15);border:none;width:18px;height:18px;border-radius:50%;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.plan-box{background:var(--bg);border-radius:12px;padding:12px;margin-top:12px;font-size:.85rem;border:1px solid var(--border)}
+.plan-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border)}
+.road-block{background:var(--bg);border-radius:12px;padding:12px;margin:8px 0;border:1px solid var(--border)}
+.road-title{font-weight:700;color:var(--primary);margin-bottom:8px;font-size:.9rem}
+.preview-item{display:flex;align-items:center;gap:8px;padding:10px;background:#e3f2fd;border-radius:10px;margin-bottom:6px}
+.dark-mode .preview-item{background:#1565c033}
+.preview-item-name{flex:1;font-weight:500;font-size:.9rem}
+.preview-item .del-btn{background:none;border:none;color:var(--danger);font-size:1.1rem;cursor:pointer;padding:0 4px}
+.task-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border-radius:12px;margin-bottom:8px;border-left:4px solid var(--border)}
+.task-item.important{border-left-color:var(--danger);background:#fff5f5}
+.task-item.done{opacity:.7}
+.task-check{width:22px;height:22px;accent-color:var(--success)}
+.worker-report-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:4px solid var(--primary)}
+.edit-badge{background:var(--edit);color:#fff;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px}
+.draft-badge{background:var(--warning);color:#000;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px}
+.squad-dup-btn{margin-left:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.8rem;cursor:pointer;color:var(--text);font-weight:500}
+.sw-item{display:block;margin:8px 0}
+.sw-item input{margin-right:8px}
+.work-item{margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.work-item input[type="number"]{width:80px;padding:4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.km-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.km-inputs label{font-size:.75rem;color:var(--text-secondary)}
+.km-range-badge{background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px}
+.km-warning{background:#fff3e0;border:1px solid var(--accent);border-radius:8px;padding:8px;margin-top:8px;font-size:.85rem;color:var(--accent)}
+.km-scale-container{margin-top:16px}
+.km-scale-track{position:relative;height:48px;background:var(--bg);border-radius:24px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px}
+.km-scale-done{position:absolute;top:0;height:100%;background:linear-gradient(90deg,var(--success),var(--primary));border-radius:24px;transition:all .3s}
+.km-scale-done.duplicate{background:linear-gradient(90deg,var(--warning),var(--accent))}
+.km-scale-label{position:absolute;top:50%;transform:translateY(-50%);font-size:.7rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap}
+.km-scale-marks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-secondary);margin-top:4px}
+.km-history-item{background:var(--bg);border-radius:8px;padding:8px;margin-bottom:6px;font-size:.85rem;border-left:3px solid var(--primary)}
+.km-history-item.duplicate{border-left-color:var(--accent);background:#fff8e1}
+.km-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:.75rem}
+.km-legend-item{display:flex;align-items:center;gap:4px}
+.km-legend-color{width:12px;height:12px;border-radius:3px}
+.search-box{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--card);color:var(--text);margin-bottom:12px}
+.road-selector{margin-bottom:12px}
+.road-selector select{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:1rem}
+.hint{font-size:.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.4}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -163,14 +171,24 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
   <div id="netStatus">● Онлайн</div>
 </div>
 
-<!-- ГЛАВНАЯ СТРАНИЦА -->
 <div class="page active" id="pageJournal">
   <div class="kpi-row">
     <div class="kpi-item"><div class="kpi-value" id="statWorkers">0</div><div class="kpi-label">👷 На смене (макс)</div></div>
     <div class="kpi-item"><div class="kpi-value" id="statObjects">0</div><div class="kpi-label">📍 Объектов</div></div>
     <div class="kpi-item"><div class="kpi-value" id="statWorks">0</div><div class="kpi-label">🔧 Видов работ</div></div>
   </div>
-  <div id="roadScaleContainer"></div>
+  
+  <div class="card">
+    <div class="card-title">🛣️ Километраж дорог</div>
+    <div class="road-selector">
+      <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
+        <option value="">📍 Выберите дорогу для просмотра</option>
+      </select>
+    </div>
+    <div id="roadKmScale"></div>
+    <div id="roadKmHistory"></div>
+  </div>
+  
   <div class="card">
     <div class="card-title">📅 Календарь</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -199,7 +217,6 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
   <div id="entriesList"></div>
 </div>
 
-<!-- НОВАЯ ЗАПИСЬ -->
 <div class="page" id="pageNew">
   <div id="editBadge" style="display:none"><div class="edit-badge">✏️ Редактирование записи #<span id="editId"></span></div></div>
   <div id="draftBadge" style="display:none"><div class="draft-badge">📝 Восстановлен черновик</div></div>
@@ -232,7 +249,6 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
   </form>
 </div>
 
-<!-- КАЛЕНДАРЬ -->
 <div class="page" id="pageCalendar">
   <div class="card">
     <div class="card-title">📅 Календарь задач и записей</div>
@@ -245,7 +261,6 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
   </div>
 </div>
 
-<!-- ТАБЕЛЬ -->
 <div class="page" id="pageTimesheet">
   <div class="card">
     <div class="card-title">📋 Табель учёта рабочего времени</div>
@@ -265,11 +280,11 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
   </div>
 </div>
 
-<!-- ОТЧЁТЫ / ДОКУМЕНТЫ -->
 <div class="page" id="pageReports">
   <div class="subtabs">
     <button class="subtab active" onclick="App.showReportTab('repAnalytics',this)">📊 Аналитика</button>
     <button class="subtab" onclick="App.showReportTab('repDocs',this)">📋 Документы</button>
+    <button class="subtab" onclick="App.showReportTab('repRoads',this)">🛣️ Дороги</button>
   </div>
   <div class="subpanel active" id="repAnalytics">
     <div class="card">
@@ -302,9 +317,15 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
       </div>
     </div>
   </div>
+  <div class="subpanel" id="repRoads">
+    <div class="card">
+      <div class="card-title">🛣️ Аналитика по километражу</div>
+      <div class="form-group"><label>Выберите дорогу</label><select id="reportRoadSelect" onchange="App.generateRoadKmReport()"><option value="">Выберите дорогу</option></select></div>
+      <div id="roadReportResult"></div>
+    </div>
+  </div>
 </div>
 
-<!-- ЕЩЁ -->
 <div class="page" id="pageMore">
   <div class="subtabs">
     <button class="subtab active" onclick="App.showSubtab('subCatalogs',this)">📚 Справочники</button>
@@ -414,12 +435,11 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v14.0</b><br>Все данные хранятся локально.</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v15.0 (Километраж)</b><br>Все данные хранятся локально.</p>
     </div>
   </div>
 </div>
 
-<!-- МОДАЛКИ -->
 <div class="modal-overlay" id="swModal">
   <div class="modal">
     <div class="modal-header"><span>👷 Выбрать работников</span><button class="close-modal" onclick="App.closeSwModal()">×</button></div>
@@ -432,7 +452,7 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
 <div class="modal-overlay" id="sWorksModal">
   <div class="modal">
     <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
-    <div class="hint" style="margin-bottom:10px">Для каждой работы укажите объём и (при наличии инструмента) часы работы.</div>
+    <div class="hint" style="margin-bottom:10px">Для каждой работы укажите объём, участок дороги (км) и (при наличии инструмента) часы работы.</div>
     <div id="sWorksList"></div>
     <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
   </div>
@@ -476,11 +496,10 @@ body { background:var(--bg); color:var(--text); line-height:1.5; padding-bottom:
 <datalist id="roadsList"></datalist>
 
 <script>
-// ===================== ПОЛНАЯ ВЕРСИЯ v14.0 =====================
 const App = (function() {
 'use strict';
 
-const PREFIX = 'drsu_v14_';
+const PREFIX = 'drsu_v15_';
 const STORAGE_KEYS = {
   entries: PREFIX+'entries', workers: PREFIX+'workers', works: PREFIX+'works',
   tools: PREFIX+'tools', tmc: PREFIX+'tmc', tasks: PREFIX+'tasks',
@@ -505,6 +524,7 @@ let stockOrder=[], stockManual=[], templates=[], timesheetOverrides={}, timeshee
 let currentFilter='all', currentTaskFilter='all', currentMonth=new Date(), selectedCalendarDate=null;
 let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=null;
 let formSquads=[], draftTimer=null;
+let selectedRoadForScale='';
 
 function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){} }
 function load(key,def){ try{ let v=localStorage.getItem(key); return v?JSON.parse(v):def; }catch(e){ return def; } }
@@ -528,9 +548,10 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active');
   let pages=['pageJournal','pageNew','pageCalendar','pageTimesheet','pageReports','pageMore'];
   let idx=pages.indexOf(id); if(idx>=0){ let navs=document.querySelectorAll('.nav-btn'); if(navs[idx]) navs[idx].classList.add('active'); }
-  if(id==='pageJournal') renderEntries();
+  if(id==='pageJournal'){ renderEntries(); renderRoadSelector(); }
   if(id==='pageCalendar') renderCalendar();
   if(id==='pageTimesheet') renderTimesheet();
+  if(id==='pageReports') renderReportRoadSelect();
   if(id==='pageMore'){ renderCatalogs(); renderStock(); renderTemplates(); renderTasks(); }
   window.scrollTo(0,0);
 }
@@ -539,7 +560,228 @@ function showCatalog(id,btn){ document.querySelectorAll('.catalog-panel').forEac
 function showStockTab(id,btn){ document.querySelectorAll('.stock-panel').forEach(p=>p.style.display='none'); if($(id)) $(id).style.display='block'; if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } renderStock(); }
 function showReportTab(id,btn){ document.querySelectorAll('#pageReports .subpanel').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active'); if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } }
 
-// ----- Управление нарядами -----
+// ===================== КИЛОМЕТРАЖ =====================
+
+function getRoadKmSegments(roadName) {
+  let segments = [];
+  entries.forEach((e, eIdx) => {
+    e.squads?.forEach((sq, sqIdx) => {
+      sq.works?.forEach((w, wIdx) => {
+        if (w.road === roadName && w.kmFrom !== undefined && w.kmTo !== undefined) {
+          segments.push({
+            entryId: e.id,
+            entryDate: e.date,
+            entryIdx: eIdx,
+            squadIdx: sqIdx,
+            workIdx: wIdx,
+            workName: w.name,
+            kmFrom: parseFloat(w.kmFrom),
+            kmTo: parseFloat(w.kmTo),
+            volume: w.volume,
+            unit: w.unit,
+            duplicate: false
+          });
+        }
+      });
+    });
+  });
+  // Помечаем дубликаты (пересечения)
+  for (let i = 0; i < segments.length; i++) {
+    for (let j = i + 1; j < segments.length; j++) {
+      let a = segments[i], b = segments[j];
+      if (a.kmFrom < b.kmTo && a.kmTo > b.kmFrom) {
+        a.duplicate = true;
+        b.duplicate = true;
+      }
+    }
+  }
+  return segments.sort((a,b) => a.kmFrom - b.kmFrom);
+}
+
+function checkKmOverlap(roadName, kmFrom, kmTo, excludeEntryId) {
+  let segments = getRoadKmSegments(roadName);
+  let overlaps = [];
+  segments.forEach(s => {
+    if (excludeEntryId && s.entryId === excludeEntryId) return;
+    if (kmFrom < s.kmTo && kmTo > s.kmFrom) {
+      overlaps.push(s);
+    }
+  });
+  return overlaps;
+}
+
+function renderRoadSelector() {
+  let sel = $('roadSelector');
+  if (!sel) return;
+  let html = '<option value="">📍 Выберите дорогу для просмотра</option>';
+  roads.forEach(r => {
+    html += `<option value="${escapeHtml(r.name)}"${r.name === selectedRoadForScale ? ' selected' : ''}>${escapeHtml(r.name)}${r.length ? ' (' + r.length + ' км)' : ''}</option>`;
+  });
+  sel.innerHTML = html;
+  if (selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
+}
+
+function selectRoadForScale(roadName) {
+  selectedRoadForScale = roadName;
+  renderRoadKmScale(roadName);
+}
+
+function renderRoadKmScale(roadName) {
+  let container = $('roadKmScale');
+  let historyContainer = $('roadKmHistory');
+  if (!container || !roadName) {
+    if (container) container.innerHTML = '';
+    if (historyContainer) historyContainer.innerHTML = '';
+    return;
+  }
+  let road = roads.find(r => r.name === roadName);
+  if (!road) return;
+  
+  let segments = getRoadKmSegments(roadName);
+  let totalLength = parseFloat(road.length) || 0;
+  
+  let coveredKm = 0;
+  let uniqueRanges = [];
+  if (totalLength > 0 && segments.length > 0) {
+    let sorted = segments.slice().sort((a,b) => a.kmFrom - b.kmFrom);
+    let merged = [];
+    sorted.forEach(s => {
+      if (merged.length === 0) {
+        merged.push({from: s.kmFrom, to: s.kmTo});
+      } else {
+        let last = merged[merged.length - 1];
+        if (s.kmFrom <= last.to) {
+          last.to = Math.max(last.to, s.kmTo);
+        } else {
+          merged.push({from: s.kmFrom, to: s.kmTo});
+        }
+      }
+    });
+    merged.forEach(m => { coveredKm += (m.to - m.from); });
+    uniqueRanges = merged;
+  }
+  
+  let pct = totalLength ? Math.min(100, (coveredKm / totalLength) * 100) : 0;
+  
+  let html = `<div class="km-scale-container">`;
+  html += `<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">Выполнено: ${coveredKm.toFixed(1)} из ${totalLength} км</span></div>`;
+  html += `<div class="km-scale-track">`;
+  if (totalLength > 0) {
+    uniqueRanges.forEach((range, i) => {
+      let leftPct = (range.from / totalLength) * 100;
+      let widthPct = ((range.to - range.from) / totalLength) * 100;
+      let isDup = segments.some(s => {
+        let a = Math.max(s.kmFrom, range.from);
+        let b = Math.min(s.kmTo, range.to);
+        return b > a && s.duplicate;
+      });
+      html += `<div class="km-scale-done${isDup ? ' duplicate' : ''}" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
+      html += `<div class="km-scale-label" style="left:${leftPct + widthPct/2}%; transform:translate(-50%,-50%)">${range.from}-${range.to}</div>`;
+    });
+  }
+  html += `</div>`;
+  html += `<div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
+  html += `<div class="km-legend">
+    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div>
+    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход</div>
+  </div>`;
+  html += `<div style="margin-top:12px;font-size:.9rem;font-weight:600;color:var(--primary)">Выполнено: ${pct.toFixed(1)}% (${coveredKm.toFixed(1)} км)</div>`;
+  html += `</div>`;
+  container.innerHTML = html;
+  
+  // История
+  if (historyContainer) {
+    if (segments.length === 0) {
+      historyContainer.innerHTML = '<div class="empty-state">Нет данных по километражу</div>';
+    } else {
+      let hHtml = '<div class="card-title" style="margin-top:16px">📜 История по участкам</div>';
+      segments.forEach(s => {
+        hHtml += `<div class="km-history-item${s.duplicate ? ' duplicate' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>${s.kmFrom} – ${s.kmTo} км</b>
+            <span style="font-size:.75rem;color:var(--text-secondary)">${formatDate(s.entryDate)}</span>
+          </div>
+          <div>${escapeHtml(s.workName)} — ${s.volume} ${s.unit || ''}</div>
+          ${s.duplicate ? '<div style="color:var(--accent);font-size:.75rem">⚠️ Участок пересекается с другой работой</div>' : ''}
+        </div>`;
+      });
+      historyContainer.innerHTML = hHtml;
+    }
+  }
+}
+
+function renderReportRoadSelect() {
+  let sel = $('reportRoadSelect');
+  if (!sel) return;
+  let html = '<option value="">Выберите дорогу</option>';
+  roads.forEach(r => {
+    html += `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`;
+  });
+  sel.innerHTML = html;
+}
+
+function generateRoadKmReport() {
+  let roadName = $('reportRoadSelect').value;
+  let container = $('roadReportResult');
+  if (!roadName || !container) { if(container) container.innerHTML = ''; return; }
+  
+  let road = roads.find(r => r.name === roadName);
+  let segments = getRoadKmSegments(roadName);
+  let totalLength = parseFloat(road?.length) || 0;
+  
+  let coveredKm = 0;
+  let uniqueRanges = [];
+  if (totalLength > 0 && segments.length > 0) {
+    let sorted = segments.slice().sort((a,b) => a.kmFrom - b.kmFrom);
+    let merged = [];
+    sorted.forEach(s => {
+      if (merged.length === 0) merged.push({from: s.kmFrom, to: s.kmTo});
+      else {
+        let last = merged[merged.length - 1];
+        if (s.kmFrom <= last.to) last.to = Math.max(last.to, s.kmTo);
+        else merged.push({from: s.kmFrom, to: s.kmTo});
+      }
+    });
+    merged.forEach(m => { coveredKm += (m.to - m.from); });
+    uniqueRanges = merged;
+  }
+  
+  let pct = totalLength ? Math.min(100, (coveredKm / totalLength) * 100) : 0;
+  
+  let html = `<div class="card">
+    <div class="card-title">🛣️ ${escapeHtml(roadName)}</div>
+    <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:8px">${pct.toFixed(1)}% выполнено</div>
+    <div style="margin-bottom:12px">${coveredKm.toFixed(1)} из ${totalLength} км</div>
+    <div class="km-scale-track" style="margin-bottom:16px">`;
+  
+  if (totalLength > 0) {
+    uniqueRanges.forEach(r => {
+      let leftPct = (r.from / totalLength) * 100;
+      let widthPct = ((r.to - r.from) / totalLength) * 100;
+      html += `<div class="km-scale-done" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
+    });
+  }
+  html += `</div>`;
+  
+  // Сводка по работам
+  let workSummary = {};
+  segments.forEach(s => {
+    if (!workSummary[s.workName]) workSummary[s.workName] = {total: 0, unit: s.unit, ranges: []};
+    workSummary[s.workName].total += s.volume;
+    workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
+  });
+  
+  html += `<table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
+  for (let w in workSummary) {
+    html += `<tr><td>${escapeHtml(w)}</td><td>${workSummary[w].total.toFixed(2)} ${workSummary[w].unit}</td><td>${workSummary[w].ranges.join(', ')}</td></tr>`;
+  }
+  html += `</table></div>`;
+  
+  container.innerHTML = html;
+}
+
+// ===================== НАРЯДЫ =====================
+
 function addSquad(data){
   let sid='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
   let squad=data?JSON.parse(JSON.stringify(data)):{ id:sid, category:'road', objects:[], people:[], works:[], tmc:[], planToday:'', planTomorrow:'', notes:'' };
@@ -557,9 +799,22 @@ function updateSquadField(sid,field,val){ let s=formSquads.find(x=>x.id===sid); 
 function addObject(sid){ let inp=$('objInp_'+sid); if(!inp) return; let v=inp.value.trim(); if(!v){ showToast('Введите или выберите объект'); return; } let s=formSquads.find(x=>x.id===sid); if(s){ if(!s.objects.includes(v)){ s.objects.push(v); inp.value=''; renderSquads(); scheduleDraftSave(); showToast('Объект добавлен'); } else{ showToast('Объект уже есть'); inp.value=''; } } }
 function removeObject(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.objects.splice(idx,1); renderSquads(); scheduleDraftSave(); }
 function removeWork(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.works.splice(idx,1); renderSquads(); scheduleDraftSave(); }
-function editWorkVolume(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(!s||!s.works[idx]) return; let w=s.works[idx]; let newVol=prompt('Новый объём ('+w.unit+'):',w.volume); if(newVol!==null){ let v=parseFloat(newVol); if(!isNaN(v) && v>=0) w.volume=v; } let newHours=prompt('Часы работы инструмента:',w.toolHours||0); if(newHours!==null){ let h=parseFloat(newHours); if(!isNaN(h) && h>=0){ w.toolHours=h; let tool=tools.find(t=>t.id===w.toolId); if(tool) w.fuelLiters=Math.round(tool.fuelConsumption*h*100)/100; } } renderSquads(); scheduleDraftSave(); showToast('Работа обновлена'); }
+function editWorkVolume(sid,idx){ 
+  let s=formSquads.find(x=>x.id===sid); if(!s||!s.works[idx]) return; 
+  let w=s.works[idx]; 
+  let newVol=prompt('Новый объём ('+w.unit+'):',w.volume); 
+  if(newVol!==null){ let v=parseFloat(newVol); if(!isNaN(v) && v>=0) w.volume=v; } 
+  let newHours=prompt('Часы работы инструмента:',w.toolHours||0); 
+  if(newHours!==null){ let h=parseFloat(newHours); if(!isNaN(h) && h>=0){ w.toolHours=h; let tool=tools.find(t=>t.id===w.toolId); if(tool) w.fuelLiters=Math.round(tool.fuelConsumption*h*100)/100; } }
+  let newKmFrom=prompt('От км:',w.kmFrom||0);
+  if(newKmFrom!==null){ let k=parseFloat(newKmFrom); if(!isNaN(k)) w.kmFrom=k; }
+  let newKmTo=prompt('До км:',w.kmTo||0);
+  if(newKmTo!==null){ let k=parseFloat(newKmTo); if(!isNaN(k)) w.kmTo=k; }
+  renderSquads(); scheduleDraftSave(); showToast('Работа обновлена'); 
+}
 function removeTmc(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.tmc.splice(idx,1); renderSquads(); scheduleDraftSave(); }
 function updateWorkerHours(sid,pidx,val){ let s=formSquads.find(x=>x.id===sid); if(s&&s.people[pidx]){ s.people[pidx].hours=parseFloat(val)||8; renderSquads(); scheduleDraftSave(); } }
+
 function calcSquadPlanHtml(sq){
   let normPeople=(sq.people||[]).filter(p=>{ let w=workers.find(x=>x.name===p.name); return !w||(CATEGORIES[w.category]&&CATEGORIES[w.category].norm); });
   let totalPeopleHours=normPeople.reduce((s,p)=>s+(parseFloat(p.hours)||8),0);
@@ -576,7 +831,6 @@ function calcSquadPlanHtml(sq){
   html+='<div class="plan-row"><span class="plan-label">Факт часов (дорожные):</span><span class="plan-value '+statusClass+'">'+totalPeopleHours.toFixed(1)+' ч</span></div>';
   html+='<div class="plan-row"><span class="plan-label">Отклонение:</span><span class="plan-value '+statusClass+'">'+(diff>=0?'+':'')+diff.toFixed(1)+' чел-ч</span></div>';
   html+='<div class="plan-row"><span class="plan-label">% выполнения:</span><span class="plan-value '+statusClass+'">'+pct.toFixed(1)+'%</span></div>';
-  html+='<div class="norm-bar-bg"><div class="norm-bar-fill '+statusClass+'" style="width:'+Math.min(pct,130)+'%"></div></div>';
   html+='<div class="plan-row"><span class="plan-label">Статус:</span><span class="plan-value '+statusClass+'">'+statusText+'</span></div>';
   html+='<div class="plan-row"><span class="plan-label">Зарплата рабочих:</span><span class="plan-value">'+totalWorkerCost.toFixed(2)+' руб.</span></div>';
   if(totalToolCost>0) html+='<div class="plan-row"><span class="plan-label">Расходы на инструмент:</span><span class="plan-value">'+totalToolCost.toFixed(2)+' руб.</span></div>';
@@ -584,6 +838,7 @@ function calcSquadPlanHtml(sq){
   if(totalFuel>0) html+='<div class="plan-row"><span class="plan-label">Расход бензина:</span><span class="plan-value">'+totalFuel.toFixed(2)+' л</span></div>';
   html+='</div>'; return html;
 }
+
 function renderSquads(){
   let container=$('squadsContainer'); if(!container) return; container.innerHTML='';
   formSquads.forEach((sq,index)=>{
@@ -595,7 +850,8 @@ function renderSquads(){
     let worksHtml=''; Object.keys(worksByRoad).forEach(road=>{ let wlist=worksByRoad[road];
       worksHtml+='<div class="road-block"><div class="road-title">🛣️ '+escapeHtml(road)+'</div>';
       wlist.forEach(w=>{ let tool=tools.find(t=>t.id===w.toolId); let fuel=w.fuelLiters||0; let machineCost=tool?(tool.machineCostPerHour||0)*(w.toolHours||0):0; let workerCost=((w.directCost||0)-(w.toolCost||0))*w.volume;
-        worksHtml+='<div class="preview-item"><div class="preview-item-name">'+escapeHtml(w.name)+' — <b>'+w.volume+' '+(w.unit||'')+'</b><div style="font-size:.75rem;color:var(--text-secondary)">'+(w.laborCost?(w.laborCost*w.volume).toFixed(1)+' чел-ч | ':'')+workerCost.toFixed(2)+' руб. | '+(tool?tool.name+' '+w.toolHours+'ч | ':'')+(fuel>0?'⛽ '+fuel.toFixed(2)+' л | ':'')+(machineCost>0?'🛠️ '+machineCost.toFixed(2)+' руб. ':'')+'</div></div><button class="del-btn" onclick="App.editWorkVolume(\''+sq.id+'\','+w.idx+')">✏️</button><button class="del-btn" onclick="App.removeWork(\''+sq.id+'\','+w.idx+')">🗑️</button></div>';
+        let kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined) ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
+        worksHtml+='<div class="preview-item"><div class="preview-item-name">'+escapeHtml(w.name)+' — <b>'+w.volume+' '+(w.unit||'')+'</b>'+kmBadge+'<div style="font-size:.75rem;color:var(--text-secondary)">'+(w.laborCost?(w.laborCost*w.volume).toFixed(1)+' чел-ч | ':'')+workerCost.toFixed(2)+' руб. | '+(tool?tool.name+' '+w.toolHours+'ч | ':'')+(fuel>0?'⛽ '+fuel.toFixed(2)+' л | ':'')+(machineCost>0?'🛠️ '+machineCost.toFixed(2)+' руб. ':'')+'</div></div><button class="del-btn" onclick="App.editWorkVolume(\''+sq.id+'\','+w.idx+')">✏️</button><button class="del-btn" onclick="App.removeWork(\''+sq.id+'\','+w.idx+')">🗑️</button></div>';
       }); worksHtml+='</div>';
     });
     let tmcPreview=(sq.tmc||[]).map((t,i)=>'<div class="preview-item"><div class="preview-item-name">'+escapeHtml(t.name)+': <b>'+t.qty+' '+(t.unit||'')+'</b></div><button class="del-btn" onclick="App.removeTmc(\''+sq.id+'\','+i+')">🗑️</button></div>').join('');
@@ -617,25 +873,72 @@ function renderSquads(){
   });
 }
 
-// ----- Модальные окна -----
+// ===================== МОДАЛКИ =====================
+
 function openSwModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let modal=$('swModal'); let list=$('swList'); let filtered=workers.slice(); list.innerHTML=filtered.map(w=>{ let selected=(sq.people||[]).some(p=>p.name===w.name); return '<label class="sw-item"><input type="checkbox" data-name="'+escapeHtml(w.name)+'"'+(selected?' checked':'')+'><span>'+escapeHtml(w.name)+' <small>('+(CATEGORIES[w.category]||CATEGORIES.other).name+(w.grade?', разр.'+w.grade:'')+')</small></span></label>'; }).join(''); modal.classList.add('active'); }
 function closeSwModal(){ $('swModal').classList.remove('active'); currentSquadId=null; }
 function selectAllWorkers(checked){ document.querySelectorAll('#swList input[type="checkbox"]').forEach(cb=>cb.checked=checked); }
 function applySw(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#swList input:checked')).map(cb=>cb.dataset.name); sq.people=checked.map(name=>{ let existing=(sq.people||[]).find(p=>p.name===name); return existing||{name, hours:8}; }); renderSquads(); closeSwModal(); scheduleDraftSave(); }
-function openSWorksModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let modal=$('sWorksModal'); let list=$('sWorksList'); let filtered=works.slice(); list.innerHTML=filtered.map(w=>'<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong>'+escapeHtml(w.name)+'</strong> <small>('+(w.unit||'ед.')+')</small></label><div style="margin-left:24px; margin-top:5px;"><label>Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> <label>Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label></div></div>').join(''); modal.classList.add('active'); }
+
+function openSWorksModal(squadId){ 
+  currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; 
+  let modal=$('sWorksModal'); let list=$('sWorksList'); 
+  let filtered=works.slice(); 
+  list.innerHTML=filtered.map(w=>{
+    let road = (sq.objects && sq.objects[0]) || 'Без объекта';
+    return '<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong>'+escapeHtml(w.name)+'</strong> <small>('+(w.unit||'ед.')+')</small></label>'+
+    '<div style="margin-left:24px; margin-top:5px;">'+
+    '<label>Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> '+
+    '<label>Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label>'+
+    '<div class="km-inputs">'+
+    '<div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div>'+
+    '<div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div>'+
+    '</div>'+
+    '</div></div>';
+  }).join(''); 
+  modal.classList.add('active'); 
+}
 function closeSWorksModal(){ $('sWorksModal').classList.remove('active'); currentSquadId=null; }
-function applySWorks(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let road=(sq.objects&&sq.objects[0])||'Без объекта'; let checkboxes=document.querySelectorAll('#sWorksList .work-cb'); checkboxes.forEach(cb=>{ if(!cb.checked) return; let id=cb.dataset.id; let name=cb.dataset.name; let unit=cb.dataset.unit; let laborCost=parseFloat(cb.dataset.labor)||0; let directCost=parseFloat(cb.dataset.direct)||0; let toolCost=parseFloat(cb.dataset.toolcost)||0; let volumeDiv=cb.closest('.work-item').querySelector('.work-volume'); let hoursDiv=cb.closest('.work-item').querySelector('.work-hours'); let volume=volumeDiv?parseFloat(volumeDiv.value):1; let toolHours=hoursDiv?parseFloat(hoursDiv.value):0; if(isNaN(volume)||volume<=0) volume=1; if(isNaN(toolHours)) toolHours=0; let fuelLiters=0; let tool=tools.find(t=>t.id===id); if(tool) fuelLiters=Math.round(tool.fuelConsumption*toolHours*100)/100; let existing=sq.works.find(w=>w.id===id && w.road===road); if(!existing){ sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId:'', toolHours, fuelLiters }); }else{ existing.volume=volume; existing.toolHours=toolHours; existing.fuelLiters=fuelLiters; } }); renderSquads(); closeSWorksModal(); scheduleDraftSave(); }
+function applySWorks(){ 
+  let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; 
+  let road=(sq.objects&&sq.objects[0])||'Без объекта'; 
+  let checkboxes=document.querySelectorAll('#sWorksList .work-cb'); 
+  checkboxes.forEach(cb=>{ 
+    if(!cb.checked) return; 
+    let id=cb.dataset.id; let name=cb.dataset.name; let unit=cb.dataset.unit; 
+    let laborCost=parseFloat(cb.dataset.labor)||0; let directCost=parseFloat(cb.dataset.direct)||0; let toolCost=parseFloat(cb.dataset.toolcost)||0; 
+    let volumeDiv=cb.closest('.work-item').querySelector('.work-volume'); 
+    let hoursDiv=cb.closest('.work-item').querySelector('.work-hours');
+    let kmFromDiv=cb.closest('.work-item').querySelector('.work-km-from');
+    let kmToDiv=cb.closest('.work-item').querySelector('.work-km-to');
+    let volume=volumeDiv?parseFloat(volumeDiv.value):1; 
+    let toolHours=hoursDiv?parseFloat(hoursDiv.value):0; 
+    let kmFrom=kmFromDiv?parseFloat(kmFromDiv.value):undefined;
+    let kmTo=kmToDiv?parseFloat(kmToDiv.value):undefined;
+    if(isNaN(volume)||volume<=0) volume=1; 
+    if(isNaN(toolHours)) toolHours=0; 
+    let fuelLiters=0; 
+    let tool=tools.find(t=>t.id===id); 
+    if(tool) fuelLiters=Math.round(tool.fuelConsumption*toolHours*100)/100; 
+    let existing=sq.works.find(w=>w.id===id && w.road===road); 
+    if(!existing){ 
+      sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId:'', toolHours, fuelLiters, kmFrom, kmTo }); 
+    }else{ 
+      existing.volume=volume; existing.toolHours=toolHours; existing.fuelLiters=fuelLiters; existing.kmFrom=kmFrom; existing.kmTo=kmTo;
+    } 
+  }); 
+  renderSquads(); closeSWorksModal(); scheduleDraftSave(); 
+}
 function openSTmcModal(squadId){ currentSquadId=squadId; let modal=$('sTmcModal'); let list=$('sTmcList'); list.innerHTML=tmc.map(t=>'<label class="sw-item"><input type="checkbox" data-id="'+t.id+'" data-name="'+escapeHtml(t.name)+'" data-unit="'+escapeHtml(t.unit||'')+'" data-price="'+(t.price||0)+'"> '+escapeHtml(t.name)+' ('+t.unit+')</label>').join(''); modal.classList.add('active'); }
 function closeSTmcModal(){ $('sTmcModal').classList.remove('active'); currentSquadId=null; }
 function applySTmc(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#sTmcList input:checked')); checked.forEach(cb=>{ let id=cb.dataset.id; if(!sq.tmc.some(t=>t.id===id)){ let qty=parseFloat(prompt('Количество '+cb.dataset.name+':','1')); if(isNaN(qty)||qty<=0) return; sq.tmc.push({ id, name:cb.dataset.name, unit:cb.dataset.unit, qty, price:parseFloat(cb.dataset.price)||0 }); } }); renderSquads(); closeSTmcModal(); scheduleDraftSave(); }
 
-// ----- Сохранение записи со складом -----
+// ===================== СОХРАНЕНИЕ =====================
+
 function saveEntry(ev){ if(ev) ev.preventDefault(); if(!formSquads.length){ showToast('Добавьте хотя бы один наряд'); return false; }
   let date=$('inpDate').value; if(!date){ showToast('Укажите дату'); return false; }
   for(let sq of formSquads){ if(!sq.objects||!sq.objects.length){ showToast('Добавьте объект в каждый наряд'); return false; } if(!sq.people||!sq.people.length){ showToast('Добавьте работников в каждый наряд'); return false; } for(let p of sq.people){ let h=parseFloat(p.hours); if(isNaN(h)||h<=0||h>24){ showToast('Часы работника '+p.name+' должны быть от 0.5 до 24'); return false; } } for(let w of (sq.works||[])){ if(w.volume<=0){ showToast('Объём работы "'+w.name+'" должен быть больше 0'); return false; } } }
-  // Возврат материалов при редактировании
   if(editingEntryIndex>=0 && entries[editingEntryIndex]){ let oldEntry=entries[editingEntryIndex]; for(let oldSquad of (oldEntry.squads||[])){ for(let oldTmc of (oldSquad.tmc||[])){ let stock=stockOrder.find(s=>s.id===oldTmc.id); if(stock) stock.qty+=oldTmc.qty; } } save(STORAGE_KEYS.stockOrder,stockOrder); }
-  // Списание новых
   for(let sq of formSquads){ for(let t of (sq.tmc||[])){ let stock=stockOrder.find(s=>s.id===t.id); if(!stock||stock.qty<t.qty){ showToast('Недостаточно '+t.name+' на складе (остаток: '+(stock?stock.qty.toFixed(2):0)+')'); return false; } stock.qty-=t.qty; } }
   save(STORAGE_KEYS.stockOrder,stockOrder);
   let entry={ id:Date.now(), date, important:$('inpImportant').checked, squads:JSON.parse(JSON.stringify(formSquads)), reminder:$('inpReminder').value||'', reminderText:$('inpReminderText').value||'', weather:$('inpWeather').value||'', weatherCond:$('inpWeatherCond').value||'', notes:$('inpNotes').value||'', created:new Date().toISOString() };
@@ -651,7 +954,8 @@ function saveTemplate(){ if(!formSquads.length){ showToast('Нет нарядо�
 function loadTemplate(id){ if(!id) return; if(formSquads.length && !confirm('Заменить текущие наряды шаблоном?')) return; let t=templates.find(x=>x.id===parseInt(id)); if(!t) return; formSquads=JSON.parse(JSON.stringify(t.squads)); renderSquads(); scheduleDraftSave(); showToast('Шаблон загружен'); $('templateSelect').value=''; }
 function renderTemplates(){ let sel=$('templateSelect'); if(sel) sel.innerHTML='<option value="">📂 Загрузить шаблон</option>'+templates.map(t=>'<option value="'+t.id+'">'+escapeHtml(t.name)+'</option>').join(''); }
 
-// ----- Главная страница: группировка по месяцам, шкала дороги -----
+// ===================== ЖУРНАЛ =====================
+
 function renderEntries(){
   let search=$('journalSearch')?.value.trim().toLowerCase()||'';
   let filtered=entries.slice();
@@ -661,7 +965,7 @@ function renderEntries(){
   else if(currentFilter==='important') filtered=filtered.filter(e=>e.important);
   else if(currentFilter==='plan') filtered=filtered.filter(e=>e.squads&&e.squads.some(s=>s.planTomorrow));
   if(search) filtered=filtered.filter(e=>e.squads?.some(s=>s.objects?.some(o=>o.toLowerCase().includes(search))||s.people?.some(p=>p.name.toLowerCase().includes(search))||s.works?.some(w=>w.name.toLowerCase().includes(search)))||e.date.includes(search));
-  // Группировка по месяцам
+  
   let months={};
   filtered.forEach(e=>{ let m=e.date.slice(0,7); if(!months[m]) months[m]=[]; months[m].push(e); });
   let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -690,14 +994,14 @@ function renderEntries(){
   });
   if(!html) html='<div class="empty-state">Нет записей</div>';
   let list=$('entriesList'); if(list) list.innerHTML=html;
-  // KPI
+  
   let todayEntries=entries.filter(e=>e.date===today);
   let maxWorkers=0, objectsSet=new Set(), worksSet=new Set();
   todayEntries.forEach(e=>{ e.squads?.forEach(s=>{ maxWorkers=Math.max(maxWorkers,s.people?.length||0); s.objects?.forEach(o=>objectsSet.add(o)); s.works?.forEach(w=>worksSet.add(w.name)); }); });
   if($('statWorkers')) $('statWorkers').textContent=maxWorkers;
   if($('statObjects')) $('statObjects').textContent=objectsSet.size;
   if($('statWorks')) $('statWorks').textContent=worksSet.size;
-  renderRoadScale();
+  
   renderDashboardTasks();
 }
 function toggleEntry(idx){ let el=$('ent_'+idx); if(el) el.classList.toggle('expanded'); }
@@ -740,7 +1044,8 @@ function renderEntryDetails(e){
           let tool=tools.find(t=>t.id===w.toolId);
           let machineCost=tool?(tool.machineCostPerHour||0)*(w.toolHours||0):0;
           let workerCost=((w.directCost||0)-(w.toolCost||0))*w.volume;
-          html+=`<div>• ${escapeHtml(w.name)} — <b>${w.volume} ${w.unit||''}</b>${w.laborCost?`<br>&nbsp;&nbsp;Норма: ${(w.laborCost*w.volume).toFixed(1)} чел-ч`:''}${workerCost?`<br>&nbsp;&nbsp;Рабочие: ${workerCost.toFixed(2)} руб. | Инстр.: ${((w.toolCost||0)*w.volume).toFixed(2)} руб.`:''}${tool?`<br>&nbsp;&nbsp;Инструмент: ${escapeHtml(tool.name)} ${w.toolHours||0}ч | ⛽ ${(w.fuelLiters||0).toFixed(2)} л | Аморт. ${machineCost.toFixed(2)} руб.`:''}</div>`;
+          let kmInfo = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ` | 🛣️ ${w.kmFrom}–${w.kmTo} км` : '';
+          html+=`<div>• ${escapeHtml(w.name)} — <b>${w.volume} ${w.unit||''}</b>${kmInfo}${w.laborCost?`<br>&nbsp;&nbsp;Норма: ${(w.laborCost*w.volume).toFixed(1)} чел-ч`:''}${workerCost?`<br>&nbsp;&nbsp;Рабочие: ${workerCost.toFixed(2)} руб. | Инстр.: ${((w.toolCost||0)*w.volume).toFixed(2)} руб.`:''}${tool?`<br>&nbsp;&nbsp;Инструмент: ${escapeHtml(tool.name)} ${w.toolHours||0}ч | ⛽ ${(w.fuelLiters||0).toFixed(2)} л | Аморт. ${machineCost.toFixed(2)} руб.`:''}</div>`;
         });
         html+=`</div>`;
       }
@@ -755,37 +1060,15 @@ function renderEntryDetails(e){
 }
 function setFilter(type,btn){ currentFilter=type; document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); if(btn) btn.classList.add('active'); renderEntries(); }
 
-function renderRoadScale(){
-  let container=$('roadScaleContainer'); if(!container) return;
-  let roadsWithLength=roads.filter(r=>r.length&&r.length>0);
-  if(!roadsWithLength.length){ container.innerHTML=''; return; }
-  // Определяем дорогу с наибольшим количеством выполненных км
-  let roadStats={};
-  entries.forEach(e=>{ e.squads?.forEach(sq=>{ sq.objects?.forEach(o=>{ let road=roads.find(r=>r.name===o); if(road&&road.length){ if(!roadStats[road.name]) roadStats[road.name]={kmDone:0, road}; sq.works?.forEach(w=>{ if(w.segmentFrom!==undefined && w.segmentTo!==undefined) roadStats[road.name].kmDone+=Math.abs(w.segmentTo-w.segmentFrom); }); } }); }); });
-  let targetRoad=roadsWithLength[0];
-  let maxKm=-1;
-  for(let name in roadStats){ if(roadStats[name].kmDone>maxKm){ maxKm=roadStats[name].kmDone; targetRoad=roadStats[name].road; } }
-  let totalKm=parseFloat(targetRoad.length)||0;
-  let doneKm=roadStats[targetRoad.name]?.kmDone||0;
-  let pct=totalKm?Math.min(100,(doneKm/totalKm)*100):0;
-  // Собираем отрезки
-  let segments=[];
-  entries.forEach(e=>{ e.squads?.forEach(sq=>{ sq.objects?.forEach(o=>{ if(o===targetRoad.name){ sq.works?.forEach(w=>{ if(w.segmentFrom!==undefined && w.segmentTo!==undefined){ segments.push({from:w.segmentFrom, to:w.segmentTo, date:e.date}); } }); } }); }); });
-  let uniqueSegments=[];
-  segments.forEach(s=>{ let key=s.from+'-'+s.to; if(!uniqueSegments.find(u=>u.key===key)) uniqueSegments.push({...s,key}); });
-  let segHtml=uniqueSegments.map(s=>`<span class="road-segment done">✅ ${s.from}–${s.to} км</span>`).join('');
-  let html=`<div class="road-scale-container"><div class="road-scale-title">🛣️ ${escapeHtml(targetRoad.name)} — ${totalKm} км</div><div class="road-scale-bar"><div class="road-scale-fill" style="width:${pct}%"><span>${pct.toFixed(0)}%</span></div></div><div class="road-scale-labels"><span>0 км</span><span>${doneKm.toFixed(1)} км</span><span>${totalKm} км</span></div>${segHtml?'<div class="road-scale-segments">'+segHtml+'</div>':''}<div style="font-size:.8rem;margin-top:8px">Выполнено: ${doneKm.toFixed(1)} из ${totalKm} км (${pct.toFixed(0)}%)</div></div>`;
-  container.innerHTML=html;
-}
 function renderDashboardTasks(){
   let container=$('dashboardTasks'); if(!container) return;
-  let activeTasks=tasks.filter(t=>!t.done).sort((a,b)=>{ if(a.important&&!b.important) return -1; if(!a.important&&b.important) return 1; return new Date(a.date||'9999')-new Date(b.date||'9999'); }).slice(0,5);
+  let activeTasks=tasks.filter(t=>!t.done).slice(0,5);
   if(!activeTasks.length){ container.innerHTML='<div class="empty-state">Нет активных задач</div>'; return; }
-  container.innerHTML=activeTasks.map(t=>{ let idx=tasks.indexOf(t); return `<div class="task-item${t.important?' important':''}"><input type="checkbox" class="task-check" onchange="App.toggleTaskDone(${idx});App.renderDashboardTasks();"><div class="task-text">${escapeHtml(t.text)}</div>${t.date?`<div class="task-date-badge">${formatDate(t.date)}</div>`:''}</div>`; }).join('');
+  container.innerHTML=activeTasks.map(t=>`<div class="task-item"><input type="checkbox" onchange="App.toggleTaskDone(${tasks.indexOf(t)})"><span>${escapeHtml(t.text)}</span></div>`).join('');
 }
-function renderDashboardTasks(){ let container=$('dashboardTasks'); if(!container) return; let activeTasks=tasks.filter(t=>!t.done).slice(0,5); if(!activeTasks.length){ container.innerHTML='<div>Нет активных задач</div>'; return; } container.innerHTML=activeTasks.map(t=>`<div class="task-item"><input type="checkbox" onchange="App.toggleTaskDone(${tasks.indexOf(t)})"><span>${escapeHtml(t.text)}</span></div>`).join(''); } // дубль, но оставим
 
-// ----- Склад -----
+// ===================== СКЛАД =====================
+
 function addStockRow(type){ let name=prompt('Название материала:'); if(!name) return; let unit=prompt('Единица измерения:')||'шт'; let price=parseFloat(prompt('Цена за единицу:')||0); let id=Date.now(); let item={id,name,unit,qty:0,price}; if(type==='order'){ stockOrder.push(item); save(STORAGE_KEYS.stockOrder,stockOrder); } else { stockManual.push({...item,history:[]}); save(STORAGE_KEYS.stockManual,stockManual); } renderStock(); }
 function updateStockOrder(id,field,value){ let item=stockOrder.find(s=>s.id==id); if(item){ if(field==='qty') item.qty=parseFloat(value)||0; else if(field==='price') item.price=parseFloat(value)||0; save(STORAGE_KEYS.stockOrder,stockOrder); renderStock(); } }
 function deleteStockOrder(id){ if(confirm('Удалить?')){ stockOrder=stockOrder.filter(s=>s.id!=id); save(STORAGE_KEYS.stockOrder,stockOrder); renderStock(); } }
@@ -795,7 +1078,8 @@ function renderStock(){ let orderDiv=$('orderStockList'); if(orderDiv){ if(stock
   let manualDiv=$('manualStockList'); if(manualDiv){ if(stockManual.length){ manualDiv.innerHTML=stockManual.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Количество: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockManual(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockManual(${t.id},'price',this.value)"> руб.<button class="btn btn-small btn-danger" onclick="App.deleteStockManual(${t.id})">🗑️</button></div></div>`).join(''); } else manualDiv.innerHTML='<div class="empty-state">Нет ТМЦ.</div>'; }
   let historyDiv=$('manualStockHistory'); if(historyDiv){ let allHistory=[]; stockManual.forEach(t=>{ if(t.history) t.history.forEach(h=>allHistory.push({material:t.name,...h})); }); allHistory.sort((a,b)=>(b.date||'').localeCompare(a.date)); if(allHistory.length){ historyDiv.innerHTML='<table class="report-table"><tr><th>Дата</th><th>Материал</th><th>Поле</th><th>Было</th><th>Стало</th></tr>'+allHistory.slice(0,50).map(h=>`<tr><td>${h.date}</td><td>${escapeHtml(h.material)}</td><td>${h.field}</td><td>${h.old!==undefined?h.old:''}</td><td>${h.new!==undefined?h.new:''}</td></tr>`).join('')+'</table>'; } else historyDiv.innerHTML='<div class="empty-state">Нет операций</div>'; } }
 
-// ----- Табель -----
+// ===================== ТАБЕЛЬ =====================
+
 function getTsKey(name,date){ return name+'::'+date; }
 function addTimesheetWorker(){ let name=prompt('ФИО работника:'); if(!name) return; let month=$('tsMonth').value; if(!month){ showToast('Выберите месяц'); return; } let day=parseInt(prompt('День месяца (1-31):')); if(day<1||day>31) return; let val=prompt('Введите часы или буквенный код (Б,П,АБЗ,ОТП):','8'); if(!val) return; let parts=month.split('-'); let dateStr=parts[0]+'-'+parts[1]+'-'+String(day).padStart(2,'0'); let key=getTsKey(name.trim(),dateStr); let upper=val.trim().toUpperCase(); if(LETTER_CODES[upper]){ timesheetLetters[key]=upper; delete timesheetOverrides[key]; }else{ let num=parseFloat(val); if(!isNaN(num)&&num>0){ timesheetOverrides[key]=num; delete timesheetLetters[key]; }else{ showToast('Неверное значение'); return; } } save(STORAGE_KEYS.tsOverrides,timesheetOverrides); save(STORAGE_KEYS.tsLetters,timesheetLetters); renderTimesheet(); showToast('Работник добавлен'); }
 function renderTimesheet(){ let month=$('tsMonth').value; let category=$('tsCategory').value; let resultEl=$('timesheetResult'); if(!month){ resultEl.innerHTML='<div class="empty-state">Выберите месяц</div>'; return; } let parts=month.split('-').map(Number); let y=parts[0],m=parts[1]; let daysInMonth=new Date(y,m,0).getDate(); let monthEntries=entries.filter(e=>e.date.indexOf(month)===0); if(category!=='all') monthEntries=monthEntries.filter(e=>e.squads&&e.squads.some(s=>s.category===category)); let workerMap={}; monthEntries.forEach(e=>{ (e.squads||[]).forEach(sq=>{ if(category!=='all'&&sq.category!==category) return; (sq.people||[]).forEach(p=>{ if(!workerMap[p.name]) workerMap[p.name]={}; let day=parseInt(e.date.split('-')[2]); let hours=parseFloat(p.hours)||8; if(!workerMap[p.name][day]) workerMap[p.name][day]=0; workerMap[p.name][day]+=hours; }); }); }); Object.keys(timesheetOverrides).forEach(key=>{ let [name,date]=key.split('::'); if(date.startsWith(month)){ let day=parseInt(date.split('-')[2]); if(!workerMap[name]) workerMap[name]={}; workerMap[name][day]=timesheetOverrides[key]; } }); Object.keys(timesheetLetters).forEach(key=>{ let [name,date]=key.split('::'); if(date.startsWith(month)){ let day=parseInt(date.split('-')[2]); if(!workerMap[name]) workerMap[name]={}; workerMap[name][day]=timesheetLetters[key]; } }); let html='<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>Работник</th>'; for(let d=1;d<=daysInMonth;d++) html+='<th>'+d+'</th>'; html+='<th>Часы</th><th>Дни</th><th>Букв.</th></thead><tbody>';
@@ -806,14 +1090,16 @@ function clearTimesheetOverrides(){ if(confirm('Сбросить коррект�
 function exportTimesheetCSV(){ let month=$('tsMonth').value; if(!month) return; let csv='\uFEFFРаботник;'; let daysInMonth=new Date(parseInt(month.split('-')[0]),parseInt(month.split('-')[1]),0).getDate(); for(let d=1;d<=daysInMonth;d++) csv+=d+';'; csv+='Часы;Дни;Букв.\n'; let rows=document.querySelectorAll('.timesheet-table tbody tr'); rows.forEach(tr=>{ let cells=tr.querySelectorAll('td'); let rowData=Array.from(cells).map(c=>c.innerText.trim()); csv+=rowData.join(';')+'\n'; }); downloadFile(csv,'табель_'+month+'.csv','text/csv;charset=utf-8'); }
 async function exportTimesheetExcel(){ if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; } let month=$('tsMonth').value; if(!month) return; let parts=month.split('-'); let year=parseInt(parts[0]), monthNum=parseInt(parts[1]); let daysInMonth=new Date(year,monthNum,0).getDate(); let workbook=new ExcelJS.Workbook(); let ws=workbook.addWorksheet('Табель'); ws.mergeCells('A1:AK1'); ws.getCell('A1').value='Табель за '+month; ws.getCell('A1').style={font:{bold:true,size:14},alignment:{horizontal:'center'}}; let col=1; ws.getCell(2,col++).value='Табельный №'; ws.getCell(2,col++).value='Фамилия, И.О.'; ws.getCell(2,col++).value='Разряд'; for(let d=1;d<=daysInMonth;d++) ws.getCell(2,col++).value=d; ws.getCell(2,col).value='Часы'; ws.mergeCells(2,col,2,col+2); col+=3; for(let c=1;c<=col+2;c++) ws.getCell(2,c).style={font:{bold:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}}; let rowIdx=3; let rows=document.querySelectorAll('.timesheet-table tbody tr'); rows.forEach(tr=>{ let cells=tr.querySelectorAll('td'); let row=ws.getRow(rowIdx); row.getCell(1).value=rowIdx-2; row.getCell(2).value=cells[0]?.innerText||''; row.getCell(3).value=''; for(let i=1;i<=daysInMonth;i++){ let val=cells[i]?.innerText||''; row.getCell(3+i).value=val; } let hours=cells[daysInMonth+1]?.innerText||'0'; row.getCell(3+daysInMonth+1).value=parseFloat(hours); rowIdx++; }); let buffer=await workbook.xlsx.writeBuffer(); let blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='табель_'+month+'.xlsx'; a.click(); URL.revokeObjectURL(a.href); showToast('Excel сформирован'); }
 
-// ----- Задачи -----
+// ===================== ЗАДАЧИ =====================
+
 function renderTasks(){ let container=$('tasksList'); if(!container) return; let filter=currentTaskFilter; let filtered=tasks; if(filter==='active') filtered=tasks.filter(t=>!t.done); else if(filter==='done') filtered=tasks.filter(t=>t.done); else if(filter==='important') filtered=tasks.filter(t=>t.important); container.innerHTML=filtered.length?filtered.map((t,idx)=>{ let realIdx=tasks.indexOf(t); return `<div class="task-item${t.done?' done':''}${t.important?' important':''}"><input type="checkbox" class="task-check"${t.done?' checked':''} onchange="App.toggleTaskDone(${realIdx})"><div class="task-text">${escapeHtml(t.text)}</div>${t.date?`<div class="task-date-badge">${formatDate(t.date)}</div>`:''}<button class="task-delete" onclick="App.deleteTask(${realIdx})">🗑️</button></div>`; }).join(''):'<div class="empty-state">Нет задач</div>'; }
 function addTask(){ let text=$('newTaskText')?.value.trim(); if(!text) return; let important=$('newTaskImportant')?.checked||false; tasks.push({ id:Date.now(), text, date:$('newTaskDate').value, done:false, important, created:new Date().toISOString() }); save(STORAGE_KEYS.tasks,tasks); $('newTaskText').value=''; $('newTaskDate').value=''; $('newTaskImportant').checked=false; renderTasks(); renderCalendar(); showToast('Задача добавлена'); }
 function toggleTaskDone(idx){ tasks[idx].done=!tasks[idx].done; save(STORAGE_KEYS.tasks,tasks); renderTasks(); renderCalendar(); renderDashboardTasks(); }
 function deleteTask(idx){ tasks.splice(idx,1); save(STORAGE_KEYS.tasks,tasks); renderTasks(); renderCalendar(); renderDashboardTasks(); }
 function setTaskFilter(filter){ currentTaskFilter=filter; renderTasks(); }
 
-// ----- Календарь -----
+// ===================== КАЛЕНДАРЬ =====================
+
 function renderCalendar(){ let y=currentMonth.getFullYear(), m=currentMonth.getMonth(); let firstDay=new Date(y,m,1).getDay(); let daysInMonth=new Date(y,m+1,0).getDate(); let startOffset=firstDay===0?6:firstDay-1; let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; let label=monthNames[m]+' '+y; if($('calendarMonth')) $('calendarMonth').textContent=label; if($('calendarMonth2')) $('calendarMonth2').textContent=label;
   ['calendarGrid','calendarGrid2'].forEach(gridId=>{ let grid=$(gridId); if(!grid) return; grid.innerHTML=''; ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>grid.innerHTML+=`<div class="calendar-day header">${d}</div>`); for(let i=0;i<startOffset;i++) grid.innerHTML+=`<div class="calendar-day"></div>`; let today=todayStr(); for(let d=1;d<=daysInMonth;d++){ let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; let hasEntry=entries.some(e=>e.date===ds); let hasTask=tasks.some(t=>t.date===ds && !t.done); let cls='calendar-day'; if(ds===today) cls+=' today'; else if(hasEntry) cls+=' has-entry'; if(hasTask) cls+=' has-task'; grid.innerHTML+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`; } }); }
 function changeMonth(delta){ currentMonth.setMonth(currentMonth.getMonth()+delta); renderCalendar(); }
@@ -821,7 +1107,8 @@ function showDayDetails(date){ selectedCalendarDate=date; $('dayModalTitle').tex
 function addEntryFromCalendar(){ closeDayModal(); clearForm(); if($('inpDate')) $('inpDate').value=selectedCalendarDate; showPage('pageNew'); showToast('Новая запись на '+formatDate(selectedCalendarDate)); }
 function closeDayModal(){ $('dayModal').classList.remove('active'); selectedCalendarDate=null; }
 
-// ----- Справочники -----
+// ===================== СПРАВОЧНИКИ =====================
+
 let currentCatalogFilter='';
 function filterCatalog(query){ currentCatalogFilter=query.toLowerCase(); renderCatalogs(); }
 function highlightMatch(text,query){ if(!query) return escapeHtml(text); let idx=text.toLowerCase().indexOf(query); if(idx===-1) return escapeHtml(text); return escapeHtml(text.slice(0,idx))+'<mark style="background:#ffeb3b;color:#000;">'+escapeHtml(text.slice(idx,idx+query.length))+'</mark>'+escapeHtml(text.slice(idx+query.length)); }
@@ -838,7 +1125,8 @@ function closeCatalogModal(){ $('catalogModal').classList.remove('active'); cata
 function updateDatalists(){ let dl=$('roadsList'); if(!dl){ dl=document.createElement('datalist'); dl.id='roadsList'; document.body.appendChild(dl); } dl.innerHTML=roads.map(r=>`<option value="${escapeHtml(r.name)}">`).join(''); }
 function importCatalogCSV(type){ let input=document.createElement('input'); input.type='file'; input.accept='.csv'; input.onchange=e=>{ let file=e.target.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=ev=>{ let text=ev.target.result; let lines=text.split(/\r?\n/).filter(l=>l.trim()); let added=0; lines.forEach(line=>{ let parts=line.split(';'); try{ if(type==='worker'&&parts.length>=2){ workers.push({id:Date.now(), name:parts[0].trim(), category:parts[1].trim()}); added++; }else if(type==='work'&&parts.length>=4){ works.push({id:Date.now(), name:parts[0].trim(), unit:parts[1].trim(), laborCost:parseFloat(parts[2])||0, directCost:parseFloat(parts[3])||0}); added++; }else if(type==='road'&&parts.length>=1){ roads.push({id:Date.now(), name:parts[0].trim(), length:parseFloat(parts[1])||0, note:parts[2]?parts[2].trim():''}); added++; } }catch(err){} }); save(STORAGE_KEYS.workers,workers); save(STORAGE_KEYS.works,works); save(STORAGE_KEYS.roads,roads); renderCatalogs(); updateDatalists(); showToast('Импортировано '+added+' записей'); }; reader.readAsText(file); }; input.click(); }
 
-// ----- Отчёты (упрощённо, но рабочие) -----
+// ===================== ОТЧЁТЫ =====================
+
 function generateSummaryReport(){ let from=$('reportFrom').value, to=$('reportTo').value; if(!from||!to){ showToast('Выберите период'); return; } let filtered=entries.filter(e=>e.date>=from&&e.date<=to); let workTotals={}; filtered.forEach(e=>{ e.squads?.forEach(sq=>{ sq.works?.forEach(w=>{ let key=w.name; if(!workTotals[key]) workTotals[key]={name:w.name, total:0, unit:w.unit||''}; workTotals[key].total+=w.volume; }); }); }); let html=`<div class="card"><div class="card-title">Сводный отчёт ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><div>Видов работ: ${Object.keys(workTotals).length}</div><table class="report-table"><tr><th>Работа</th><th>Объём</th></td>${Object.values(workTotals).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.total} ${w.unit}</td></tr>`).join('')}</table></div>`; $('reportResult').innerHTML=html; }
 function generateWorkersReport(){ showToast('Функция в разработке'); }
 function generateObjectsReport(){ showToast('Функция в разработке'); }
@@ -849,7 +1137,8 @@ function generateTimesheetDoc(){ showToast('Табель в разработке
 function generateS29Doc(){ showToast('С-29 в разработке'); }
 function exportEntryExcel(idx){ let e=entries[idx]; if(!e) return; if(typeof XLSX==='undefined'){ showToast('XLSX не загружен'); return; } let wb=XLSX.utils.book_new(); let ws=XLSX.utils.json_to_sheet([{Дата:e.date,Объекты:e.squads?.flatMap(s=>s.objects).join(', ')}]); XLSX.utils.book_append_sheet(wb,ws,'Наряд'); XLSX.writeFile(wb,`наряд_${e.date}.xlsx`); showToast('Excel сохранён'); }
 
-// ----- Настройки, экспорт/импорт -----
+// ===================== НАСТРОЙКИ =====================
+
 function saveAppSettings(){ settings.org=$('settingOrg').value.trim(); settings.master=$('settingMaster').value.trim(); save(STORAGE_KEYS.settings,settings); showToast('Настройки сохранены'); }
 function exportAllData(){ let data={entries,workers,works,tools,tmc,tasks,settings,roads,stockOrder,stockManual,templates,timesheetOverrides,timesheetLetters}; let json=JSON.stringify(data,null,2); downloadFile(json,'backup_'+todayStr()+'.json','application/json'); showToast('Резервная копия создана'); }
 function importAllData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(!confirm('Импортировать? Данные будут заменены!')) return; if(data.entries) entries=data.entries; if(data.workers) workers=data.workers; if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; if(data.tasks) tasks=data.tasks; if(data.settings) settings=data.settings; if(data.roads) roads=data.roads; if(data.stockOrder) stockOrder=data.stockOrder; if(data.stockManual) stockManual=data.stockManual; if(data.templates) templates=data.templates; if(data.timesheetOverrides) timesheetOverrides=data.timesheetOverrides; if(data.timesheetLetters) timesheetLetters=data.timesheetLetters; Object.keys(STORAGE_KEYS).forEach(k=>save(STORAGE_KEYS[k],eval(k))); renderEntries(); renderCatalogs(); renderTasks(); renderCalendar(); renderStock(); renderTemplates(); showToast('Импорт завершён'); }catch(err){ showToast('Ошибка файла'); } }; reader.readAsText(file); input.value=''; }
@@ -859,13 +1148,14 @@ function applyTheme(){ if(settings.theme==='dark') document.body.classList.add('
 function exportNormsTemplate(){ let tpl={works,tools,tmc}; downloadFile(JSON.stringify(tpl,null,2),'norms_template.json','application/json'); showToast('Шаблон скачан'); }
 function importNormsData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; save(STORAGE_KEYS.works,works); save(STORAGE_KEYS.tools,tools); save(STORAGE_KEYS.tmc,tmc); renderCatalogs(); showToast('Нормативы загружены'); }catch(err){ showToast('Ошибка'); } }; reader.readAsText(file); input.value=''; }
 
-// ----- Инициализация -----
+// ===================== ИНИЦИАЛИЗАЦИЯ =====================
+
 document.addEventListener('DOMContentLoaded',()=>{
   loadAll(); applyTheme(); if($('headerDate')) $('headerDate').textContent=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   if($('inpDate')) $('inpDate').value=todayStr(); if($('tsMonth')) $('tsMonth').value=new Date().toISOString().slice(0,7);
   if($('reportFrom')) $('reportFrom').value=todayStr(); if($('reportTo')) $('reportTo').value=todayStr(); if($('docMonth')) $('docMonth').value=new Date().toISOString().slice(0,7);
   updateDatalists(); if(editingEntryIndex<0 && !loadDraft() && !formSquads.length) addSquad();
-  renderEntries(); renderCatalogs(); renderTasks(); renderCalendar(); renderStock(); renderTemplates();
+  renderEntries(); renderCatalogs(); renderTasks(); renderCalendar(); renderStock(); renderTemplates(); renderRoadSelector();
   if(settings.org && $('settingOrg')) $('settingOrg').value=settings.org;
   if(settings.master && $('settingMaster')) $('settingMaster').value=settings.master;
   if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
@@ -891,7 +1181,8 @@ return {
   generateSummaryReport, generateWorkersReport, generateObjectsReport,
   exportCSV, exportJSON, saveAppSettings, exportAllData, importAllData, clearAllData, setTheme,
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
-  exportNormsTemplate, importNormsData, renderRoadScale, renderDashboardTasks
+  exportNormsTemplate, importNormsData, renderDashboardTasks,
+  selectRoadForScale, renderRoadSelector, generateRoadKmReport
 };
 })();
 
