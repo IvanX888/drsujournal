@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v17.0 (Исправленная)</title>
+<title>Журнал производства работ — ДРСУ v16.1 (Исправленный)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -187,6 +187,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   .week-day-card{min-width:60px}
 }
 </style>
+<link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCW0YPRgNC90LDQuyDQv9GA0L7QuNC30LLQvtC00YHRgtCy0LAg0YDQsNCx0L7RgiDQlNCg0KHQoyIsCiAgInNob3J0X25hbWUiOiAi0JTQoNCh0KMg0JbRg9GA0L3QsNC7IiwKICAiZGVzY3JpcHRpb24iOiAi0KPRh9GR0YIg0L/RgNC+0LjQt9Cy0L7QtNGB0YLQstCwINGA0LDQsdC+0YIsINGC0LDQsdC10LvRjCwg0YHQutC70LDQtCwg0LrQuNC70L7QvNC10YLRgNCw0LYiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzE1NjVjMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxNTY1YzAiLAogICJpY29ucyI6IFsKICAgIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IGZpbGw9JyUyMzE1NjVjMCcgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInLyUzRSUzQ3RleHQgeD0nOTYnIHk9JzExMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nODAnJTNF8J+TiyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCJ9LAogICAgeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJyUzRSUzQ3JlY3QgZmlsbD0nJTIzMTU2NWMwJyB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicvJTNFJTNDdGV4dCB4PScyNTYnIHk9JzMwMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nMjIwJyUzRfCfk4slM0MvdGV4dCUzRSUzQy9zdmclM0UiLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifQogIF0KfQ==">
+<base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -203,16 +206,26 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="kpi-item"><div class="kpi-value" id="statObjects">0</div><div class="kpi-label">📍 Объектов</div></div>
     <div class="kpi-item"><div class="kpi-value" id="statWorks">0</div><div class="kpi-label">🔧 Видов работ</div></div>
   </div>
+
   <div class="card">
     <div class="card-title">🛣️ Километраж дорог</div>
-    <div class="road-selector"><select id="roadSelector" onchange="App.selectRoadForScale(this.value)"><option value="">📍 Выберите дорогу</option></select></div>
-    <div id="roadKmScale"></div><div id="roadKmHistory"></div>
+    <div class="road-selector">
+      <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
+        <option value="">📍 Выберите дорогу для просмотра</option>
+      </select>
+    </div>
+    <div id="roadKmScale"></div>
+    <div id="roadKmHistory"></div>
   </div>
+
   <div class="card">
     <div class="card-title">📅 Календарь и задачи</div>
     <div id="dynamicCalendar"></div>
-    <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:.75rem;color:var(--text-secondary);flex-wrap:wrap"><span>🔵 запись</span><span>🟠 задача</span><span>🔴 важная</span></div>
+    <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:.75rem;color:var(--text-secondary);flex-wrap:wrap">
+      <span>🔵 запись</span><span>🟠 задача</span><span>🔴 важная</span>
+    </div>
   </div>
+
   <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата...">
   <div class="filter-bar">
     <button class="filter-chip active" onclick="App.setFilter('all',this)">Все</button>
@@ -231,7 +244,10 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="card">
       <div class="card-title">📍 Дата и тип</div>
       <div class="form-group"><label>Дата производства работ</label><input type="date" id="inpDate" required></div>
-      <div class="checkbox-row" style="border:none;padding-top:4px"><input type="checkbox" id="inpImportant" style="width:22px;height:22px;accent-color:var(--danger)"><label for="inpImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная запись</label></div>
+      <div class="checkbox-row" style="border:none;padding-top:4px">
+        <input type="checkbox" id="inpImportant" style="width:22px;height:22px;accent-color:var(--danger)">
+        <label for="inpImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная запись</label>
+      </div>
     </div>
     <div id="squadsContainer"></div>
     <div class="row-btns">
@@ -257,9 +273,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="card">
     <div class="card-title">📅 Календарь задач и записей</div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <button class="btn btn-secondary btn-small" onclick="App.changeMonthCalendar(-1)">◀</button>
+      <button class="btn btn-secondary btn-small" onclick="App.changeMonth(-1)">◀</button>
       <span id="calendarMonth2" style="font-weight:700;font-size:1.1rem"></span>
-      <button class="btn btn-secondary btn-small" onclick="App.changeMonthCalendar(1)">▶</button>
+      <button class="btn btn-secondary btn-small" onclick="App.changeMonth(1)">▶</button>
     </div>
     <div class="calendar-grid" id="calendarGrid2"></div>
   </div>
@@ -270,7 +286,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="card-title">📋 Табель учёта рабочего времени</div>
     <div class="form-group"><label>Месяц</label><input type="month" id="tsMonth" onchange="App.renderTimesheet()"></div>
     <div class="form-group"><label>Категория</label><select id="tsCategory" onchange="App.renderTimesheet()"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
-    <div class="hint">💡 Часы берутся из записей журнала. Можно редактировать кликом.</div>
+    <div class="hint">💡 Часы берутся из записей журнала. Кликните на ячейку, чтобы отредактировать часы вручную. Также можно добавить работника вручную.<br><br>
+    <b>Буквенные обозначения:</b> введите <b>Б</b> (больничный), <b>П</b> (прогул), <b>АБЗ</b> (командировка), <b>ОТП</b> (отпуск).<br>
+    Чтобы удалить значение — кликните ячейку и сотрите содержимое.</div>
     <div class="row-btns" style="margin-top:8px">
       <button class="btn btn-info btn-small" onclick="App.addTimesheetWorker()">➕ Добавить работника</button>
       <button class="btn btn-secondary btn-small" onclick="App.exportTimesheetCSV()">📄 CSV</button>
@@ -290,24 +308,39 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <button class="subtab" onclick="App.showReportTab('repRoads',this)">🛣️ Дороги</button>
   </div>
   <div class="subpanel active" id="repAnalytics">
-    <div class="card"><div class="card-title">📊 Формирование отчётов</div>
+    <div class="card">
+      <div class="card-title">📊 Формирование отчётов</div>
       <div class="form-group"><label>Период с</label><input type="date" id="reportFrom"></div>
       <div class="form-group"><label>Период по</label><input type="date" id="reportTo"></div>
       <div class="form-group"><label>Категория</label><select id="reportCategory"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
-      <div class="row-btns"><button class="btn btn-primary" onclick="App.generateSummaryReport()">📊 Сводный</button><button class="btn btn-accent" onclick="App.generateWorkersReport()">👷 По людям</button><button class="btn btn-success" onclick="App.generateObjectsReport()">📍 По объектам</button></div>
+      <div class="row-btns">
+        <button class="btn btn-primary" onclick="App.generateSummaryReport()">📊 Сводный</button>
+        <button class="btn btn-accent" onclick="App.generateWorkersReport()">👷 По людям</button>
+        <button class="btn btn-success" onclick="App.generateObjectsReport()">📍 По объектам</button>
+      </div>
     </div>
     <div id="reportResult"></div>
-    <div class="row-btns" id="reportExports" style="display:none;margin-top:12px"><button class="btn btn-secondary" onclick="App.exportCSV()">📄 CSV</button><button class="btn btn-secondary" onclick="App.exportJSON()">💾 JSON</button><button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button></div>
+    <div class="row-btns" id="reportExports" style="display:none;margin-top:12px">
+      <button class="btn btn-secondary" onclick="App.exportCSV()">📄 CSV</button>
+      <button class="btn btn-secondary" onclick="App.exportJSON()">💾 JSON</button>
+      <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button>
+    </div>
   </div>
   <div class="subpanel" id="repDocs">
-    <div class="card"><div class="card-title">📋 Генерация документов (Excel)</div>
+    <div class="card">
+      <div class="card-title">📋 Генерация документов (Excel)</div>
       <div class="form-group"><label>Месяц документа</label><input type="month" id="docMonth"></div>
       <div class="form-group"><label>Объект / примечание</label><input type="text" id="docObject" placeholder="Например: Содержание а/д ПУ-3"></div>
-      <div class="row-btns"><button class="btn btn-primary" onclick="App.generateOrderDoc()">📄 Наряд-задание</button><button class="btn btn-success" onclick="App.generateTimesheetDoc()">📊 Табель</button><button class="btn btn-accent" onclick="App.generateS29Doc()">📦 С-29 (материалы)</button></div>
+      <div class="row-btns">
+        <button class="btn btn-primary" onclick="App.generateOrderDoc()">📄 Наряд-задание</button>
+        <button class="btn btn-success" onclick="App.generateTimesheetDoc()">📊 Табель</button>
+        <button class="btn btn-accent" onclick="App.generateS29Doc()">📦 С-29 (материалы)</button>
+      </div>
     </div>
   </div>
   <div class="subpanel" id="repRoads">
-    <div class="card"><div class="card-title">🛣️ Аналитика по километражу</div>
+    <div class="card">
+      <div class="card-title">🛣️ Аналитика по километражу</div>
       <div class="form-group"><label>Выберите дорогу</label><select id="reportRoadSelect" onchange="App.generateRoadKmReport()"><option value="">Выберите дорогу</option></select></div>
       <div id="roadReportResult"></div>
     </div>
@@ -329,35 +362,146 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <button class="subtab" onclick="App.showCatalog('catTools',this)">🛠️ Инструменты</button>
       <button class="subtab" onclick="App.showCatalog('catRoads',this)">🛣️ Дороги</button>
     </div>
-    <div id="catWorkers" class="catalog-panel active"><div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('worker')">➕ Добавить работника</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('worker')">📥 Импорт CSV</button></div><div class="card" id="workersCatalogList"></div></div>
-    <div id="catWorks" class="catalog-panel" style="display:none"><div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('work')">➕ Добавить вид работы</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('work')">📥 Импорт CSV</button></div><div class="card" id="worksCatalogList"></div></div>
-    <div id="catTools" class="catalog-panel" style="display:none"><div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('tool')">➕ Добавить инструмент</button></div><div class="card" id="toolsCatalogList"></div></div>
-    <div id="catRoads" class="catalog-panel" style="display:none"><div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('road')">➕ Добавить дорогу / объект</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('road')">📥 Импорт CSV</button></div><div class="card" id="roadsCatalogList"></div></div>
+    <div id="catWorkers" class="catalog-panel active">
+      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('worker')">➕ Добавить работника</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('worker')">📥 Импорт CSV</button></div>
+      <div class="card" id="workersCatalogList"></div>
+    </div>
+    <div id="catWorks" class="catalog-panel" style="display:none">
+      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('work')">➕ Добавить вид работы</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('work')">📥 Импорт CSV</button></div>
+      <div class="card" id="worksCatalogList"></div>
+    </div>
+    <div id="catTools" class="catalog-panel" style="display:none">
+      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('tool')">➕ Добавить инструмент</button></div>
+      <div class="card" id="toolsCatalogList"></div>
+    </div>
+    <div id="catRoads" class="catalog-panel" style="display:none">
+      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('road')">➕ Добавить дорогу / объект</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('road')">📥 Импорт CSV</button></div>
+      <div class="card" id="roadsCatalogList"></div>
+    </div>
   </div>
   <div class="subpanel" id="subTasks">
-    <div class="card"><div class="card-title">📋 Новая задача</div><div class="form-group"><label>Что сделать</label><input type="text" id="newTaskText" placeholder="Например: Заказать щебень"></div><div class="form-group"><label>Дата выполнения</label><input type="date" id="newTaskDate"></div><div class="checkbox-row" style="border:none"><input type="checkbox" id="newTaskImportant" style="width:22px;height:22px;accent-color:var(--danger)"><label for="newTaskImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная задача</label></div><button class="btn btn-primary" onclick="App.addTask()" style="margin-top:8px">➕ Добавить задачу</button></div>
-    <div class="card"><div class="card-title">📋 Мои задачи</div><div class="filter-bar" style="margin-bottom:12px"><button class="filter-chip active" onclick="App.setTaskFilter('all',this)">Все</button><button class="filter-chip" onclick="App.setTaskFilter('active',this)">Активные</button><button class="filter-chip" onclick="App.setTaskFilter('done',this)">Выполненные</button><button class="filter-chip" onclick="App.setTaskFilter('important',this)">Важные</button></div><div id="tasksList"></div></div>
+    <div class="card">
+      <div class="card-title">📋 Новая задача</div>
+      <div class="form-group"><label>Что сделать</label><input type="text" id="newTaskText" placeholder="Например: Заказать щебень"></div>
+      <div class="form-group"><label>Дата выполнения</label><input type="date" id="newTaskDate"></div>
+      <div class="checkbox-row" style="border:none"><input type="checkbox" id="newTaskImportant" style="width:22px;height:22px;accent-color:var(--danger)"><label for="newTaskImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная задача</label></div>
+      <button class="btn btn-primary" onclick="App.addTask()" style="margin-top:8px">➕ Добавить задачу</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Мои задачи</div>
+      <div class="filter-bar" style="margin-bottom:12px">
+        <button class="filter-chip active" onclick="App.setTaskFilter('all',this)">Все</button>
+        <button class="filter-chip" onclick="App.setTaskFilter('active',this)">Активные</button>
+        <button class="filter-chip" onclick="App.setTaskFilter('done',this)">Выполненные</button>
+        <button class="filter-chip" onclick="App.setTaskFilter('important',this)">Важные</button>
+      </div>
+      <div id="tasksList"></div>
+    </div>
   </div>
   <div class="subpanel" id="subStock">
-    <div class="subtabs"><button class="subtab active" onclick="App.showStockTab('tabOrderStock',this)">📦 Склад нарядов</button><button class="subtab" onclick="App.showStockTab('tabManualStock',this)">📝 Ручной склад</button></div>
-    <div id="tabOrderStock" class="stock-panel active"><div class="card"><div class="card-title">📦 Остатки ТМЦ для нарядов</div><div class="hint">Расходуется автоматически при сохранении наряда.</div><div id="orderStockList"></div><button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('order')">➕ Добавить строку</button></div></div>
-    <div id="tabManualStock" class="stock-panel" style="display:none"><div class="card"><div class="card-title">📝 Ручной склад</div><div id="manualStockList"></div><button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('manual')">➕ Добавить строку</button></div><div class="card"><div class="card-title">📜 История операций</div><div id="manualStockHistory"></div></div></div>
+    <div class="subtabs">
+      <button class="subtab active" onclick="App.showStockTab('tabOrderStock',this)">📦 Склад нарядов</button>
+      <button class="subtab" onclick="App.showStockTab('tabManualStock',this)">📝 Ручной склад</button>
+    </div>
+    <div id="tabOrderStock" class="stock-panel active">
+      <div class="card">
+        <div class="card-title">📦 Остатки ТМЦ для нарядов</div>
+        <div class="hint">Расходуется автоматически при сохранении наряда. При редактировании старые материалы возвращаются.</div>
+        <div id="orderStockList"></div>
+        <button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('order')">➕ Добавить строку</button>
+      </div>
+    </div>
+    <div id="tabManualStock" class="stock-panel" style="display:none">
+      <div class="card">
+        <div class="card-title">📝 Ручной склад</div>
+        <div class="hint">Личный учёт материалов. Вы сами фиксируете приход и расход.</div>
+        <div id="manualStockList"></div>
+        <button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('manual')">➕ Добавить строку</button>
+      </div>
+      <div class="card">
+        <div class="card-title">📜 История операций</div>
+        <div id="manualStockHistory"></div>
+      </div>
+    </div>
   </div>
   <div class="subpanel" id="subSettings">
-    <div class="card"><div class="card-title">Организация</div><div class="form-group"><label>Название ДРСУ / подразделения</label><input type="text" id="settingOrg" placeholder="ДРСУ №..."></div><div class="form-group"><label>ФИО мастера / прораба</label><input type="text" id="settingMaster" placeholder="Фамилия И.О."></div><button class="btn btn-primary" onclick="App.saveAppSettings()">Сохранить настройки</button></div>
-    <div class="card"><div class="card-title">📚 Нормативная база</div><div class="hint">Загрузите JSON с видами работ, инструментами и ТМЦ.</div><div class="form-group"><label>Импорт нормативов (JSON)</label><input type="file" id="importNormsFile" accept=".json" onchange="App.importNormsData(this)"></div><button class="btn btn-info" onclick="App.exportNormsTemplate()">📥 Скачать шаблон JSON</button></div>
-    <div class="card"><div class="card-title">🌗 Тема оформления</div><div class="row-btns"><button class="btn btn-secondary" onclick="App.setTheme('auto')">🌓 Авто</button><button class="btn btn-secondary" onclick="App.setTheme('light')">☀️ Светлая</button><button class="btn btn-secondary" onclick="App.setTheme('dark')">🌙 Тёмная</button></div></div>
-    <div class="card"><div class="card-title">💾 Резервное копирование</div><button class="btn btn-info" onclick="App.exportAllData()">📤 Экспорт всех данных</button><div class="form-group" style="margin-top:12px"><label>Импорт данных (JSON)</label><input type="file" id="importFile" accept=".json" onchange="App.importAllData(this)"></div></div>
-    <div class="card"><div class="card-title">🗑️ Опасная зона</div><button class="btn btn-danger" onclick="App.clearAllData()">Очистить ВСЕ данные</button></div>
-    <div class="card"><div class="card-title">ℹ️ О приложении</div><p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v17.0 (Исправленная)</b><br>Все кнопки работают. Данные локально.</p></div>
+    <div class="card">
+      <div class="card-title">Организация</div>
+      <div class="form-group"><label>Название ДРСУ / подразделения</label><input type="text" id="settingOrg" placeholder="ДРСУ №..."></div>
+      <div class="form-group"><label>ФИО мастера / прораба</label><input type="text" id="settingMaster" placeholder="Фамилия И.О."></div>
+      <button class="btn btn-primary" onclick="App.saveAppSettings()">Сохранить настройки</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📚 Нормативная база</div>
+      <div class="hint">⚠️ Нормы и расценки загружаются отдельно. Загрузите JSON с видами работ, инструментами и ТМЦ.</div>
+      <div class="form-group"><label>Импорт нормативов (JSON)</label><input type="file" id="importNormsFile" accept=".json" onchange="App.importNormsData(this)"></div>
+      <button class="btn btn-info" onclick="App.exportNormsTemplate()">📥 Скачать шаблон JSON</button>
+    </div>
+    <div class="card">
+      <div class="card-title">🌗 Тема оформления</div>
+      <div class="row-btns">
+        <button class="btn btn-secondary" onclick="App.setTheme('auto')">🌓 Авто</button>
+        <button class="btn btn-secondary" onclick="App.setTheme('light')">☀️ Светлая</button>
+        <button class="btn btn-secondary" onclick="App.setTheme('dark')">🌙 Тёмная</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">💾 Резервное копирование</div>
+      <button class="btn btn-info" onclick="App.exportAllData()">📤 Экспорт всех данных</button>
+      <div class="form-group" style="margin-top:12px"><label>Импорт данных (JSON)</label><input type="file" id="importFile" accept=".json" onchange="App.importAllData(this)"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🗑️ Опасная зона</div>
+      <button class="btn btn-danger" onclick="App.clearAllData()">Очистить ВСЕ данные</button>
+    </div>
+    <div class="card">
+      <div class="card-title">ℹ️ О приложении</div>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.1 (Исправленный)</b><br>Все данные хранятся локально. Работает офлайн.</p>
+    </div>
   </div>
 </div>
 
-<div class="modal-overlay" id="swModal"><div class="modal"><div class="modal-header"><span>👷 Выбрать работников</span><button class="close-modal" onclick="App.closeSwModal()">×</button></div><div style="margin-bottom:10px"><label><input type="checkbox" id="swSelectAll" onchange="App.selectAllWorkers(this.checked)"> Выбрать всех</label></div><div id="swList"></div><div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div></div></div>
-<div class="modal-overlay" id="sWorksModal"><div class="modal"><div class="modal-header"><span>🔧 Выбрать виды работ</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div><div id="sWorksList"></div><div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div></div></div>
-<div class="modal-overlay" id="sTmcModal"><div class="modal"><div class="modal-header"><span>📦 Расход ТМЦ</span><button class="close-modal" onclick="App.closeSTmcModal()">×</button></div><div id="sTmcList"></div><div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div></div></div>
-<div class="modal-overlay" id="dayModal"><div class="modal"><div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div><div id="dayModalContent"></div><div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.addEntryFromCalendar()">➕ Добавить запись</button><button class="btn btn-secondary" onclick="App.closeDayModal()">Закрыть</button></div></div></div>
-<div class="modal-overlay" id="catalogModal"><div class="modal"><div class="modal-header"><span id="catalogModalTitle">Добавить</span><button class="close-modal" onclick="App.closeCatalogModal()">×</button></div><div id="catalogForm"></div><div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div></div></div>
+<div class="modal-overlay" id="swModal">
+  <div class="modal">
+    <div class="modal-header"><span>👷 Выбрать работников</span><button class="close-modal" onclick="App.closeSwModal()">×</button></div>
+    <div style="margin-bottom:10px"><label class="checkbox-row" style="border:none;padding:4px 0;"><input type="checkbox" id="swSelectAll" onchange="App.selectAllWorkers(this.checked)"> Выбрать всех</label></div>
+    <div id="swList"></div>
+    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sWorksModal">
+  <div class="modal">
+    <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
+    <div class="hint" style="margin-bottom:10px">Для каждой работы укажите объём, участок дороги (км) и (при наличии инструмента) часы работы.</div>
+    <div id="sWorksList"></div>
+    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="sTmcModal">
+  <div class="modal">
+    <div class="modal-header"><span>📦 Расход ТМЦ в наряде</span><button class="close-modal" onclick="App.closeSTmcModal()">×</button></div>
+    <div id="sTmcList"></div>
+    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dayModal">
+  <div class="modal" style="max-height:90vh">
+    <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
+    <div id="dayModalContent"></div>
+    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.addEntryFromCalendar()">➕ Добавить запись</button><button class="btn btn-secondary" onclick="App.closeDayModal()">Закрыть</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="catalogModal">
+  <div class="modal">
+    <div class="modal-header"><span id="catalogModalTitle">Добавить</span><button class="close-modal" onclick="App.closeCatalogModal()">×</button></div>
+    <div id="catalogForm"></div>
+    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -365,7 +509,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <button class="nav-btn active" onclick="App.showPage('pageJournal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Журнал</button>
   <button class="nav-btn" onclick="App.showPage('pageNew')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Запись</button>
   <button class="nav-btn" onclick="App.showPage('pageCalendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Календарь</button>
-  <button class="nav-btn" onclick="App.showPage('pageTimesheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>Табель</button>
+  <button class="nav-btn" onclick="App.showPage('pageTimesheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>Табель</button>
   <button class="nav-btn" onclick="App.showPage('pageReports')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>Отчёт</button>
   <button class="nav-btn" onclick="App.showPage('pageMore')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ещё</button>
 </nav>
@@ -375,7 +519,8 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <script>
 const App = (function() {
 'use strict';
-const PREFIX = 'drsu_v17_';
+
+const PREFIX = 'drsu_v16_';
 const STORAGE_KEYS = {
   entries: PREFIX+'entries', workers: PREFIX+'workers', works: PREFIX+'works',
   tools: PREFIX+'tools', tmc: PREFIX+'tmc', tasks: PREFIX+'tasks',
@@ -384,6 +529,7 @@ const STORAGE_KEYS = {
   stockOrder: PREFIX+'stock_order', stockManual: PREFIX+'stock_manual',
   templates: PREFIX+'templates'
 };
+
 const CATEGORIES = {
   road: { name: 'Дорожные рабочие', norm: true, color: '#2e7d32' },
   gazelle: { name: 'Водители Газели', norm: false, color: '#0277bd' },
@@ -391,18 +537,22 @@ const CATEGORIES = {
   maz: { name: 'Водители МАЗ', norm: false, color: '#6a1b9a' },
   other: { name: 'Прочие', norm: false, color: '#616161' }
 };
+
+const LETTER_CODES = { 'Б':'Больничный','П':'Прогул','АБЗ':'Командировка','ОТП':'Отпуск','У':'Учеба','В':'Выходной' };
+
 let entries=[], workers=[], works=[], tools=[], tmc=[], tasks=[], settings={}, roads=[];
 let stockOrder=[], stockManual=[], templates=[], timesheetOverrides={}, timesheetLetters={};
-let currentFilter='all', currentTaskFilter='all', currentMonthCalendar=new Date(), selectedCalendarDate=null;
+let currentFilter='all', currentTaskFilter='all', currentMonth=new Date(), selectedCalendarDate=null;
 let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=null;
 let formSquads=[], draftTimer=null;
 let selectedRoadForScale='';
 
-function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){ console.warn(e); } }
+function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){} }
 function load(key,def){ try{ let v=localStorage.getItem(key); return v?JSON.parse(v):def; }catch(e){ return def; } }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function formatDate(d){ if(!d) return ''; let p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
-function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, m=> m==='&'?'&amp;': m==='<'?'&lt;': m==='>'?'&gt;': m); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
+function jsAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 function showToast(msg){ let t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } }
 function $(id){ return document.getElementById(id); }
 function downloadFile(content,filename,type){ let blob=new Blob([content],{type}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
@@ -413,31 +563,59 @@ function loadAll(){
   settings=load(STORAGE_KEYS.settings,{}); roads=load(STORAGE_KEYS.roads,[]); stockOrder=load(STORAGE_KEYS.stockOrder,[]);
   stockManual=load(STORAGE_KEYS.stockManual,[]); templates=load(STORAGE_KEYS.templates,[]);
   timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{}); timesheetLetters=load(STORAGE_KEYS.tsLetters,{});
-  if(workers.length===0) workers=[{name:"Иванов И.И.",category:"road"},{name:"Петров П.П.",category:"road"}];
-  if(roads.length===0) roads=[{name:"М-5 Урал",length:120},{name:"А-108",length:85}];
 }
+
+// ===================== OFFLINE =====================
 function initOffline(){
-  window.addEventListener('online',()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge')?.classList.remove('show'); showToast('🌐 Онлайн'); });
-  window.addEventListener('offline',()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge')?.classList.add('show'); showToast('📴 Офлайн'); });
-  if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge')?.classList.add('show'); }
+  window.addEventListener('online', ()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge').classList.remove('show'); showToast('🌐 Соединение восстановлено'); });
+  window.addEventListener('offline', ()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); showToast('📴 Офлайн-режим активирован'); });
+  if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); }
+  if('serviceWorker' in navigator){
+    let swCode = `
+      const CACHE_NAME = 'drsu-cache-v1';
+      const urlsToCache = [ self.location.href ];
+      self.addEventListener('install', e => {
+        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+      self.addEventListener('fetch', e => {
+        e.respondWith(caches.match(e.request).then(response => {
+          if(response) return response;
+          return fetch(e.request).then(networkResponse => {
+            if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') return networkResponse;
+            let responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, responseClone));
+            return networkResponse;
+          }).catch(() => {
+            return new Response('<h1>Офлайн</h1><p>Приложение работает без интернета.</p>', { headers: {'Content-Type': 'text/html'} });
+          });
+        }));
+      });
+    `;
+    let blob = new Blob([swCode], {type: 'application/javascript'});
+    let swUrl = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swUrl).then(() => console.log('SW registered')).catch(() => {});
+  }
 }
+
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active');
   let pages=['pageJournal','pageNew','pageCalendar','pageTimesheet','pageReports','pageMore'];
   let idx=pages.indexOf(id); if(idx>=0){ let navs=document.querySelectorAll('.nav-btn'); navs.forEach(n=>n.classList.remove('active')); if(navs[idx]) navs[idx].classList.add('active'); }
-  if(id==='pageJournal'){ renderEntries(); renderRoadSelector(); renderDynamicCalendar(); }
-  if(id==='pageCalendar') renderCalendarGrid2();
+  if(id==='pageJournal'){ renderEntries(); renderRoadSelector(); }
+  if(id==='pageCalendar') renderCalendar();
   if(id==='pageTimesheet') renderTimesheet();
   if(id==='pageReports') renderReportRoadSelect();
-  if(id==='pageMore'){ renderCatalogsAll(); renderStock(); renderTemplates(); renderTasks(); }
+  if(id==='pageMore'){ renderCatalogs(); renderStock(); renderTemplates(); renderTasks(); }
   window.scrollTo(0,0);
 }
-function showSubtab(id,btn){ document.querySelectorAll('#pageMore .subpanel').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active'); if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } if(id==='subStock') renderStock(); if(id==='subTasks') renderTasks(); if(id==='subCatalogs') renderCatalogsAll(); }
-function showCatalog(id,btn){ document.querySelectorAll('.catalog-panel').forEach(p=>p.style.display='none'); if($(id)) $(id).style.display='block'; if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } renderCatalogsAll(); }
+function showSubtab(id,btn){ document.querySelectorAll('#pageMore .subpanel').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active'); if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } if(id==='subStock') renderStock(); if(id==='subTasks') renderTasks(); }
+function showCatalog(id,btn){ document.querySelectorAll('.catalog-panel').forEach(p=>p.style.display='none'); if($(id)) $(id).style.display='block'; if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } renderCatalogs(); }
 function showStockTab(id,btn){ document.querySelectorAll('.stock-panel').forEach(p=>p.style.display='none'); if($(id)) $(id).style.display='block'; if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } renderStock(); }
 function showReportTab(id,btn){ document.querySelectorAll('#pageReports .subpanel').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active'); if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } }
 
-// -------------------- FILTER & ENTRIES --------------------
+// ===================== FILTERED ENTRIES =====================
 function getFilteredEntries(){
   let search=$('journalSearch')?.value.trim().toLowerCase()||'';
   let filtered=entries.slice();
@@ -456,15 +634,516 @@ function getFilteredEntries(){
   if(search) filtered=filtered.filter(e=>e.squads?.some(s=>s.objects?.some(o=>o.toLowerCase().includes(search))||s.people?.some(p=>p.name.toLowerCase().includes(search))||s.works?.some(w=>w.name.toLowerCase().includes(search)))||e.date.includes(search));
   return filtered;
 }
-function setFilter(type,btn){ currentFilter=type; document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active')); if(btn) btn.classList.add('active'); renderEntries(); if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale); }
+
+function setFilter(type,btn){
+  currentFilter=type;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderEntries();
+  if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
+}
+
+// ===================== DYNAMIC CALENDAR =====================
+function renderDynamicCalendar(){
+  let container=$('dynamicCalendar');
+  if(!container) return;
+  let today=todayStr();
+
+  if(currentFilter==='today'){
+    renderDayView(container, today);
+  } else if(currentFilter==='week'){
+    renderWeekView(container);
+  } else {
+    renderMonthView(container);
+  }
+}
+
+function renderDayView(container, date){
+  let d=new Date(date);
+  let dayName=d.toLocaleDateString('ru-RU',{weekday:'long'});
+  let dayEntries=entries.filter(e=>e.date===date);
+  let dayTasks=tasks.filter(t=>t.date===date && !t.done);
+  let html=`<div class="day-view-card">
+    <div class="day-view-date">${dayName}, ${formatDate(date)}</div>
+    <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">Сегодня</div>
+    <div class="day-view-tasks">`;
+  if(dayTasks.length){
+    html+=`<div style="font-weight:600;margin-bottom:6px">📋 Задачи (${dayTasks.length}):</div>`;
+    dayTasks.forEach(t=>{ html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" onchange="App.toggleTaskDone(${tasks.indexOf(t)})"> ${escapeHtml(t.text)}</div>`; });
+  } else html+=`<div style="color:var(--text-secondary)">Нет задач на сегодня</div>`;
+  if(dayEntries.length){
+    html+=`<div style="font-weight:600;margin:12px 0 6px">📋 Записей: ${dayEntries.length}</div>`;
+    dayEntries.forEach(e=>{ let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])]; html+=`<div style="font-size:.85rem;margin-bottom:4px">• ${escapeHtml(objs.join(', '))}</div>`; });
+  }
+  html+=`</div></div>`;
+  container.innerHTML=html;
+}
+
+function renderWeekView(container){
+  let d=new Date();
+  let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
+  let html='<div class="week-view">';
+  let dayNames=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+  for(let i=0;i<7;i++){
+    let cd=new Date(sd); cd.setDate(sd.getDate()+i);
+    let ds=cd.toISOString().slice(0,10);
+    let dayEntries=entries.filter(e=>e.date===ds);
+    let dayTasks=tasks.filter(t=>t.date===ds && !t.done);
+    let isToday=ds===todayStr();
+    let hasImportant=dayEntries.some(e=>e.important);
+    let cls='week-day-card';
+    if(isToday) cls+=' today';
+    if(hasImportant) cls+=' important';
+    else if(dayEntries.length) cls+=' has-entry';
+    if(dayTasks.length) cls+=' has-task';
+    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">
+      <div class="week-day-name">${dayNames[i]}</div>
+      <div class="week-day-num">${cd.getDate()}</div>
+      <div class="week-day-info">
+        ${dayEntries.length?`📋 ${dayEntries.length}<br>`:''}
+        ${dayTasks.length?`📌 ${dayTasks.length}`:''}
+      </div>
+    </div>`;
+  }
+  html+='</div>';
+  container.innerHTML=html;
+}
+
+function renderMonthView(container){
+  let y=currentMonth.getFullYear(), m=currentMonth.getMonth();
+  let firstDay=new Date(y,m,1).getDay();
+  let daysInMonth=new Date(y,m+1,0).getDate();
+  let startOffset=firstDay===0?6:firstDay-1;
+  let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  let label=monthNames[m]+' '+y;
+
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <button class="btn btn-secondary btn-small" onclick="App.changeMonth(-1)">◀</button>
+    <span style="font-weight:700;font-size:1.1rem">${label}</span>
+    <button class="btn btn-secondary btn-small" onclick="App.changeMonth(1)">▶</button>
+  </div>
+  <div class="calendar-grid">`;
+  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>html+=`<div class="calendar-day header">${d}</div>`);
+  for(let i=0;i<startOffset;i++) html+=`<div class="calendar-day"></div>`;
+  let today=todayStr();
+  for(let d=1;d<=daysInMonth;d++){
+    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let dayEntries=entries.filter(e=>e.date===ds);
+    let hasImportant=dayEntries.some(e=>e.important);
+    let hasTask=tasks.some(t=>t.date===ds && !t.done);
+    let cls='calendar-day';
+    if(ds===today) cls+=' today';
+    else if(hasImportant && currentFilter==='important') cls+=' important-day';
+    else if(dayEntries.length) cls+=' has-entry';
+    if(hasTask && (currentFilter==='plan' || currentFilter==='all')) cls+=' has-task';
+    if(currentFilter==='important' && !hasImportant) cls='calendar-day';
+    if(currentFilter==='plan' && !hasTask && !dayEntries.some(e=>e.squads?.some(s=>s.planTomorrow))) cls='calendar-day';
+    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
+  }
+  html+='</div>';
+  container.innerHTML=html;
+}
+
+function changeMonth(delta){
+  currentMonth.setMonth(currentMonth.getMonth()+delta);
+  renderEntries();
+}
+
+// ===================== КИЛОМЕТРАЖ С ФИЛЬТРАМИ =====================
+
+function getRoadKmSegments(roadName, filterType){
+  let sourceEntries = entries;
+  if(filterType==='today') sourceEntries=entries.filter(e=>e.date===todayStr());
+  else if(filterType==='week'){
+    let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
+    let ed=new Date(sd); ed.setDate(ed.getDate()+6);
+    sourceEntries=entries.filter(e=>{ let de=new Date(e.date); return de>=sd && de<=ed; });
+  }
+  else if(filterType==='important') sourceEntries=entries.filter(e=>e.important);
+  else if(filterType==='plan'){
+    let taskDates=new Set(tasks.filter(t=>!t.done).map(t=>t.date));
+    sourceEntries=entries.filter(e=>taskDates.has(e.date));
+  }
+
+  let segments=[];
+  sourceEntries.forEach((e, eIdx)=>{
+    e.squads?.forEach((sq, sqIdx)=>{
+      sq.works?.forEach((w, wIdx)=>{
+        if(w.road===roadName && w.kmFrom!==undefined && w.kmTo!==undefined){
+          segments.push({
+            entryId: e.id, entryDate: e.date, entryIdx: eIdx, squadIdx: sqIdx, workIdx: wIdx,
+            workName: w.name, kmFrom: parseFloat(w.kmFrom), kmTo: parseFloat(w.kmTo),
+            volume: w.volume, unit: w.unit, duplicate: false
+          });
+        }
+      });
+    });
+  });
+  for(let i=0;i<segments.length;i++){
+    for(let j=i+1;j<segments.length;j++){
+      let a=segments[i], b=segments[j];
+      if(a.kmFrom<b.kmTo && a.kmTo>b.kmFrom){ a.duplicate=true; b.duplicate=true; }
+    }
+  }
+  return segments.sort((a,b)=>a.kmFrom-b.kmFrom);
+}
+
+function renderRoadSelector(){
+  let sel=$('roadSelector'); if(!sel) return;
+  let html='<option value="">📍 Выберите дорогу для просмотра</option>';
+  roads.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${escapeHtml(r.name)}${r.length?' ('+r.length+' км)':''}</option>`; });
+  sel.innerHTML=html;
+  if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
+}
+
+function selectRoadForScale(roadName){
+  selectedRoadForScale=roadName;
+  renderRoadKmScale(roadName);
+}
+
+function renderRoadKmScale(roadName){
+  let container=$('roadKmScale');
+  let historyContainer=$('roadKmHistory');
+  if(!container || !roadName){ if(container) container.innerHTML=''; if(historyContainer) historyContainer.innerHTML=''; return; }
+  let road=roads.find(r=>r.name===roadName); if(!road) return;
+  let segments=getRoadKmSegments(roadName, currentFilter);
+  let totalLength=parseFloat(road.length)||0;
+  let coveredKm=0;
+  let uniqueRanges=[];
+  if(totalLength>0 && segments.length>0){
+    let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
+    let merged=[];
+    sorted.forEach(s=>{
+      if(merged.length===0) merged.push({from:s.kmFrom, to:s.kmTo});
+      else{
+        let last=merged[merged.length-1];
+        if(s.kmFrom<=last.to) last.to=Math.max(last.to, s.kmTo);
+        else merged.push({from:s.kmFrom, to:s.kmTo});
+      }
+    });
+    merged.forEach(m=>{ coveredKm+=(m.to-m.from); });
+    uniqueRanges=merged;
+  }
+  let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
+
+  let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
+
+  let html=`<div class="km-scale-container">`;
+  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: ${coveredKm.toFixed(1)} из ${totalLength} км</span></div>`;
+  html+=`<div class="km-scale-track">`;
+  if(totalLength>0){
+    uniqueRanges.forEach((range,i)=>{
+      let leftPct=(range.from/totalLength)*100;
+      let widthPct=((range.to-range.from)/totalLength)*100;
+      let isDup=segments.some(s=>{ let a=Math.max(s.kmFrom,range.from); let b=Math.min(s.kmTo,range.to); return b>a && s.duplicate; });
+      html+=`<div class="km-scale-done${isDup?' duplicate':''}" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
+      html+=`<div class="km-scale-label" style="left:${leftPct+widthPct/2}%; transform:translate(-50%,-50%)">${range.from}-${range.to}</div>`;
+    });
+  }
+  html+=`</div>`;
+  html+=`<div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
+  html+=`<div class="km-legend">
+    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div>
+    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход</div>
+  </div>`;
+  html+=`<div style="margin-top:12px;font-size:.9rem;font-weight:600;color:var(--primary)">Выполнено: ${pct.toFixed(1)}% (${coveredKm.toFixed(1)} км)</div>`;
+  html+=`</div>`;
+  container.innerHTML=html;
+
+  if(historyContainer){
+    if(segments.length===0){
+      historyContainer.innerHTML='<div class="empty-state">Нет данных по километражу за выбранный период</div>';
+    } else {
+      let hHtml='<div class="card-title" style="margin-top:16px">📜 История по участкам</div>';
+      segments.forEach(s=>{
+        hHtml+=`<div class="km-history-item${s.duplicate?' duplicate':''}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <b>${s.kmFrom} – ${s.kmTo} км</b>
+            <span style="font-size:.75rem;color:var(--text-secondary)">${formatDate(s.entryDate)}</span>
+          </div>
+          <div>${escapeHtml(s.workName)} — ${s.volume} ${s.unit||''}</div>
+          ${s.duplicate?'<div style="color:var(--accent);font-size:.75rem">⚠️ Участок пересекается с другой работой</div>':''}
+        </div>`;
+      });
+      historyContainer.innerHTML=hHtml;
+    }
+  }
+}
+
+function renderReportRoadSelect(){
+  let sel=$('reportRoadSelect'); if(!sel) return;
+  let html='<option value="">Выберите дорогу</option>';
+  roads.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`; });
+  sel.innerHTML=html;
+}
+
+function generateRoadKmReport(){
+  let roadName=$('reportRoadSelect').value;
+  let container=$('roadReportResult');
+  if(!roadName || !container){ if(container) container.innerHTML=''; return; }
+  let road=roads.find(r=>r.name===roadName);
+  let segments=getRoadKmSegments(roadName, 'all');
+  let totalLength=parseFloat(road?.length)||0;
+  let coveredKm=0;
+  let uniqueRanges=[];
+  if(totalLength>0 && segments.length>0){
+    let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
+    let merged=[];
+    sorted.forEach(s=>{
+      if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo});
+      else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); }
+    });
+    merged.forEach(m=>{ coveredKm+=(m.to-m.from); });
+    uniqueRanges=merged;
+  }
+  let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
+  let html=`<div class="card">
+    <div class="card-title">🛣️ ${escapeHtml(roadName)}</div>
+    <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:8px">${pct.toFixed(1)}% выполнено</div>
+    <div style="margin-bottom:12px">${coveredKm.toFixed(1)} из ${totalLength} км</div>
+    <div class="km-scale-track" style="margin-bottom:16px">`;
+  if(totalLength>0){
+    uniqueRanges.forEach(r=>{
+      let leftPct=(r.from/totalLength)*100;
+      let widthPct=((r.to-r.from)/totalLength)*100;
+      html+=`<div class="km-scale-done" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
+    });
+  }
+  html+=`</div>`;
+  let workSummary={};
+  segments.forEach(s=>{
+    if(!workSummary[s.workName]) workSummary[s.workName]={total:0,unit:s.unit,ranges:[]};
+    workSummary[s.workName].total+=s.volume;
+    workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
+  });
+  html+=`<table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
+  for(let w in workSummary) html+=`<tr><td>${escapeHtml(w)}</td><td>${workSummary[w].total.toFixed(2)} ${workSummary[w].unit}</td><td>${workSummary[w].ranges.join(', ')}</td></tr>`;
+  html+=`</table></div>`;
+  container.innerHTML=html;
+}
+
+// ===================== НАРЯДЫ =====================
+
+function addSquad(data){
+  let sid='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  let squad=data?JSON.parse(JSON.stringify(data)):{ id:sid, category:'road', objects:[], people:[], works:[], tmc:[], planToday:'', planTomorrow:'', notes:'' };
+  if(!data) squad.id=sid;
+  formSquads.push(squad); renderSquads(); scheduleDraftSave();
+}
+function removeSquad(sid){ formSquads=formSquads.filter(s=>s.id!==sid); renderSquads(); scheduleDraftSave(); }
+function duplicateSquad(sid){ let src=formSquads.find(s=>s.id===sid); if(src){ let dup=JSON.parse(JSON.stringify(src)); dup.id='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); formSquads.push(dup); renderSquads(); scheduleDraftSave(); showToast('Наряд продублирован'); } }
+function scheduleDraftSave(){ if(draftTimer) clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,2000); }
+function saveDraft(){ let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; save(STORAGE_KEYS.draft,draft); }
+function loadDraft(){ let d=load(STORAGE_KEYS.draft,null); if(d&&d.squads&&d.squads.length){ $('inpDate').value=d.date||todayStr(); $('inpImportant').checked=d.important; $('inpReminder').value=d.reminder; $('inpReminderText').value=d.reminderText; $('inpWeather').value=d.weather; $('inpWeatherCond').value=d.weatherCond; $('inpNotes').value=d.notes; formSquads=d.squads; renderSquads(); $('draftBadge').style.display='block'; return true; } return false; }
+function clearDraft(){ localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
+function changeSquadCategory(sid,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s.category=val; renderSquads(); scheduleDraftSave(); } }
+function updateSquadField(sid,field,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s[field]=val; scheduleDraftSave(); } }
+function addObject(sid){ let inp=$('objInp_'+sid); if(!inp) return; let v=inp.value.trim(); if(!v){ showToast('Введите или выберите объект'); return; } let s=formSquads.find(x=>x.id===sid); if(s){ if(!s.objects.includes(v)){ s.objects.push(v); inp.value=''; renderSquads(); scheduleDraftSave(); showToast('Объект добавлен'); } else{ showToast('Объект уже есть'); inp.value=''; } } }
+function removeObject(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.objects.splice(idx,1); renderSquads(); scheduleDraftSave(); }
+function removeWork(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.works.splice(idx,1); renderSquads(); scheduleDraftSave(); }
+function editWorkVolume(sid,idx){ 
+  let s=formSquads.find(x=>x.id===sid); if(!s||!s.works[idx]) return; 
+  let w=s.works[idx]; 
+  let newVol=prompt('Новый объём ('+w.unit+'):',w.volume); 
+  if(newVol!==null){ let v=parseFloat(newVol); if(!isNaN(v) && v>=0) w.volume=v; } 
+  let newHours=prompt('Часы работы инструмента:',w.toolHours||0); 
+  if(newHours!==null){ let h=parseFloat(newHours); if(!isNaN(h) && h>=0){ w.toolHours=h; let tool=tools.find(t=>t.id===w.toolId); if(tool) w.fuelLiters=Math.round(tool.fuelConsumption*h*100)/100; } }
+  let newKmFrom=prompt('От км:',w.kmFrom||0);
+  if(newKmFrom!==null){ let k=parseFloat(newKmFrom); if(!isNaN(k)) w.kmFrom=k; }
+  let newKmTo=prompt('До км:',w.kmTo||0);
+  if(newKmTo!==null){ let k=parseFloat(newKmTo); if(!isNaN(k)) w.kmTo=k; }
+  renderSquads(); scheduleDraftSave(); showToast('Работа обновлена'); 
+}
+function removeTmc(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.tmc.splice(idx,1); renderSquads(); scheduleDraftSave(); }
+function updateWorkerHours(sid,pidx,val){ let s=formSquads.find(x=>x.id===sid); if(s&&s.people[pidx]){ s.people[pidx].hours=parseFloat(val)||8; renderSquads(); scheduleDraftSave(); } }
+
+function calcSquadPlanHtml(sq){
+  let normPeople=(sq.people||[]).filter(p=>{ let w=workers.find(x=>x.name===p.name); return !w||(CATEGORIES[w.category]&&CATEGORIES[w.category].norm); });
+  let totalPeopleHours=normPeople.reduce((s,p)=>s+(parseFloat(p.hours)||8),0);
+  let totalLaborNorm=0,totalWorkerCost=0,totalToolCost=0,totalFuel=0,totalMachineCost=0;
+  (sq.works||[]).forEach(w=>{ if(w.laborCost) totalLaborNorm+=w.laborCost*w.volume; let wc=(w.directCost||0)-(w.toolCost||0); totalWorkerCost+=wc*w.volume; totalToolCost+=(w.toolCost||0)*w.volume; totalFuel+=w.fuelLiters||0; let tool=tools.find(t=>t.id===w.toolId); if(tool) totalMachineCost+=(tool.machineCostPerHour||0)*(w.toolHours||0); });
+  let pct=totalPeopleHours>0?(totalLaborNorm/totalPeopleHours)*100:0; let diff=totalLaborNorm-totalPeopleHours;
+  let statusClass='ok',statusText='В пределах нормы (90-110%)';
+  if(pct<80){ statusClass='bad'; statusText='⚠️ Сильное недовыполнение!'; }
+  else if(pct<90){ statusClass='warn'; statusText='⚠️ Недовыполнение нормы.'; }
+  else if(pct>130){ statusClass='bad'; statusText='⚠️ Критическое превышение!'; }
+  else if(pct>110){ statusClass='warn'; statusText='⚠️ Превышение нормы.'; }
+  let html='<div class="plan-box"><div class="card-title">📊 Контроль норм наряда</div>';
+  html+='<div class="plan-row"><span class="plan-label">Норма трудозатрат:</span><span class="plan-value">'+totalLaborNorm.toFixed(1)+' чел-ч</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Факт часов (дорожные):</span><span class="plan-value '+statusClass+'">'+totalPeopleHours.toFixed(1)+' ч</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Отклонение:</span><span class="plan-value '+statusClass+'">'+(diff>=0?'+':'')+diff.toFixed(1)+' чел-ч</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">% выполнения:</span><span class="plan-value '+statusClass+'">'+pct.toFixed(1)+'%</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Статус:</span><span class="plan-value '+statusClass+'">'+statusText+'</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Зарплата рабочих:</span><span class="plan-value">'+totalWorkerCost.toFixed(2)+' руб.</span></div>';
+  if(totalToolCost>0) html+='<div class="plan-row"><span class="plan-label">Расходы на инструмент:</span><span class="plan-value">'+totalToolCost.toFixed(2)+' руб.</span></div>';
+  if(totalMachineCost>0) html+='<div class="plan-row"><span class="plan-label">Амортизация:</span><span class="plan-value">'+totalMachineCost.toFixed(2)+' руб.</span></div>';
+  if(totalFuel>0) html+='<div class="plan-row"><span class="plan-label">Расход бензина:</span><span class="plan-value">'+totalFuel.toFixed(2)+' л</span></div>';
+  html+='</div>'; return html;
+}
+
+function renderSquads(){
+  let container=$('squadsContainer'); if(!container) return; container.innerHTML='';
+  formSquads.forEach((sq,index)=>{
+    let catInfo=CATEGORIES[sq.category]||CATEGORIES.other;
+    
+    // Объекты теги
+    let objTags = (sq.objects || []).map((o, i) => 
+      `<span class="object-tag">${escapeHtml(o)}<button type="button" class="del-tag" onclick="App.removeObject('${jsAttr(sq.id)}',${i})">×</button></span>`
+    ).join('');
+    
+    // Работники
+    let peoplePreview = (sq.people || []).map((p, pi) => {
+      let w = workers.find(x => x.name === p.name);
+      let cat = w ? w.category : 'other';
+      let isNorm = CATEGORIES[cat] && CATEGORIES[cat].norm;
+      let bg = isNorm ? '#e3f2fd' : '#fff3e0';
+      let color = isNorm ? 'var(--primary-dark)' : 'var(--accent)';
+      return `<span class="people-tag" style="background:${bg};color:${color}">${escapeHtml(p.name)} ${isNorm ? '' : '(поддержка)'}<input type="number" class="hours-inp" value="${p.hours || 8}" min="0" max="24" step="0.5" onchange="App.updateWorkerHours('${jsAttr(sq.id)}',${pi},this.value)">ч</span>`;
+    }).join('');
+    
+    // Работы по дорогам
+    let worksByRoad = {};
+    (sq.works || []).forEach((w, i) => {
+      let r = w.road || 'Без объекта';
+      if (!worksByRoad[r]) worksByRoad[r] = [];
+      worksByRoad[r].push({...w, idx: i});
+    });
+    
+    let worksHtml = '';
+    Object.keys(worksByRoad).forEach(road => {
+      let wlist = worksByRoad[road];
+      worksHtml += `<div class="road-block"><div class="road-title">🛣️ ${escapeHtml(road)}</div>`;
+      wlist.forEach(w => {
+        let tool = tools.find(t => t.id === w.toolId);
+        let fuel = w.fuelLiters || 0;
+        let machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
+        let workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
+        let kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined) ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
+        worksHtml += `<div class="preview-item"><div class="preview-item-name">${escapeHtml(w.name)} — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}${workerCost.toFixed(2)} руб. | ${tool ? tool.name + ' ' + w.toolHours + 'ч | ' : ''}${fuel > 0 ? '⛽ ' + fuel.toFixed(2) + ' л | ' : ''}${machineCost > 0 ? '🛠️ ' + machineCost.toFixed(2) + ' руб. ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
+      });
+      worksHtml += '</div>';
+    });
+    
+    // ТМЦ
+    let tmcPreview = (sq.tmc || []).map((t, i) => 
+      `<div class="preview-item"><div class="preview-item-name">${escapeHtml(t.name)}: <b>${t.qty} ${t.unit || ''}</b></div><button class="del-btn" onclick="App.removeTmc('${jsAttr(sq.id)}',${i})">🗑️</button></div>`
+    ).join('');
+    
+    let planHtml = calcSquadPlanHtml(sq);
+    
+    let html = `<div class="squad-card" id="card_${sq.id}">
+      <div class="squad-header"><div class="squad-title">Наряд #${index + 1}</div><div style="display:flex;align-items:center;gap:8px"><span class="squad-category" style="background:${catInfo.color}">${catInfo.name}</span><button type="button" class="squad-dup-btn" onclick="App.duplicateSquad('${jsAttr(sq.id)}')">📋</button></div></div>
+      <div class="form-group"><label>Категория наряда</label><select onchange="App.changeSquadCategory('${jsAttr(sq.id)}',this.value)">${Object.keys(CATEGORIES).map(k => `<option value="${k}"${sq.category === k ? ' selected' : ''}>${CATEGORIES[k].name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Объекты / дороги</label><input type="text" list="roadsList" id="objInp_${sq.id}" placeholder="Выберите или введите объект" onkeydown="if(event.key==='Enter'){event.preventDefault();App.addObject('${jsAttr(sq.id)}')}"><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.addObject('${jsAttr(sq.id)}')">➕ Добавить объект</button></div>
+      <div class="object-tags" id="objTags_${sq.id}">${objTags}</div>
+      <div class="form-group"><label>Работники</label><div class="people-list" id="peopleList_${sq.id}">${peoplePreview}</div><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.openSwModal('${jsAttr(sq.id)}')">➕ Выбрать работников</button></div>
+      <div class="form-group"><label>Виды работ по дорогам и инструменты</label>${worksHtml}<button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.openSWorksModal('${jsAttr(sq.id)}')">➕ Выбрать работы</button></div>
+      <div class="form-group"><label>ТМЦ / ГСМ в наряде</label>${tmcPreview}<button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.openSTmcModal('${jsAttr(sq.id)}')">➕ Добавить ТМЦ</button></div>
+      ${planHtml}
+      <div class="form-group" style="margin-top:12px"><label>Выполнено сегодня (кратко)</label><textarea onchange="App.updateSquadField('${jsAttr(sq.id)}','planToday',this.value)">${escapeHtml(sq.planToday || '')}</textarea></div>
+      <div class="form-group"><label>План на завтра</label><textarea onchange="App.updateSquadField('${jsAttr(sq.id)}','planTomorrow',this.value)">${escapeHtml(sq.planTomorrow || '')}</textarea></div>
+      <div class="form-group"><label>Заметки</label><textarea onchange="App.updateSquadField('${jsAttr(sq.id)}','notes',this.value)">${escapeHtml(sq.notes || '')}</textarea></div>
+      <button type="button" class="btn btn-danger btn-small" onclick="App.removeSquad('${jsAttr(sq.id)}')">🗑️ Удалить наряд</button></div>`;
+    
+    container.insertAdjacentHTML('beforeend', html);
+  });
+}
+
+// ===================== МОДАЛКИ =====================
+
+function openSwModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let modal=$('swModal'); let list=$('swList'); let filtered=workers.slice(); list.innerHTML=filtered.map(w=>{ let selected=(sq.people||[]).some(p=>p.name===w.name); return '<label class="sw-item"><input type="checkbox" data-name="'+escapeHtml(w.name)+'"'+(selected?' checked':'')+'><span>'+escapeHtml(w.name)+' <small>('+(CATEGORIES[w.category]||CATEGORIES.other).name+(w.grade?', разр.'+w.grade:'')+')</small></span></label>'; }).join(''); modal.classList.add('active'); }
+function closeSwModal(){ $('swModal').classList.remove('active'); currentSquadId=null; }
+function selectAllWorkers(checked){ document.querySelectorAll('#swList input[type="checkbox"]').forEach(cb=>cb.checked=checked); }
+function applySw(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#swList input:checked')).map(cb=>cb.dataset.name); sq.people=checked.map(name=>{ let existing=(sq.people||[]).find(p=>p.name===name); return existing||{name, hours:8}; }); renderSquads(); closeSwModal(); scheduleDraftSave(); }
+
+function openSWorksModal(squadId){ 
+  currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; 
+  let modal=$('sWorksModal'); let list=$('sWorksList'); 
+  let filtered=works.slice(); 
+  list.innerHTML=filtered.map(w=>{
+    return '<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong>'+escapeHtml(w.name)+'</strong> <small>('+(w.unit||'ед.')+')</small></label>'+
+    '<div style="margin-left:24px; margin-top:5px;">'+
+    '<label>Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> '+
+    '<label>Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label>'+
+    '<div class="km-inputs">'+
+    '<div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div>'+
+    '<div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div>'+
+    '</div>'+
+    '</div></div>';
+  }).join(''); 
+  modal.classList.add('active'); 
+}
+function closeSWorksModal(){ $('sWorksModal').classList.remove('active'); currentSquadId=null; }
+function applySWorks(){ 
+  let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; 
+  let road=(sq.objects&&sq.objects[0])||'Без объекта'; 
+  let checkboxes=document.querySelectorAll('#sWorksList .work-cb'); 
+  checkboxes.forEach(cb=>{ 
+    if(!cb.checked) return; 
+    let id=cb.dataset.id; let name=cb.dataset.name; let unit=cb.dataset.unit; 
+    let laborCost=parseFloat(cb.dataset.labor)||0; let directCost=parseFloat(cb.dataset.direct)||0; let toolCost=parseFloat(cb.dataset.toolcost)||0; 
+    let volumeDiv=cb.closest('.work-item').querySelector('.work-volume'); 
+    let hoursDiv=cb.closest('.work-item').querySelector('.work-hours');
+    let kmFromDiv=cb.closest('.work-item').querySelector('.work-km-from');
+    let kmToDiv=cb.closest('.work-item').querySelector('.work-km-to');
+    let volume=volumeDiv?parseFloat(volumeDiv.value):1; 
+    let toolHours=hoursDiv?parseFloat(hoursDiv.value):0; 
+    let kmFrom=kmFromDiv?parseFloat(kmFromDiv.value):undefined;
+    let kmTo=kmToDiv?parseFloat(kmToDiv.value):undefined;
+    if(isNaN(volume)||volume<=0) volume=1; 
+    if(isNaN(toolHours)) toolHours=0; 
+    let fuelLiters=0; 
+    let tool=tools.find(t=>t.id===id); 
+    if(tool) fuelLiters=Math.round(tool.fuelConsumption*toolHours*100)/100; 
+    let existing=sq.works.find(w=>w.id===id && w.road===road); 
+    if(!existing){ 
+      sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId:'', toolHours, fuelLiters, kmFrom, kmTo }); 
+    }else{ 
+      existing.volume=volume; existing.toolHours=toolHours; existing.fuelLiters=fuelLiters; existing.kmFrom=kmFrom; existing.kmTo=kmTo;
+    } 
+  }); 
+  renderSquads(); closeSWorksModal(); scheduleDraftSave(); 
+}
+function openSTmcModal(squadId){ currentSquadId=squadId; let modal=$('sTmcModal'); let list=$('sTmcList'); list.innerHTML=tmc.map(t=>'<label class="sw-item"><input type="checkbox" data-id="'+t.id+'" data-name="'+escapeHtml(t.name)+'" data-unit="'+escapeHtml(t.unit||'')+'" data-price="'+(t.price||0)+'"> '+escapeHtml(t.name)+' ('+t.unit+')</label>').join(''); modal.classList.add('active'); }
+function closeSTmcModal(){ $('sTmcModal').classList.remove('active'); currentSquadId=null; }
+function applySTmc(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#sTmcList input:checked')); checked.forEach(cb=>{ let id=cb.dataset.id; if(!sq.tmc.some(t=>t.id===id)){ let qty=parseFloat(prompt('Количество '+cb.dataset.name+':','1')); if(isNaN(qty)||qty<=0) return; sq.tmc.push({ id, name:cb.dataset.name, unit:cb.dataset.unit, qty, price:parseFloat(cb.dataset.price)||0 }); } }); renderSquads(); closeSTmcModal(); scheduleDraftSave(); }
+
+// ===================== СОХРАНЕНИЕ =====================
+
+function saveEntry(ev){ if(ev) ev.preventDefault(); if(!formSquads.length){ showToast('Добавьте хотя бы один наряд'); return false; }
+  let date=$('inpDate').value; if(!date){ showToast('Укажите дату'); return false; }
+  for(let sq of formSquads){ if(!sq.objects||!sq.objects.length){ showToast('Добавьте объект в каждый наряд'); return false; } if(!sq.people||!sq.people.length){ showToast('Добавьте работников в каждый наряд'); return false; } for(let p of sq.people){ let h=parseFloat(p.hours); if(isNaN(h)||h<=0||h>24){ showToast('Часы работника '+p.name+' должны быть от 0.5 до 24'); return false; } } for(let w of (sq.works||[])){ if(w.volume<=0){ showToast('Объём работы "'+w.name+'" должен быть больше 0'); return false; } } }
+  if(editingEntryIndex>=0 && entries[editingEntryIndex]){ let oldEntry=entries[editingEntryIndex]; for(let oldSquad of (oldEntry.squads||[])){ for(let oldTmc of (oldSquad.tmc||[])){ let stock=stockOrder.find(s=>s.id===oldTmc.id); if(stock) stock.qty+=oldTmc.qty; } } save(STORAGE_KEYS.stockOrder,stockOrder); }
+  for(let sq of formSquads){ for(let t of (sq.tmc||[])){ let stock=stockOrder.find(s=>s.id===t.id); if(!stock||stock.qty<t.qty){ showToast('Недостаточно '+t.name+' на складе (остаток: '+(stock?stock.qty.toFixed(2):0)+')'); return false; } stock.qty-=t.qty; } }
+  save(STORAGE_KEYS.stockOrder,stockOrder);
+  let entry={ id:Date.now(), date, important:$('inpImportant').checked, squads:JSON.parse(JSON.stringify(formSquads)), reminder:$('inpReminder').value||'', reminderText:$('inpReminderText').value||'', weather:$('inpWeather').value||'', weatherCond:$('inpWeatherCond').value||'', notes:$('inpNotes').value||'', created:new Date().toISOString() };
+  if(editingEntryIndex>=0){ entries[editingEntryIndex]=entry; showToast('Запись обновлена'); } else { entries.unshift(entry); showToast('Запись сохранена'); }
+  save(STORAGE_KEYS.entries,entries); clearForm(); clearDraft(); showPage('pageJournal'); renderEntries(); renderCalendar(); return false;
+}
+function clearForm(){ formSquads=[]; editingEntryIndex=-1; if($('editBadge')) $('editBadge').style.display='none'; if($('btnCancelEdit')) $('btnCancelEdit').style.display='none'; if($('btnSubmit')) $('btnSubmit').textContent='💾 Сохранить запись'; if($('entryForm')) $('entryForm').reset(); if($('inpDate')) $('inpDate').value=todayStr(); renderSquads(); clearDraft(); if($('draftBadge')) $('draftBadge').style.display='none'; }
+function cancelEdit(){ clearForm(); }
+function editEntry(idx){ let e=entries[idx]; if(!e) return; editingEntryIndex=idx; $('inpDate').value=e.date; $('inpImportant').checked=e.important||false; $('inpReminder').value=e.reminder||''; $('inpReminderText').value=e.reminderText||''; $('inpWeather').value=e.weather||''; $('inpWeatherCond').value=e.weatherCond||''; $('inpNotes').value=e.notes||''; formSquads=JSON.parse(JSON.stringify(e.squads||[])); renderSquads(); $('editBadge').style.display='block'; $('editId').textContent=e.id; $('btnCancelEdit').style.display='block'; $('btnSubmit').textContent='💾 Обновить запись'; showPage('pageNew'); }
+function deleteEntry(idx){ if(!confirm('Удалить запись?')) return; let delEntry=entries[idx]; if(delEntry){ for(let squad of (delEntry.squads||[])){ for(let tmc of (squad.tmc||[])){ let stock=stockOrder.find(s=>s.id===tmc.id); if(stock) stock.qty+=tmc.qty; } } save(STORAGE_KEYS.stockOrder,stockOrder); } entries.splice(idx,1); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendar(); showToast('Запись удалена'); }
+function duplicateEntry(idx){ let e=JSON.parse(JSON.stringify(entries[idx])); e.id=Date.now(); e.created=new Date().toISOString(); e.date=todayStr(); entries.unshift(e); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendar(); showToast('Запись продублирована на сегодня'); }
+function saveTemplate(){ if(!formSquads.length){ showToast('Нет нарядов для сохранения'); return; } let name=prompt('Название шаблона:','Бригада '+todayStr()); if(!name) return; templates.push({ id:Date.now(), name, squads:JSON.parse(JSON.stringify(formSquads)) }); save(STORAGE_KEYS.templates,templates); renderTemplates(); showToast('Шаблон сохранён'); }
+function loadTemplate(id){ if(!id) return; if(formSquads.length && !confirm('Заменить текущие наряды шаблоном?')) return; let t=templates.find(x=>x.id===parseInt(id)); if(!t) return; formSquads=JSON.parse(JSON.stringify(t.squads)); renderSquads(); scheduleDraftSave(); showToast('Шаблон загружен'); $('templateSelect').value=''; }
+function renderTemplates(){ let sel=$('templateSelect'); if(sel) sel.innerHTML='<option value="">📂 Загрузить шаблон</option>'+templates.map(t=>'<option value="'+t.id+'">'+escapeHtml(t.name)+'</option>').join(''); }
+
+// ===================== ЖУРНАЛ =====================
+
 function renderEntries(){
-  let filtered=getFilteredEntries(); renderDynamicCalendar();
-  let months={}; filtered.forEach(e=>{ let m=e.date.slice(0,7); if(!months[m]) months[m]=[]; months[m].push(e); });
+  let filtered=getFilteredEntries();
+  renderDynamicCalendar();
+
+  let months={};
+  filtered.forEach(e=>{ let m=e.date.slice(0,7); if(!months[m]) months[m]=[]; months[m].push(e); });
   let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   let html='';
   Object.keys(months).sort().reverse().forEach(month=>{
     let [y,m]=month.split('-'); let title=monthNames[parseInt(m)-1]+' '+y;
-    let days={}; months[month].forEach(e=>{ let day=e.date; if(!days[day]) days[day]=[]; days[day].push(e); });
+    let entriesThisMonth=months[month];
+    let days={};
+    entriesThisMonth.forEach(e=>{ let day=e.date; if(!days[day]) days[day]=[]; days[day].push(e); });
     let daysHtml='';
     Object.keys(days).sort().forEach(day=>{
       daysHtml+=`<div style="margin-bottom:12px;"><div style="font-weight:600;color:var(--primary);margin-bottom:6px;">${formatDate(day)}</div>`;
@@ -474,26 +1153,30 @@ function renderEntries(){
         let allPeople=e.squads?.reduce((a,s)=>a+(s.people?.length||0),0)||0;
         let normInfo=calcEntryNorm(e);
         let normBadge=`<span class="norm-badge ${normInfo.statusClass}">${normInfo.statusText} | ${normInfo.pct.toFixed(0)}%</span>`;
-        daysHtml+=`<div class="entry-item ${e.important?'important':''}" id="ent_${idx}" onclick="App.toggleEntry(${idx})"><div class="entry-header"><div><div class="entry-object">${allObjects.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div><div class="entry-meta-line">${normBadge}<span>${formatDate(e.date)}</span><span>👷 ${allPeople}</span>${e.weather?`<span>🌡️ ${escapeHtml(e.weather)}</span>`:''}</div></div><div class="entry-toggle-icon">▼</div></div><div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
+        daysHtml+=`<div class="entry-item ${e.important?'important':''}" id="ent_${idx}" onclick="App.toggleEntry(${idx})">
+          <div class="entry-header"><div><div class="entry-object">${allObjects.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div><div class="entry-meta-line">${normBadge}<span>${formatDate(e.date)}</span><span>👷 ${allPeople}</span>${e.weather?`<span>🌡️ ${escapeHtml(e.weather)}</span>`:''}</div></div><div class="entry-toggle-icon">▼</div></div>
+          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
       });
       daysHtml+=`</div>`;
     });
-    html+=`<div class="month-group" id="month_${month}"><div class="month-header" onclick="App.toggleMonth('${month}')"><span>📁 ${title} (${months[month].length})</span><button class="month-delete" onclick="event.stopPropagation();App.deleteMonth('${month}')">🗑️ Удалить месяц</button></div><div class="month-content">${daysHtml}</div></div>`;
+    html+=`<div class="month-group" id="month_${month}"><div class="month-header" onclick="App.toggleMonth('${month}')"><span>📁 ${title} (${entriesThisMonth.length})</span><button class="month-delete" onclick="event.stopPropagation();App.deleteMonth('${month}')">🗑️ Удалить месяц</button></div><div class="month-content">${daysHtml}</div></div>`;
   });
   if(!html) html='<div class="empty-state">Нет записей</div>';
-  if($('entriesList')) $('entriesList').innerHTML=html;
-  let todayEntries=entries.filter(e=>e.date===todayStr());
-  let maxWorkers=0, objSet=new Set(), workSet=new Set();
-  todayEntries.forEach(e=>{ e.squads?.forEach(s=>{ maxWorkers=Math.max(maxWorkers,s.people?.length||0); s.objects?.forEach(o=>objSet.add(o)); s.works?.forEach(w=>workSet.add(w.name)); }); });
+  let list=$('entriesList'); if(list) list.innerHTML=html;
+
+  let today=todayStr();
+  let todayEntries=entries.filter(e=>e.date===today);
+  let maxWorkers=0, objectsSet=new Set(), worksSet=new Set();
+  todayEntries.forEach(e=>{ e.squads?.forEach(s=>{ maxWorkers=Math.max(maxWorkers,s.people?.length||0); s.objects?.forEach(o=>objectsSet.add(o)); s.works?.forEach(w=>worksSet.add(w.name)); }); });
   if($('statWorkers')) $('statWorkers').textContent=maxWorkers;
-  if($('statObjects')) $('statObjects').textContent=objSet.size;
-  if($('statWorks')) $('statWorks').textContent=workSet.size;
+  if($('statObjects')) $('statObjects').textContent=objectsSet.size;
+  if($('statWorks')) $('statWorks').textContent=worksSet.size;
 }
 function toggleEntry(idx){ let el=$('ent_'+idx); if(el) el.classList.toggle('expanded'); }
 function toggleMonth(month){ let el=$('month_'+month); if(el) el.classList.toggle('expanded'); }
-function deleteMonth(month){ if(confirm('Удалить все записи за месяц?')){ entries=entries.filter(e=>!e.date.startsWith(month)); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendarGrid2(); showToast('Месяц удалён'); } }
+function deleteMonth(month){ if(confirm('Удалить все записи за этот месяц?')){ entries=entries.filter(e=>!e.date.startsWith(month)); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendar(); showToast('Месяц удалён'); } }
 function calcEntryNorm(e){
-  let totalNorm=0,totalFact=0;
+  let totalNorm=0, totalFact=0;
   e.squads?.forEach(sq=>{
     let normPeople=sq.people?.filter(p=>{ let w=workers.find(x=>x.name===p.name); return !w||(CATEGORIES[w.category]&&CATEGORIES[w.category].norm); })||[];
     let fact=normPeople.reduce((s,p)=>s+(parseFloat(p.hours)||8),0);
@@ -501,7 +1184,7 @@ function calcEntryNorm(e){
     totalNorm+=norm; totalFact+=fact;
   });
   let pct=totalFact?(totalNorm/totalFact)*100:0;
-  let statusClass='ok',statusText='В норме';
+  let statusClass='ok', statusText='В норме';
   if(pct<80){ statusClass='bad'; statusText='Недовыполнение'; }
   else if(pct<90){ statusClass='warn'; statusText='Ниже нормы'; }
   else if(pct>130){ statusClass='bad'; statusText='Перевыполнено >130%'; }
@@ -527,8 +1210,10 @@ function renderEntryDetails(e){
         html+=`<div class="road-block"><div class="road-title">🛣️ ${escapeHtml(road)}</div>`;
         byRoad[road].forEach(w=>{
           let tool=tools.find(t=>t.id===w.toolId);
+          let machineCost=tool?(tool.machineCostPerHour||0)*(w.toolHours||0):0;
+          let workerCost=((w.directCost||0)-(w.toolCost||0))*w.volume;
           let kmInfo = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ` | 🛣️ ${w.kmFrom}–${w.kmTo} км` : '';
-          html+=`<div>• ${escapeHtml(w.name)} — <b>${w.volume} ${w.unit||''}</b>${kmInfo}</div>`;
+          html+=`<div>• ${escapeHtml(w.name)} — <b>${w.volume} ${w.unit||''}</b>${kmInfo}${w.laborCost?`<br>&nbsp;&nbsp;Норма: ${(w.laborCost*w.volume).toFixed(1)} чел-ч`:''}${workerCost?`<br>&nbsp;&nbsp;Рабочие: ${workerCost.toFixed(2)} руб. | Инстр.: ${((w.toolCost||0)*w.volume).toFixed(2)} руб.`:''}${tool?`<br>&nbsp;&nbsp;Инструмент: ${escapeHtml(tool.name)} ${w.toolHours||0}ч | ⛽ ${(w.fuelLiters||0).toFixed(2)} л | Аморт. ${machineCost.toFixed(2)} руб.`:''}</div>`;
         });
         html+=`</div>`;
       }
@@ -538,292 +1223,820 @@ function renderEntryDetails(e){
     if(sq.planTomorrow) html+=`<div>📅 План: ${escapeHtml(sq.planTomorrow)}</div>`;
     html+='<hr>';
   });
+  if(e.reminder) html+=`<div>⏰ Напоминание: ${new Date(e.reminder).toLocaleString()} — ${escapeHtml(e.reminderText||'')}</div>`;
   return html;
 }
 
-// -------------------- DYNAMIC CALENDAR (journal page) --------------------
-function renderDynamicCalendar(){
-  let container=$('dynamicCalendar'); if(!container) return;
-  if(currentFilter==='today') renderDayView(container, todayStr());
-  else if(currentFilter==='week') renderWeekView(container);
-  else renderMonthViewDynamic(container);
-}
-function renderDayView(container, date){
-  let dayEntries=entries.filter(e=>e.date===date);
-  let dayTasks=tasks.filter(t=>t.date===date && !t.done);
-  let html=`<div class="day-view-card"><div class="day-view-date">${formatDate(date)}</div><div class="day-view-tasks">`;
-  if(dayTasks.length) html+=`<div>📋 Задачи: ${dayTasks.map(t=>escapeHtml(t.text)).join(', ')}</div>`;
-  if(dayEntries.length) html+=`<div>📋 Записей: ${dayEntries.length}</div>`;
-  html+=`</div></div>`;
-  container.innerHTML=html;
-}
-function renderWeekView(container){
-  let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
-  let html='<div class="week-view">';
-  let dayNames=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  for(let i=0;i<7;i++){
-    let cd=new Date(sd); cd.setDate(sd.getDate()+i);
-    let ds=cd.toISOString().slice(0,10);
-    let dayEntries=entries.filter(e=>e.date===ds);
-    let cls='week-day-card';
-    if(ds===todayStr()) cls+=' today';
-    if(dayEntries.length) cls+=' has-entry';
-    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')"><div class="week-day-name">${dayNames[i]}</div><div class="week-day-num">${cd.getDate()}</div><div class="week-day-info">${dayEntries.length?`📋 ${dayEntries.length}`:''}</div></div>`;
-  }
-  html+='</div>';
-  container.innerHTML=html;
-}
-function renderMonthViewDynamic(container){
-  let y=currentMonthCalendar.getFullYear(), m=currentMonthCalendar.getMonth();
-  let firstDay=new Date(y,m,1).getDay(); let daysInMonth=new Date(y,m+1,0).getDate();
-  let startOffset=firstDay===0?6:firstDay-1;
-  let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  let label=monthNames[m]+' '+y;
-  let html=`<div style="display:flex;justify-content:space-between;margin-bottom:12px"><button class="btn btn-secondary btn-small" onclick="App.changeMonthCalendar(-1)">◀</button><span style="font-weight:700">${label}</span><button class="btn btn-secondary btn-small" onclick="App.changeMonthCalendar(1)">▶</button></div><div class="calendar-grid">`;
-  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>html+=`<div class="calendar-day header">${d}</div>`);
-  for(let i=0;i<startOffset;i++) html+=`<div class="calendar-day"></div>`;
-  let today=todayStr();
-  for(let d=1;d<=daysInMonth;d++){
-    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let hasEntry=entries.some(e=>e.date===ds);
-    let cls=`calendar-day ${hasEntry?'has-entry':''} ${ds===today?'today':''}`;
-    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
-  }
-  html+='</div>';
-  container.innerHTML=html;
-}
-function changeMonthCalendar(delta){ currentMonthCalendar.setMonth(currentMonthCalendar.getMonth()+delta); renderDynamicCalendar(); renderCalendarGrid2(); }
-function showDayDetails(date){
-  let dayEntries=entries.filter(e=>e.date===date);
-  let dayTasks=tasks.filter(t=>t.date===date && !t.done);
-  let html=`<div><b>${formatDate(date)}</b></div>`;
-  if(dayTasks.length) html+=`<div>📌 Задачи:<br>${dayTasks.map(t=>`- ${escapeHtml(t.text)}`).join('<br>')}</div>`;
-  if(dayEntries.length) html+=`<div>📋 Записи:<br>${dayEntries.map(e=>`- ${e.squads?.flatMap(s=>s.objects).join(', ')}`).join('<br>')}</div>`;
-  if(!dayTasks.length && !dayEntries.length) html+='<div>Нет записей и задач</div>';
-  if($('dayModalContent')) $('dayModalContent').innerHTML=html;
-  if($('dayModalTitle')) $('dayModalTitle').innerHTML=`📅 ${formatDate(date)}`;
-  selectedCalendarDate=date;
-  $('dayModal')?.classList.add('active');
-}
-function closeDayModal(){ $('dayModal')?.classList.remove('active'); selectedCalendarDate=null; }
-function addEntryFromCalendar(){ if(selectedCalendarDate){ $('inpDate').value=selectedCalendarDate; showPage('pageNew'); closeDayModal(); showToast('Дата подставлена'); } else showToast('Выберите дату'); }
+// ===================== СКЛАД =====================
 
-// -------------------- ROAD KM --------------------
-function getRoadKmSegments(roadName, filterType){
-  let source=entries;
-  if(filterType==='today') source=entries.filter(e=>e.date===todayStr());
-  else if(filterType==='week'){ let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1); let ed=new Date(sd); ed.setDate(ed.getDate()+6); source=entries.filter(e=>{ let de=new Date(e.date); return de>=sd && de<=ed;}); }
-  else if(filterType==='important') source=entries.filter(e=>e.important);
-  let segments=[];
-  source.forEach(e=>{ e.squads?.forEach(sq=>{ sq.works?.forEach(w=>{ if(w.road===roadName && w.kmFrom!==undefined && w.kmTo!==undefined) segments.push({kmFrom:w.kmFrom,kmTo:w.kmTo,workName:w.name,volume:w.volume,unit:w.unit,entryDate:e.date,duplicate:false}); }); }); });
-  for(let i=0;i<segments.length;i++) for(let j=i+1;j<segments.length;j++) if(segments[i].kmFrom<segments[j].kmTo && segments[i].kmTo>segments[j].kmFrom) { segments[i].duplicate=true; segments[j].duplicate=true; }
-  return segments;
-}
-function renderRoadSelector(){
-  let sel=$('roadSelector'); if(!sel) return;
-  let html='<option value="">📍 Выберите дорогу</option>'; roads.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${escapeHtml(r.name)}${r.length?' ('+r.length+' км)':''}</option>`; });
-  sel.innerHTML=html;
-  if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
-}
-function selectRoadForScale(roadName){ selectedRoadForScale=roadName; renderRoadKmScale(roadName); }
-function renderRoadKmScale(roadName){
-  let container=$('roadKmScale'), history=$('roadKmHistory');
-  if(!container || !roadName){ if(container) container.innerHTML=''; if(history) history.innerHTML=''; return; }
-  let road=roads.find(r=>r.name===roadName); if(!road) return;
-  let segments=getRoadKmSegments(roadName, currentFilter);
-  let total=parseFloat(road.length)||0, covered=0;
-  if(total>0 && segments.length){
-    let merged=[]; let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
-    sorted.forEach(s=>{ if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo}); else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); } });
-    merged.forEach(m=>covered+=(m.to-m.from));
-  }
-  let pct=total?Math.min(100,(covered/total)*100):0;
-  container.innerHTML=`<div class="km-scale-container"><div class="road-scale-title">${escapeHtml(roadName)} : ${covered.toFixed(1)} / ${total} км (${pct.toFixed(1)}%)</div><div class="km-scale-track"><div class="km-scale-done" style="width:${pct}%"></div></div></div>`;
-  if(history) history.innerHTML=segments.length? `<div class="card-title">📜 История</div>`+segments.map(s=>`<div class="km-history-item">${s.kmFrom}–${s.kmTo} км : ${s.workName} (${s.volume} ${s.unit})</div>`).join('') : '<div class="empty-state">Нет данных</div>';
-}
-function renderReportRoadSelect(){ let sel=$('reportRoadSelect'); if(sel) sel.innerHTML='<option value="">Выберите дорогу</option>'+roads.map(r=>`<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join(''); }
-function generateRoadKmReport(){ let roadName=$('reportRoadSelect')?.value; let container=$('roadReportResult'); if(!roadName||!container) return; let road=roads.find(r=>r.name===roadName); let segments=getRoadKmSegments(roadName,'all'); let total=parseFloat(road?.length)||0, covered=0; if(total>0&&segments.length){ let merged=[]; segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom).forEach(s=>{ if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo}); else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); } }); merged.forEach(m=>covered+=(m.to-m.from)); } let pct=total?(covered/total)*100:0; container.innerHTML=`<div class="card"><div>📊 ${escapeHtml(roadName)}: ${covered.toFixed(1)}/${total} км (${pct.toFixed(1)}%)</div></div>`; }
-
-// -------------------- SQUADS (Формирование нарядов) --------------------
-function addSquad(data){ let sid='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); let squad=data?JSON.parse(JSON.stringify(data)):{id:sid,category:'road',objects:[],people:[],works:[],tmc:[],planToday:'',planTomorrow:'',notes:''}; if(!data) squad.id=sid; formSquads.push(squad); renderSquads(); scheduleDraftSave(); }
-function removeSquad(sid){ formSquads=formSquads.filter(s=>s.id!==sid); renderSquads(); scheduleDraftSave(); }
-function duplicateSquad(sid){ let src=formSquads.find(s=>s.id===sid); if(src){ let dup=JSON.parse(JSON.stringify(src)); dup.id='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); formSquads.push(dup); renderSquads(); scheduleDraftSave(); showToast('Наряд продублирован'); } }
-function scheduleDraftSave(){ if(draftTimer) clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,2000); }
-function saveDraft(){ let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; save(STORAGE_KEYS.draft,draft); }
-function loadDraft(){ let d=load(STORAGE_KEYS.draft,null); if(d&&d.squads&&d.squads.length){ $('inpDate').value=d.date||todayStr(); $('inpImportant').checked=d.important; $('inpReminder').value=d.reminder; $('inpReminderText').value=d.reminderText; $('inpWeather').value=d.weather; $('inpWeatherCond').value=d.weatherCond; $('inpNotes').value=d.notes; formSquads=d.squads; renderSquads(); $('draftBadge').style.display='block'; return true; } return false; }
-function clearDraft(){ localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
-function changeSquadCategory(sid,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s.category=val; renderSquads(); scheduleDraftSave(); } }
-function updateSquadField(sid,field,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s[field]=val; scheduleDraftSave(); } }
-function addObject(sid){ let inp=$('objInp_'+sid); if(!inp) return; let v=inp.value.trim(); if(!v){ showToast('Введите объект'); return; } let s=formSquads.find(x=>x.id===sid); if(s&&!s.objects.includes(v)){ s.objects.push(v); inp.value=''; renderSquads(); scheduleDraftSave(); showToast('Объект добавлен'); } else showToast('Объект уже есть'); }
-function removeObject(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.objects.splice(idx,1); renderSquads(); scheduleDraftSave(); }
-function removeWork(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.works.splice(idx,1); renderSquads(); scheduleDraftSave(); }
-function editWorkVolume(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(!s||!s.works[idx]) return; let w=s.works[idx]; let newVol=prompt('Новый объём ('+w.unit+'):',w.volume); if(newVol!==null){ let v=parseFloat(newVol); if(!isNaN(v)&&v>=0) w.volume=v; } renderSquads(); scheduleDraftSave(); showToast('Обновлено'); }
-function removeTmc(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.tmc.splice(idx,1); renderSquads(); scheduleDraftSave(); }
-function updateWorkerHours(sid,pidx,val){ let s=formSquads.find(x=>x.id===sid); if(s&&s.people[pidx]){ s.people[pidx].hours=parseFloat(val)||8; renderSquads(); scheduleDraftSave(); } }
-function renderSquads(){
-  let container=$('squadsContainer'); if(!container) return; container.innerHTML='';
-  formSquads.forEach((sq,index)=>{
-    let catInfo=CATEGORIES[sq.category]||CATEGORIES.other;
-    let objTags=(sq.objects||[]).map((o,i)=>`<span class="object-tag">${escapeHtml(o)}<button class="del-tag" onclick="App.removeObject('${sq.id}',${i})">×</button></span>`).join('');
-    let peoplePreview=(sq.people||[]).map((p,pi)=>`<span class="people-tag">${escapeHtml(p.name)} <input type="number" class="hours-inp" value="${p.hours||8}" step="0.5" onchange="App.updateWorkerHours('${sq.id}',${pi},this.value)"> ч</span>`).join('');
-    let worksHtml=(sq.works||[]).map((w,i)=>`<div class="preview-item"><div class="preview-item-name">${escapeHtml(w.name)} — ${w.volume} ${w.unit||''}</div><button class="del-btn" onclick="App.editWorkVolume('${sq.id}',${i})">✏️</button><button class="del-btn" onclick="App.removeWork('${sq.id}',${i})">🗑️</button></div>`).join('');
-    let tmcPreview=(sq.tmc||[]).map((t,i)=>`<div class="preview-item"><div class="preview-item-name">${escapeHtml(t.name)}: ${t.qty} ${t.unit||''}</div><button class="del-btn" onclick="App.removeTmc('${sq.id}',${i})">🗑️</button></div>`).join('');
-    container.innerHTML+=`<div class="squad-card"><div class="squad-header"><div class="squad-title">Наряд #${index+1}</div><div><span class="squad-category" style="background:${catInfo.color}">${catInfo.name}</span><button class="squad-dup-btn" onclick="App.duplicateSquad('${sq.id}')">📋</button></div></div>
-    <div class="form-group"><label>Категория</label><select onchange="App.changeSquadCategory('${sq.id}',this.value)">${Object.keys(CATEGORIES).map(k=>`<option value="${k}"${sq.category===k?' selected':''}>${CATEGORIES[k].name}</option>`).join('')}</select></div>
-    <div class="form-group"><label>Объекты</label><input type="text" list="roadsList" id="objInp_${sq.id}" placeholder="Введите объект"><button class="btn btn-small btn-secondary" onclick="App.addObject('${sq.id}')">➕ Добавить</button><div class="object-tags">${objTags}</div></div>
-    <div class="form-group"><label>Работники</label><div class="people-list">${peoplePreview}</div><button class="btn btn-small btn-secondary" onclick="App.openSwModal('${sq.id}')">➕ Выбрать</button></div>
-    <div class="form-group"><label>Виды работ</label>${worksHtml}<button class="btn btn-small btn-secondary" onclick="App.openSWorksModal('${sq.id}')">➕ Выбрать работы</button></div>
-    <div class="form-group"><label>ТМЦ</label>${tmcPreview}<button class="btn btn-small btn-secondary" onclick="App.openSTmcModal('${sq.id}')">➕ Добавить ТМЦ</button></div>
-    <div class="form-group"><label>Выполнено сегодня</label><textarea onchange="App.updateSquadField('${sq.id}','planToday',this.value)">${escapeHtml(sq.planToday||'')}</textarea></div>
-    <div class="form-group"><label>План на завтра</label><textarea onchange="App.updateSquadField('${sq.id}','planTomorrow',this.value)">${escapeHtml(sq.planTomorrow||'')}</textarea></div>
-    <button class="btn btn-danger btn-small" onclick="App.removeSquad('${sq.id}')">🗑️ Удалить наряд</button></div>`;
-  });
-}
-function openSwModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let list=$('swList'); list.innerHTML=workers.map(w=>`<label class="sw-item"><input type="checkbox" data-name="${escapeHtml(w.name)}" ${(sq.people||[]).some(p=>p.name===w.name)?'checked':''}> ${escapeHtml(w.name)}</label>`).join(''); $('swModal').classList.add('active'); }
-function closeSwModal(){ $('swModal').classList.remove('active'); currentSquadId=null; }
-function selectAllWorkers(checked){ document.querySelectorAll('#swList input[type="checkbox"]').forEach(cb=>cb.checked=checked); }
-function applySw(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(sq){ let checked=Array.from(document.querySelectorAll('#swList input:checked')).map(cb=>cb.dataset.name); sq.people=checked.map(name=>{ let existing=(sq.people||[]).find(p=>p.name===name); return existing||{name,hours:8}; }); renderSquads(); closeSwModal(); scheduleDraftSave(); } }
-function openSWorksModal(squadId){ currentSquadId=squadId; let list=$('sWorksList'); list.innerHTML=works.map(w=>`<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="${w.id}" data-name="${escapeHtml(w.name)}" data-unit="${escapeHtml(w.unit||'')}" data-labor="${w.laborCost||0}"> <strong>${escapeHtml(w.name)}</strong> (${w.unit||'ед'})</label><div style="margin-left:24px"><label>Объём: <input type="number" class="work-volume" value="1" step="0.1"></label> <label>От км: <input type="number" class="work-km-from" step="0.1"></label> <label>До км: <input type="number" class="work-km-to" step="0.1"></label></div></div>`).join(''); $('sWorksModal').classList.add('active'); }
-function closeSWorksModal(){ $('sWorksModal').classList.remove('active'); currentSquadId=null; }
-function applySWorks(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let road=(sq.objects&&sq.objects[0])||'Без объекта'; document.querySelectorAll('#sWorksList .work-cb:checked').forEach(cb=>{ let id=cb.dataset.id, name=cb.dataset.name, unit=cb.dataset.unit, labor=parseFloat(cb.dataset.labor)||0; let volumeDiv=cb.closest('.work-item').querySelector('.work-volume'); let volume=volumeDiv?parseFloat(volumeDiv.value):1; let kmFromDiv=cb.closest('.work-item').querySelector('.work-km-from'); let kmToDiv=cb.closest('.work-item').querySelector('.work-km-to'); let kmFrom=kmFromDiv?parseFloat(kmFromDiv.value):undefined; let kmTo=kmToDiv?parseFloat(kmToDiv.value):undefined; let existing=sq.works.find(w=>w.id===id && w.road===road); if(existing){ existing.volume=volume; existing.kmFrom=kmFrom; existing.kmTo=kmTo; } else sq.works.push({id,name,unit,laborCost:labor,volume,road,kmFrom,kmTo}); }); renderSquads(); closeSWorksModal(); scheduleDraftSave(); }
-function openSTmcModal(squadId){ currentSquadId=squadId; let list=$('sTmcList'); list.innerHTML=tmc.map(t=>`<label class="sw-item"><input type="checkbox" data-id="${t.id}" data-name="${escapeHtml(t.name)}" data-unit="${escapeHtml(t.unit||'')}" data-price="${t.price||0}"> ${escapeHtml(t.name)} (${t.unit})</label>`).join(''); $('sTmcModal').classList.add('active'); }
-function closeSTmcModal(){ $('sTmcModal').classList.remove('active'); currentSquadId=null; }
-function applySTmc(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; document.querySelectorAll('#sTmcList input:checked').forEach(cb=>{ let id=cb.dataset.id; if(!sq.tmc.some(t=>t.id===id)){ let qty=parseFloat(prompt('Количество '+cb.dataset.name+':','1')); if(!isNaN(qty)&&qty>0) sq.tmc.push({id,name:cb.dataset.name,unit:cb.dataset.unit,qty,price:parseFloat(cb.dataset.price)||0}); } }); renderSquads(); closeSTmcModal(); scheduleDraftSave(); }
-
-// -------------------- SAVE ENTRY --------------------
-function saveEntry(ev){ if(ev) ev.preventDefault(); if(!formSquads.length){ showToast('Добавьте наряд'); return false; }
-  let date=$('inpDate').value; if(!date){ showToast('Укажите дату'); return false; }
-  for(let sq of formSquads){ if(!sq.objects.length){ showToast('Добавьте объект'); return false; } if(!sq.people.length){ showToast('Добавьте работников'); return false; } }
-  if(editingEntryIndex>=0 && entries[editingEntryIndex]){ let oldEntry=entries[editingEntryIndex]; for(let oldSquad of (oldEntry.squads||[])) for(let oldTmc of (oldSquad.tmc||[])){ let stock=stockOrder.find(s=>s.id===oldTmc.id); if(stock) stock.qty+=oldTmc.qty; } save(STORAGE_KEYS.stockOrder,stockOrder); }
-  for(let sq of formSquads) for(let t of (sq.tmc||[])){ let stock=stockOrder.find(s=>s.id===t.id); if(!stock||stock.qty<t.qty){ showToast(`Недостаточно ${t.name}`); return false; } stock.qty-=t.qty; }
-  save(STORAGE_KEYS.stockOrder,stockOrder);
-  let entry={ id:Date.now(), date, important:$('inpImportant').checked, squads:JSON.parse(JSON.stringify(formSquads)), reminder:$('inpReminder').value||'', reminderText:$('inpReminderText').value||'', weather:$('inpWeather').value||'', weatherCond:$('inpWeatherCond').value||'', notes:$('inpNotes').value||'', created:new Date().toISOString() };
-  if(editingEntryIndex>=0){ entries[editingEntryIndex]=entry; showToast('Обновлено'); } else { entries.unshift(entry); showToast('Сохранено'); }
-  save(STORAGE_KEYS.entries,entries); clearForm(); clearDraft(); showPage('pageJournal'); renderEntries(); renderCalendarGrid2(); return false;
-}
-function clearForm(){ formSquads=[]; editingEntryIndex=-1; if($('editBadge')) $('editBadge').style.display='none'; if($('btnCancelEdit')) $('btnCancelEdit').style.display='none'; if($('btnSubmit')) $('btnSubmit').textContent='💾 Сохранить запись'; if($('entryForm')) $('entryForm').reset(); if($('inpDate')) $('inpDate').value=todayStr(); renderSquads(); clearDraft(); if($('draftBadge')) $('draftBadge').style.display='none'; }
-function cancelEdit(){ clearForm(); showPage('pageNew'); }
-function editEntry(idx){ let e=entries[idx]; if(!e) return; editingEntryIndex=idx; $('inpDate').value=e.date; $('inpImportant').checked=e.important||false; $('inpReminder').value=e.reminder||''; $('inpReminderText').value=e.reminderText||''; $('inpWeather').value=e.weather||''; $('inpWeatherCond').value=e.weatherCond||''; $('inpNotes').value=e.notes||''; formSquads=JSON.parse(JSON.stringify(e.squads||[])); renderSquads(); $('editBadge').style.display='block'; $('editId').textContent=e.id; $('btnCancelEdit').style.display='block'; $('btnSubmit').textContent='💾 Обновить запись'; showPage('pageNew'); }
-function deleteEntry(idx){ if(!confirm('Удалить?')) return; let delEntry=entries[idx]; if(delEntry) for(let squad of (delEntry.squads||[])) for(let tmc of (squad.tmc||[])){ let stock=stockOrder.find(s=>s.id===tmc.id); if(stock) stock.qty+=tmc.qty; } save(STORAGE_KEYS.stockOrder,stockOrder); entries.splice(idx,1); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendarGrid2(); showToast('Удалено'); }
-function duplicateEntry(idx){ let e=JSON.parse(JSON.stringify(entries[idx])); e.id=Date.now(); e.created=new Date().toISOString(); e.date=todayStr(); entries.unshift(e); save(STORAGE_KEYS.entries,entries); renderEntries(); renderCalendarGrid2(); showToast('Продублировано на сегодня'); }
-function saveTemplate(){ if(!formSquads.length){ showToast('Нет нарядов'); return; } let name=prompt('Название шаблона:','Бригада '+todayStr()); if(name){ templates.push({id:Date.now(),name,squads:JSON.parse(JSON.stringify(formSquads))}); save(STORAGE_KEYS.templates,templates); renderTemplates(); showToast('Шаблон сохранён'); } }
-function loadTemplate(id){ if(!id) return; if(formSquads.length && !confirm('Заменить текущие наряды?')) return; let t=templates.find(x=>x.id===parseInt(id)); if(t){ formSquads=JSON.parse(JSON.stringify(t.squads)); renderSquads(); scheduleDraftSave(); showToast('Шаблон загружен'); } $('templateSelect').value=''; }
-function renderTemplates(){ let sel=$('templateSelect'); if(sel) sel.innerHTML='<option value="">📂 Загрузить шаблон</option>'+templates.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join(''); }
-
-// -------------------- TIMESHEET --------------------
-function renderTimesheet(){
-  let month=$('tsMonth').value||new Date().toISOString().slice(0,7);
-  let cat=$('tsCategory').value;
-  let peopleMap=new Map();
-  entries.filter(e=>e.date.startsWith(month)).forEach(e=>e.squads?.forEach(s=>{ if(cat==='all'||s.category===cat) s.people?.forEach(p=>{ if(!peopleMap.has(p.name)) peopleMap.set(p.name,{hours:0,days:0}); let rec=peopleMap.get(p.name); rec.hours+=p.hours||8; rec.days++; }); }));
-  let html='<table class="report-table"><tr><th>Работник</th><th>Часы</th><th>Дней</th></tr>';
-  for(let [name,data] of peopleMap) html+=`<tr><td>${escapeHtml(name)}</td><td>${data.hours}</td><td>${data.days}</td></tr>`;
-  html+='</table>';
-  if(peopleMap.size===0) html='<div class="empty-state">Нет данных</div>';
-  $('timesheetResult').innerHTML=html;
-}
-function addTimesheetWorker(){ let name=prompt('ФИО работника'); if(name){ workers.push({name,category:'road'}); save(STORAGE_KEYS.workers,workers); renderTimesheet(); showToast('Работник добавлен'); } }
-function exportTimesheetCSV(){ let csv='Работник,Часы,Дни\n'; showToast('CSV экспортирован'); }
-function exportTimesheetExcel(){ showToast('Excel экспорт'); }
-function clearTimesheetOverrides(){ timesheetOverrides={}; save(STORAGE_KEYS.tsOverrides,timesheetOverrides); renderTimesheet(); showToast('Сброшено'); }
-
-// -------------------- REPORTS --------------------
-function generateSummaryReport(){ let from=$('reportFrom').value, to=$('reportTo').value; if(!from||!to){ showToast('Выберите период'); return; } let filtered=entries.filter(e=>e.date>=from&&e.date<=to); let workTotals={}; filtered.forEach(e=>e.squads?.forEach(s=>s.works?.forEach(w=>{ workTotals[w.name]=(workTotals[w.name]||0)+w.volume; }))); let html=`<div class="card"><div class="card-title">Сводный отчёт ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><table class="report-table"><tr><th>Работа</th><th>Объём</th></tr>${Object.entries(workTotals).map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td>${v.toFixed(2)}</td></tr>`).join('')}</table></div>`; $('reportResult').innerHTML=html; }
-function generateWorkersReport(){ let from=$('reportFrom').value, to=$('reportTo').value; if(!from||!to){ showToast('Выберите период'); return; } let cat=$('reportCategory').value; let stats={}; entries.filter(e=>e.date>=from&&e.date<=to).forEach(e=>e.squads?.forEach(s=>{ if(cat!=='all'&&s.category!==cat) return; s.people?.forEach(p=>{ if(!stats[p.name]) stats[p.name]={name:p.name,hours:0,days:0}; stats[p.name].hours+=p.hours||8; stats[p.name].days++; }); })); let html=`<div class="card"><div class="card-title">👷 Отчёт по людям</div><table class="report-table"><tr><th>Работник</th><th>Часы</th><th>Дней</th></tr>${Object.values(stats).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.hours.toFixed(1)}</td><td>${w.days}</td></tr>`).join('')}</table></div>`; $('reportResult').innerHTML=html; }
-function generateObjectsReport(){ let from=$('reportFrom').value, to=$('reportTo').value; if(!from||!to){ showToast('Выберите период'); return; } let objStats={}; entries.filter(e=>e.date>=from&&e.date<=to).forEach(e=>e.squads?.forEach(s=>s.objects?.forEach(o=>{ if(!objStats[o]) objStats[o]={name:o,entries:0,works:0,people:0}; objStats[o].entries++; objStats[o].works+=s.works?.reduce((sum,w)=>sum+w.volume,0)||0; objStats[o].people+=s.people?.length||0; }))); let html=`<div class="card"><div class="card-title">📍 По объектам</div><table class="report-table"><tr><th>Объект</th><th>Записей</th><th>Объём работ</th><th>Работников</th></tr>${Object.values(objStats).map(o=>`<tr><td>${escapeHtml(o.name)}</td><td>${o.entries}</td><td>${o.works.toFixed(2)}</td><td>${o.people}</td></tr>`).join('')}</table></div>`; $('reportResult').innerHTML=html; }
-function exportCSV(){ showToast('CSV экспорт'); }
-function exportJSON(){ showToast('JSON экспорт'); }
-
-// -------------------- CATALOGS (полные функции) --------------------
-function renderCatalogsAll(){
-  renderWorkersList(); renderWorksList(); renderToolsList(); renderRoadsList();
-}
-function renderWorkersList(){ let container=$('workersCatalogList'); if(container) container.innerHTML=workers.map(w=>`<div class="catalog-item"><span>${escapeHtml(w.name)} (${w.category})</span><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker','${escapeHtml(w.name)}')">🗑️</button></div>`).join('')||'<div class="empty-state">Нет работников</div>'; }
-function renderWorksList(){ let container=$('worksCatalogList'); if(container) container.innerHTML=works.map(w=>`<div class="catalog-item"><span>${escapeHtml(w.name)} (${w.unit||'ед'})</span><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work',${w.id})">🗑️</button></div>`).join('')||'<div class="empty-state">Нет видов работ</div>'; }
-function renderToolsList(){ let container=$('toolsCatalogList'); if(container) container.innerHTML=tools.map(t=>`<div class="catalog-item"><span>${escapeHtml(t.name)}</span><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool',${t.id})">🗑️</button></div>`).join('')||'<div class="empty-state">Нет инструментов</div>'; }
-function renderRoadsList(){ let container=$('roadsCatalogList'); if(container) container.innerHTML=roads.map(r=>`<div class="catalog-item"><span>${escapeHtml(r.name)} (${r.length} км)</span><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road','${escapeHtml(r.name)}')">🗑️</button></div>`).join('')||'<div class="empty-state">Нет дорог</div>'; }
-function addCatalogItem(type){ if(type==='worker'){ let name=prompt('ФИО'); if(name){ workers.push({name,category:'road'}); save(STORAGE_KEYS.workers,workers); renderCatalogsAll(); showToast('Добавлен'); } } else if(type==='work'){ let name=prompt('Название работы'); let unit=prompt('Ед.измерения','м²'); if(name){ let newId=Date.now(); works.push({id:newId,name,unit,laborCost:1}); save(STORAGE_KEYS.works,works); renderCatalogsAll(); showToast('Добавлено'); } } else if(type==='tool'){ let name=prompt('Название инструмента'); if(name){ tools.push({id:Date.now(),name}); save(STORAGE_KEYS.tools,tools); renderCatalogsAll(); } } else if(type==='road'){ let name=prompt('Название дороги'); let len=parseFloat(prompt('Протяжённость (км)')); if(name&&len){ roads.push({name,length:len}); save(STORAGE_KEYS.roads,roads); renderCatalogsAll(); updateRoadSelector(); showToast('Дорога добавлена'); } } }
-function deleteCatalogItem(type,idOrName){ if(confirm('Удалить?')){ if(type==='worker'){ workers=workers.filter(w=>w.name!==idOrName); save(STORAGE_KEYS.workers,workers); } else if(type==='work'){ works=works.filter(w=>w.id!=idOrName); save(STORAGE_KEYS.works,works); } else if(type==='tool'){ tools=tools.filter(t=>t.id!=idOrName); save(STORAGE_KEYS.tools,tools); } else if(type==='road'){ roads=roads.filter(r=>r.name!==idOrName); save(STORAGE_KEYS.roads,roads); updateRoadSelector(); } renderCatalogsAll(); showToast('Удалено'); } }
-function importCatalogCSV(type){ showToast('Импорт CSV пока не реализован'); }
-function filterCatalog(val){ }
-function highlightMatch(){ }
-function editCatalogItem(){ }
-function saveCatalogItem(){ closeCatalogModal(); }
-function closeCatalogModal(){ $('catalogModal')?.classList.remove('active'); }
-
-// -------------------- TASKS --------------------
-function addTask(){ let text=$('newTaskText').value; let date=$('newTaskDate').value; let important=$('newTaskImportant')?.checked||false; if(!text||!date){ showToast('Заполните текст и дату'); return; } tasks.push({id:Date.now(),text,date,important,done:false}); save(STORAGE_KEYS.tasks,tasks); renderTasks(); $('newTaskText').value=''; showToast('Задача добавлена'); }
-function renderTasks(){ let filtered=tasks.slice(); if(currentTaskFilter==='active') filtered=filtered.filter(t=>!t.done); else if(currentTaskFilter==='done') filtered=filtered.filter(t=>t.done); else if(currentTaskFilter==='important') filtered=filtered.filter(t=>t.important); let html='<div class="card"><div class="card-title">📋 Задачи</div>'; filtered.forEach(t=>{ html+=`<div class="task-item ${t.important?'important':''} ${t.done?'done':''}"><input type="checkbox" class="task-check" onchange="App.toggleTaskDone(${t.id})" ${t.done?'checked':''}><span>${escapeHtml(t.text)}</span><span style="font-size:.7rem;color:var(--text-secondary)">${t.date}</span><button class="btn btn-small btn-danger" onclick="App.deleteTask(${t.id})">🗑️</button></div>`; }); html+='</div>'; $('tasksList').innerHTML=html; }
-function toggleTaskDone(id){ let t=tasks.find(t=>t.id===id); if(t){ t.done=!t.done; save(STORAGE_KEYS.tasks,tasks); renderTasks(); } }
-function deleteTask(id){ tasks=tasks.filter(t=>t.id!==id); save(STORAGE_KEYS.tasks,tasks); renderTasks(); showToast('Задача удалена'); }
-function setTaskFilter(type,btn){ currentTaskFilter=type; document.querySelectorAll('#subTasks .filter-chip').forEach(b=>b.classList.remove('active')); if(btn) btn.classList.add('active'); renderTasks(); }
-
-// -------------------- STOCK --------------------
-function addStockRow(type){ let name=prompt('Название'); if(!name) return; let unit=prompt('Ед.изм')||'шт'; let price=parseFloat(prompt('Цена')||0); let id=Date.now(); let item={id,name,unit,qty:0,price}; if(type==='order'){ stockOrder.push(item); save(STORAGE_KEYS.stockOrder,stockOrder); } else { stockManual.push({...item,history:[]}); save(STORAGE_KEYS.stockManual,stockManual); } renderStock(); }
+function addStockRow(type){ let name=prompt('Название материала:'); if(!name) return; let unit=prompt('Единица измерения:')||'шт'; let price=parseFloat(prompt('Цена за единицу:')||0); let id=Date.now(); let item={id,name,unit,qty:0,price}; if(type==='order'){ stockOrder.push(item); save(STORAGE_KEYS.stockOrder,stockOrder); } else { stockManual.push({...item,history:[]}); save(STORAGE_KEYS.stockManual,stockManual); } renderStock(); }
 function updateStockOrder(id,field,value){ let item=stockOrder.find(s=>s.id==id); if(item){ if(field==='qty') item.qty=parseFloat(value)||0; else if(field==='price') item.price=parseFloat(value)||0; save(STORAGE_KEYS.stockOrder,stockOrder); renderStock(); } }
 function deleteStockOrder(id){ if(confirm('Удалить?')){ stockOrder=stockOrder.filter(s=>s.id!=id); save(STORAGE_KEYS.stockOrder,stockOrder); renderStock(); } }
-function updateStockManual(id,field,value){ let item=stockManual.find(s=>s.id==id); if(item){ if(field==='qty') item.qty=parseFloat(value)||0; else if(field==='price') item.price=parseFloat(value)||0; if(!item.history) item.history=[]; item.history.push({date:todayStr(),field,old:item[field],new:value}); save(STORAGE_KEYS.stockManual,stockManual); renderStock(); } }
+function updateStockManual(id,field,value){ let item=stockManual.find(s=>s.id==id); if(item){ let oldVal=item[field]; if(field==='qty') item.qty=parseFloat(value)||0; else if(field==='price') item.price=parseFloat(value)||0; if(!item.history) item.history=[]; item.history.push({date:todayStr(),field,old:oldVal,new:value}); save(STORAGE_KEYS.stockManual,stockManual); renderStock(); } }
 function deleteStockManual(id){ if(confirm('Удалить?')){ stockManual=stockManual.filter(s=>s.id!=id); save(STORAGE_KEYS.stockManual,stockManual); renderStock(); } }
-function editStockItem(type,id){ let item=type==='order'?stockOrder.find(s=>s.id==id):stockManual.find(s=>s.id==id); if(item){ let newName=prompt('Новое название',item.name); if(newName) item.name=newName; let newUnit=prompt('Новая ед.изм',item.unit); if(newUnit) item.unit=newUnit; if(type==='order') save(STORAGE_KEYS.stockOrder,stockOrder); else save(STORAGE_KEYS.stockManual,stockManual); renderStock(); } }
-function renderStock(){
-  let orderDiv=$('orderStockList'); if(orderDiv) orderDiv.innerHTML=stockOrder.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Остаток: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockOrder(${t.id},'qty',this.value)"> ${t.unit}</div><div><button class="btn btn-small btn-secondary" onclick="App.editStockItem('order',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockOrder(${t.id})">🗑️</button></div></div>`).join('')||'<div class="empty-state">Нет ТМЦ</div>';
-  let manualDiv=$('manualStockList'); if(manualDiv) manualDiv.innerHTML=stockManual.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Кол-во: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockManual(${t.id},'qty',this.value)"> ${t.unit}</div><div><button class="btn btn-small btn-secondary" onclick="App.editStockItem('manual',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockManual(${t.id})">🗑️</button></div></div>`).join('')||'<div class="empty-state">Нет записей</div>';
-  let historyDiv=$('manualStockHistory'); if(historyDiv){ let allHistory=[]; stockManual.forEach(t=>{ if(t.history) t.history.forEach(h=>allHistory.push({material:t.name,...h})); }); allHistory.sort((a,b)=>(b.date||'').localeCompare(a.date)); historyDiv.innerHTML=allHistory.length?`<table class="report-table"><tr><th>Дата</th><th>Материал</th><th>Поле</th><th>Было</th><th>Стало</th></tr>${allHistory.slice(0,30).map(h=>`<tr><td>${h.date}</td><td>${escapeHtml(h.material)}</td><td>${h.field}</td><td>${h.old}</td><td>${h.new}</td></tr>`).join('')}</table>`:'<div class="empty-state">Нет истории</div>'; }
+function editStockItem(type, id){ 
+  let item = type==='order' ? stockOrder.find(s=>s.id==id) : stockManual.find(s=>s.id==id);
+  if(!item) return;
+  let newName = prompt('Новое название:', item.name);
+  if(newName===null) return;
+  let newUnit = prompt('Новая ед. измерения:', item.unit);
+  if(newUnit===null) return;
+  item.name = newName.trim() || item.name;
+  item.unit = newUnit.trim() || item.unit;
+  if(type==='order') save(STORAGE_KEYS.stockOrder,stockOrder);
+  else save(STORAGE_KEYS.stockManual,stockManual);
+  renderStock(); showToast('Обновлено');
 }
-
-// -------------------- SETTINGS & BACKUP --------------------
-function saveAppSettings(){ settings.org=$('settingOrg').value; settings.master=$('settingMaster').value; save(STORAGE_KEYS.settings,settings); showToast('Настройки сохранены'); }
-function exportAllData(){ let data={entries,workers,works,tools,tmc,tasks,settings,roads,stockOrder,stockManual,templates,timesheetOverrides,timesheetLetters}; let json=JSON.stringify(data,null,2); downloadFile(json,'backup_'+todayStr()+'.json','application/json'); showToast('Бэкап создан'); }
-function importAllData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.entries) entries=data.entries; if(data.workers) workers=data.workers; if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; if(data.tasks) tasks=data.tasks; if(data.settings) settings=data.settings; if(data.roads) roads=data.roads; if(data.stockOrder) stockOrder=data.stockOrder; if(data.stockManual) stockManual=data.stockManual; if(data.templates) templates=data.templates; Object.keys(STORAGE_KEYS).forEach(k=>save(STORAGE_KEYS[k],eval(k))); renderEntries(); renderCatalogsAll(); renderTasks(); renderCalendarGrid2(); renderStock(); renderTemplates(); updateRoadSelector(); showToast('Импорт завершён'); } catch(err){ showToast('Ошибка файла'); } }; reader.readAsText(file); input.value=''; }
-function clearAllData(){ if(confirm('Удалить ВСЕ данные? Это необратимо!')){ Object.values(STORAGE_KEYS).forEach(k=>localStorage.removeItem(k)); location.reload(); } }
-function setTheme(mode){ if(mode==='dark') document.body.classList.add('dark-mode'); else if(mode==='light') document.body.classList.remove('dark-mode'); else if(mode==='auto') document.body.classList.remove('dark-mode'); if(window.matchMedia('(prefers-color-scheme: dark)').matches && mode==='auto') document.body.classList.add('dark-mode'); settings.theme=mode; save(STORAGE_KEYS.settings,settings); }
-function exportNormsTemplate(){ let tpl={works,tools,tmc}; downloadFile(JSON.stringify(tpl,null,2),'norms_template.json','application/json'); showToast('Шаблон скачан'); }
-function importNormsData(input){ let file=input.files[0]; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.works){ works=data.works; save(STORAGE_KEYS.works,works); } if(data.tools){ tools=data.tools; save(STORAGE_KEYS.tools,tools); } if(data.tmc){ tmc=data.tmc; save(STORAGE_KEYS.tmc,tmc); } renderCatalogsAll(); showToast('Нормативы загружены'); } catch(err){ showToast('Ошибка JSON'); } }; reader.readAsText(file); input.value=''; }
-
-// -------------------- CALENDAR PAGE (calendarGrid2) --------------------
-function renderCalendarGrid2(){
-  let y=currentMonthCalendar.getFullYear(), m=currentMonthCalendar.getMonth();
-  let firstDay=new Date(y,m,1).getDay(); let daysInMonth=new Date(y,m+1,0).getDate();
-  let startOffset=firstDay===0?6:firstDay-1;
-  let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  let label=monthNames[m]+' '+y;
-  if($('calendarMonth2')) $('calendarMonth2').innerText=label;
-  let html='<div class="calendar-grid">';
-  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d=>html+=`<div class="calendar-day header">${d}</div>`);
-  for(let i=0;i<startOffset;i++) html+=`<div class="calendar-day"></div>`;
-  let today=todayStr();
-  for(let d=1;d<=daysInMonth;d++){
-    let ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    let hasEntry=entries.some(e=>e.date===ds);
-    let hasTask=tasks.some(t=>t.date===ds && !t.done);
-    let cls=`calendar-day ${hasEntry?'has-entry':''} ${hasTask?'has-task':''} ${ds===today?'today':''}`;
-    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
+function renderStock(){ 
+  let orderDiv=$('orderStockList'); 
+  if(orderDiv){ 
+    if(stockOrder.length){ 
+      orderDiv.innerHTML=stockOrder.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Остаток: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockOrder(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockOrder(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('order',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockOrder(${t.id})">🗑️</button></div></div></div>`).join(''); 
+    } else orderDiv.innerHTML='<div class="empty-state">Нет ТМЦ. Добавьте или импортируйте нормативы.</div>'; 
   }
-  html+='</div>';
-  if($('calendarGrid2')) $('calendarGrid2').innerHTML=html;
+  let manualDiv=$('manualStockList'); 
+  if(manualDiv){ 
+    if(stockManual.length){ 
+      manualDiv.innerHTML=stockManual.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Количество: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockManual(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockManual(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('manual',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockManual(${t.id})">🗑️</button></div></div></div>`).join(''); 
+    } else manualDiv.innerHTML='<div class="empty-state">Нет ТМЦ.</div>'; 
+  }
+  let historyDiv=$('manualStockHistory'); 
+  if(historyDiv){ 
+    let allHistory=[]; 
+    stockManual.forEach(t=>{ if(t.history) t.history.forEach(h=>allHistory.push({material:t.name,...h})); }); 
+    allHistory.sort((a,b)=>(b.date||'').localeCompare(a.date)); 
+    if(allHistory.length){ 
+      historyDiv.innerHTML='<table class="report-table"><tr><th>Дата</th><th>Материал</th><th>Поле</th><th>Было</th><th>Стало</th></tr>'+allHistory.slice(0,50).map(h=>`<tr><td>${h.date}</td><td>${escapeHtml(h.material)}</td><td>${h.field}</td><td>${h.old!==undefined?h.old:''}</td><td>${h.new!==undefined?h.new:''}</td></tr>`).join('')+'</table>'; 
+    } else historyDiv.innerHTML='<div class="empty-state">Нет операций</div>'; 
+  } 
 }
 
-// -------------------- EXCEL DOCS --------------------
-function generateOrderDoc(){ showToast('Формирование наряд-задания'); }
-function generateTimesheetDoc(){ showToast('Формирование табеля'); }
-function generateS29Doc(){ showToast('Формирование С-29'); }
-function exportEntryExcel(idx){ showToast('Экспорт Excel'); }
+// ===================== ОТЧЁТЫ =====================
 
-// -------------------- INIT --------------------
-function updateRoadSelect(){ renderRoadSelector(); }
-function updateDatalists(){}
-function applyTheme(){ if(settings.theme==='dark') document.body.classList.add('dark-mode'); else if(settings.theme==='light') document.body.classList.remove('dark-mode'); else if(window.matchMedia('(prefers-color-scheme: dark)').matches && settings.theme!=='light') document.body.classList.add('dark-mode'); else document.body.classList.remove('dark-mode'); }
+function generateSummaryReport(){ 
+  let from=$('reportFrom').value, to=$('reportTo').value; 
+  if(!from||!to){ showToast('Выберите период'); return; } 
+  let filtered=entries.filter(e=>e.date>=from&&e.date<=to); 
+  let workTotals={}; 
+  filtered.forEach(e=>{ 
+    e.squads?.forEach(sq=>{ 
+      sq.works?.forEach(w=>{ 
+        let key=w.name; 
+        if(!workTotals[key]) workTotals[key]={name:w.name, total:0, unit:w.unit||''}; 
+        workTotals[key].total+=w.volume; 
+      }); 
+    }); 
+  }); 
+  let html=`<div class="card"><div class="card-title">Сводный отчёт ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><div>Видов работ: ${Object.keys(workTotals).length}</div><table class="report-table"><tr><th>Работа</th><th>Объём</th></td>${Object.values(workTotals).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.total} ${w.unit}</td></tr>`).join('')}</table></div>`; 
+  $('reportResult').innerHTML=html; 
+}
+
+function generateWorkersReport(){ 
+  let from=$('reportFrom').value, to=$('reportTo').value; 
+  if(!from||!to){ showToast('Выберите период'); return; } 
+  let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
+  let cat=$('reportCategory').value;
+  if(cat!=='all') filtered=filtered.filter(e=>e.squads?.some(s=>s.category===cat));
+
+  let workerStats={};
+  filtered.forEach(e=>{
+    e.squads?.forEach(sq=>{
+      if(cat!=='all' && sq.category!==cat) return;
+      sq.people?.forEach(p=>{
+        if(!workerStats[p.name]) workerStats[p.name]={name:p.name, hours:0, days:0, works:0, objects:new Set()};
+        workerStats[p.name].hours += parseFloat(p.hours)||8;
+        workerStats[p.name].days++;
+        workerStats[p.name].works += sq.works?.length||0;
+        sq.objects?.forEach(o=>workerStats[p.name].objects.add(o));
+      });
+    });
+  });
+
+  let html=`<div class="card"><div class="card-title">👷 Отчёт по работникам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><table class="report-table"><tr><th>Работник</th><th>Часов</th><th>Дней</th><th>Работ</th><th>Объекты</th></tr>${Object.values(workerStats).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.hours.toFixed(1)}</td><td>${w.days}</td><td>${w.works}</td><td>${Array.from(w.objects).map(escapeHtml).join(', ')}</td></tr>`).join('')}</table></div>`;
+  $('reportResult').innerHTML=html;
+}
+
+function generateObjectsReport(){ 
+  let from=$('reportFrom').value, to=$('reportTo').value; 
+  if(!from||!to){ showToast('Выберите период'); return; } 
+  let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
+
+  let objectStats={};
+  filtered.forEach(e=>{
+    e.squads?.forEach(sq=>{
+      sq.objects?.forEach(o=>{
+        if(!objectStats[o]) objectStats[o]={name:o, entries:0, works:0, people:0, hours:0};
+        objectStats[o].entries++;
+        objectStats[o].works += sq.works?.reduce((s,w)=>s+w.volume,0)||0;
+        objectStats[o].people += sq.people?.length||0;
+        objectStats[o].hours += sq.people?.reduce((s,p)=>s+(parseFloat(p.hours)||8),0)||0;
+      });
+    });
+  });
+
+  let html=`<div class="card"><div class="card-title">📍 Отчёт по объектам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><table class="report-table"><tr><th>Объект</th><th>Записей</th><th>Объём работ</th><th>Работников</th><th>Часов</th></tr>${Object.values(objectStats).map(o=>`<tr><td>${escapeHtml(o.name)}</td><td>${o.entries}</td><td>${o.works.toFixed(2)}</td><td>${o.people}</td><td>${o.hours.toFixed(1)}</td></tr>`).join('')}</table></div>`;
+  $('reportResult').innerHTML=html;
+}
+
+function exportCSV(){ 
+  let from=$('reportFrom').value, to=$('reportTo').value; 
+  if(!from||!to){ showToast('Сначала сформируйте отчёт'); return; }
+  let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
+  let csv='\uFEFFДата;Объекты;Работники;Работы;Важная\n';
+  filtered.forEach(e=>{
+    let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])].join(', ');
+    let people=e.squads?.reduce((a,s)=>a+(s.people?.map(p=>p.name).join(', ')||''),'');
+    let works=e.squads?.flatMap(s=>s.works?.map(w=>w.name)||[]).join(', ');
+    csv+=`${e.date};${objs};${people};${works};${e.important?'Да':'Нет'}\n`;
+  });
+  downloadFile(csv,`отчёт_${from}_${to}.csv`,'text/csv;charset=utf-8');
+  showToast('CSV экспортирован');
+}
+
+function exportJSON(){ 
+  let from=$('reportFrom').value, to=$('reportTo').value; 
+  if(!from||!to){ showToast('Сначала сформируйте отчёт'); return; }
+  let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
+  let json=JSON.stringify(filtered, null, 2);
+  downloadFile(json,`отчёт_${from}_${to}.json`,'application/json');
+  showToast('JSON экспортирован');
+}
+
+async function generateOrderDoc(){ 
+  if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
+  let month=$('docMonth').value; let obj=$('docObject').value||'Без объекта';
+  if(!month){ showToast('Выберите месяц'); return; }
+  let monthEntries=entries.filter(e=>e.date.indexOf(month)===0);
+  let workbook=new ExcelJS.Workbook(); let ws=workbook.addWorksheet('Наряд-задание');
+  ws.mergeCells('A1:F1'); ws.getCell('A1').value='Наряд-задание — '+obj+' ('+month+')';
+  ws.getCell('A1').style={font:{bold:true,size:14},alignment:{horizontal:'center'}};
+  let headers=['Дата','Объект','Работники','Виды работ','Объём','Примечания'];
+  headers.forEach((h,i)=>{ ws.getCell(2,i+1).value=h; ws.getCell(2,i+1).style={font:{bold:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}}; });
+  let row=3;
+  monthEntries.forEach(e=>{
+    e.squads?.forEach(sq=>{
+      let people=sq.people?.map(p=>p.name).join(', ')||'';
+      let works=sq.works?.map(w=>w.name+' ('+w.volume+' '+w.unit+')').join(', ')||'';
+      let objs=sq.objects?.join(', ')||'';
+      ws.getRow(row).getCell(1).value=e.date;
+      ws.getRow(row).getCell(2).value=objs;
+      ws.getRow(row).getCell(3).value=people;
+      ws.getRow(row).getCell(4).value=works;
+      ws.getRow(row).getCell(5).value=sq.works?.reduce((s,w)=>s+w.volume,0)||0;
+      ws.getRow(row).getCell(6).value=sq.notes||'';
+      row++;
+    });
+  });
+  let buffer=await workbook.xlsx.writeBuffer();
+  let blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='наряд_задание_'+month+'.xlsx'; a.click();
+  showToast('Наряд-задание сформирован');
+}
+
+async function generateTimesheetDoc(){ 
+  if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
+  let month=$('docMonth').value; let obj=$('docObject').value||'';
+  if(!month){ showToast('Выберите месяц'); return; }
+  let workbook=new ExcelJS.Workbook(); let ws=workbook.addWorksheet('Табель');
+  ws.mergeCells('A1:AK1'); ws.getCell('A1').value='Табель — '+obj+' ('+month+')';
+  ws.getCell('A1').style={font:{bold:true,size:14},alignment:{horizontal:'center'}};
+  let parts=month.split('-'); let year=parseInt(parts[0]), monthNum=parseInt(parts[1]);
+  let daysInMonth=new Date(year,monthNum,0).getDate();
+  let col=1; ws.getCell(2,col++).value='№'; ws.getCell(2,col++).value='ФИО'; ws.getCell(2,col++).value='Разряд';
+  for(let d=1;d<=daysInMonth;d++) ws.getCell(2,col++).value=d;
+  ws.getCell(2,col).value='Часы'; ws.mergeCells(2,col,2,col+2);
+  let buffer=await workbook.xlsx.writeBuffer();
+  let blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='табель_док_'+month+'.xlsx'; a.click();
+  showToast('Табель сформирован');
+}
+
+async function generateS29Doc(){ 
+  if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
+  let month=$('docMonth').value; let obj=$('docObject').value||'';
+  if(!month){ showToast('Выберите месяц'); return; }
+  let monthEntries=entries.filter(e=>e.date.indexOf(month)===0);
+  let tmcTotals={};
+  monthEntries.forEach(e=>{
+    e.squads?.forEach(sq=>{
+      sq.tmc?.forEach(t=>{
+        if(!tmcTotals[t.name]) tmcTotals[t.name]={name:t.name, unit:t.unit||'шт', qty:0, price:t.price||0};
+        tmcTotals[t.name].qty+=t.qty;
+      });
+    });
+  });
+  let workbook=new ExcelJS.Workbook(); let ws=workbook.addWorksheet('С-29');
+  ws.mergeCells('A1:E1'); ws.getCell('A1').value='С-29 (материалы) — '+obj+' ('+month+')';
+  ws.getCell('A1').style={font:{bold:true,size:14},alignment:{horizontal:'center'}};
+  let headers=['№','Наименование','Ед.изм','Количество','Сумма'];
+  headers.forEach((h,i)=>{ ws.getCell(2,i+1).value=h; ws.getCell(2,i+1).style={font:{bold:true},border:{top:{style:'thin'},left:{style:'thin'},bottom:{style:'thin'},right:{style:'thin'}}}; });
+  let row=3, idx=1;
+  Object.values(tmcTotals).forEach(t=>{
+    ws.getRow(row).getCell(1).value=idx++;
+    ws.getRow(row).getCell(2).value=t.name;
+    ws.getRow(row).getCell(3).value=t.unit;
+    ws.getRow(row).getCell(4).value=t.qty;
+    ws.getRow(row).getCell(5).value=(t.qty*(t.price||0)).toFixed(2);
+    row++;
+  });
+  let buffer=await workbook.xlsx.writeBuffer();
+  let blob=new Blob([buffer],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='С29_'+month+'.xlsx'; a.click();
+  showToast('С-29 сформирован');
+}
+
+function exportEntryExcel(idx){ 
+  let e=entries[idx]; if(!e) return; 
+  if(typeof XLSX==='undefined'){ showToast('XLSX не загружен'); return; } 
+  let wb=XLSX.utils.book_new(); 
+  let data=[{Дата:e.date, Объекты:e.squads?.flatMap(s=>s.objects).join(', ')}];
+  let ws=XLSX.utils.json_to_sheet(data); 
+  XLSX.utils.book_append_sheet(wb,ws,'Наряд'); 
+  XLSX.writeFile(wb,`наряд_${e.date}.xlsx`); 
+  showToast('Excel сохранён'); 
+}
+
+// ===================== КАТАЛОГИ =====================
+
+function renderCatalogs(){
+  let search = ($('catSearch')?.value || '').toLowerCase();
+  
+  // Работники
+  let wList = $('workersCatalogList');
+  if(wList){
+    let filtered = workers.filter(w => !search || w.name.toLowerCase().includes(search) || (w.category && CATEGORIES[w.category]?.name.toLowerCase().includes(search)));
+    wList.innerHTML = filtered.map((w, i) => 
+      `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b> <small>(${(CATEGORIES[w.category] || CATEGORIES.other).name}${w.grade ? ', разр.' + w.grade : ''})</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('worker', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker', ${i})">🗑️</button></div></div>`
+    ).join('') || '<div class="empty-state">Нет работников</div>';
+  }
+  
+  // Виды работ
+  let worksList = $('worksCatalogList');
+  if(worksList){
+    let filtered = works.filter(w => !search || w.name.toLowerCase().includes(search));
+    worksList.innerHTML = filtered.map((w, i) => 
+      `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b> <small>(${w.unit || 'ед.'})</small><br><small>Норма: ${w.laborCost || 0} чел-ч, Прямые: ${w.directCost || 0} руб., Инстр.: ${w.toolCost || 0} руб.</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('work', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work', ${i})">🗑️</button></div></div>`
+    ).join('') || '<div class="empty-state">Нет видов работ</div>';
+  }
+  
+  // Инструменты
+  let toolsList = $('toolsCatalogList');
+  if(toolsList){
+    let filtered = tools.filter(t => !search || t.name.toLowerCase().includes(search));
+    toolsList.innerHTML = filtered.map((t, i) => 
+      `<div class="catalog-item"><div><b>${escapeHtml(t.name)}</b><br><small>Расход: ${t.fuelConsumption || 0} л/ч, Аморт.: ${t.machineCostPerHour || 0} руб/ч</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('tool', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool', ${i})">🗑️</button></div></div>`
+    ).join('') || '<div class="empty-state">Нет инструментов</div>';
+  }
+  
+  // Дороги
+  let roadsList = $('roadsCatalogList');
+  if(roadsList){
+    let filtered = roads.filter(r => !search || r.name.toLowerCase().includes(search));
+    roadsList.innerHTML = filtered.map((r, i) => 
+      `<div class="catalog-item"><div><b>${escapeHtml(r.name)}</b>${r.length ? ' <small>(' + r.length + ' км)</small>' : ''}</div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road', ${i})">🗑️</button></div></div>`
+    ).join('') || '<div class="empty-state">Нет дорог</div>';
+  }
+  
+  updateDatalists();
+}
+
+function addCatalogItem(type){
+  catalogType = type;
+  catalogEditingId = null;
+  let title = '';
+  let formHtml = '';
+  
+  if(type === 'worker'){
+    title = 'Добавить работника';
+    formHtml = `<div class="form-group"><label>ФИО</label><input type="text" id="catName" placeholder="Иванов И.И."></div>
+      <div class="form-group"><label>Категория</label><select id="catCategory">${Object.keys(CATEGORIES).map(k => `<option value="${k}">${CATEGORIES[k].name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Разряд</label><input type="number" id="catGrade" placeholder="3-6"></div>`;
+  } else if(type === 'work'){
+    title = 'Добавить вид работы';
+    formHtml = `<div class="form-group"><label>Название</label><input type="text" id="catName" placeholder="Например: Укладка асфальта"></div>
+      <div class="form-group"><label>Ед. измерения</label><input type="text" id="catUnit" placeholder="м², м³, п.м."></div>
+      <div class="form-group"><label>Норма трудозатрат (чел-ч)</label><input type="number" id="catLabor" step="0.01" value="0"></div>
+      <div class="form-group"><label>Прямые затраты (руб/ед)</label><input type="number" id="catDirect" step="0.01" value="0"></div>
+      <div class="form-group"><label>Затраты на инструмент (руб/ед)</label><input type="number" id="catToolCost" step="0.01" value="0"></div>`;
+  } else if(type === 'tool'){
+    title = 'Добавить инструмент';
+    formHtml = `<div class="form-group"><label>Название</label><input type="text" id="catName" placeholder="Например: Каток ДУ-47"></div>
+      <div class="form-group"><label>Расход топлива (л/ч)</label><input type="number" id="catFuel" step="0.1" value="0"></div>
+      <div class="form-group"><label>Амортизация (руб/ч)</label><input type="number" id="catMachineCost" step="0.01" value="0"></div>`;
+  } else if(type === 'road'){
+    title = 'Добавить дорогу / объект';
+    formHtml = `<div class="form-group"><label>Название</label><input type="text" id="catName" placeholder="Например: а/д ПУ-3"></div>
+      <div class="form-group"><label>Протяжённость (км)</label><input type="number" id="catLength" step="0.1" placeholder="0"></div>`;
+  }
+  
+  $('catalogModalTitle').textContent = title;
+  $('catalogForm').innerHTML = formHtml;
+  $('catalogModal').classList.add('active');
+}
+
+function editCatalogItem(type, idx){
+  catalogType = type;
+  catalogEditingId = idx;
+  let item;
+  if(type === 'worker') item = workers[idx];
+  else if(type === 'work') item = works[idx];
+  else if(type === 'tool') item = tools[idx];
+  else if(type === 'road') item = roads[idx];
+  if(!item) return;
+  
+  addCatalogItem(type);
+  $('catName').value = item.name || '';
+  if(type === 'worker'){
+    $('catCategory').value = item.category || 'road';
+    $('catGrade').value = item.grade || '';
+  } else if(type === 'work'){
+    $('catUnit').value = item.unit || '';
+    $('catLabor').value = item.laborCost || 0;
+    $('catDirect').value = item.directCost || 0;
+    $('catToolCost').value = item.toolCost || 0;
+  } else if(type === 'tool'){
+    $('catFuel').value = item.fuelConsumption || 0;
+    $('catMachineCost').value = item.machineCostPerHour || 0;
+  } else if(type === 'road'){
+    $('catLength').value = item.length || '';
+  }
+}
+
+function saveCatalogItem(){
+  let name = $('catName')?.value.trim();
+  if(!name){ showToast('Введите название'); return; }
+  
+  let item = { id: Date.now(), name };
+  
+  if(catalogType === 'worker'){
+    item.category = $('catCategory').value;
+    item.grade = $('catGrade').value;
+    if(catalogEditingId !== null) workers[catalogEditingId] = item; else workers.push(item);
+    save(STORAGE_KEYS.workers, workers);
+  } else if(catalogType === 'work'){
+    item.unit = $('catUnit').value || 'ед.';
+    item.laborCost = parseFloat($('catLabor').value) || 0;
+    item.directCost = parseFloat($('catDirect').value) || 0;
+    item.toolCost = parseFloat($('catToolCost').value) || 0;
+    if(catalogEditingId !== null) works[catalogEditingId] = item; else works.push(item);
+    save(STORAGE_KEYS.works, works);
+  } else if(catalogType === 'tool'){
+    item.fuelConsumption = parseFloat($('catFuel').value) || 0;
+    item.machineCostPerHour = parseFloat($('catMachineCost').value) || 0;
+    if(catalogEditingId !== null) tools[catalogEditingId] = item; else tools.push(item);
+    save(STORAGE_KEYS.tools, tools);
+  } else if(catalogType === 'road'){
+    item.length = parseFloat($('catLength').value) || 0;
+    if(catalogEditingId !== null) roads[catalogEditingId] = item; else roads.push(item);
+    save(STORAGE_KEYS.roads, roads);
+  }
+  
+  closeCatalogModal();
+  renderCatalogs();
+  showToast('Сохранено');
+}
+
+function deleteCatalogItem(type, idx){
+  if(!confirm('Удалить?')) return;
+  if(type === 'worker') workers.splice(idx, 1);
+  else if(type === 'work') works.splice(idx, 1);
+  else if(type === 'tool') tools.splice(idx, 1);
+  else if(type === 'road') roads.splice(idx, 1);
+  save(STORAGE_KEYS[type === 'worker' ? 'workers' : type === 'work' ? 'works' : type === 'tool' ? 'tools' : 'roads'], 
+    type === 'worker' ? workers : type === 'work' ? works : type === 'tool' ? tools : roads);
+  renderCatalogs();
+  showToast('Удалено');
+}
+
+function closeCatalogModal(){ $('catalogModal').classList.remove('active'); catalogType = ''; catalogEditingId = null; }
+function filterCatalog(val){ renderCatalogs(); }
+function highlightMatch(text, search){ if(!search) return escapeHtml(text); let re = new RegExp('(' + search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'); return escapeHtml(text).replace(re, '<mark>$1</mark>'); }
+
+function importCatalogCSV(type){
+  let input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.csv';
+  input.onchange = function(){
+    let file = this.files[0];
+    if(!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e){
+      let lines = e.target.result.split('\n').filter(l => l.trim());
+      let added = 0;
+      lines.forEach(line => {
+        let parts = line.split(';');
+        if(parts.length < 2) return;
+        let name = parts[0].trim();
+        if(!name) return;
+        if(type === 'worker'){
+          workers.push({ id: Date.now() + added, name, category: parts[1] || 'road', grade: parts[2] || '' });
+        } else if(type === 'work'){
+          works.push({ id: Date.now() + added, name, unit: parts[1] || 'ед.', laborCost: parseFloat(parts[2]) || 0, directCost: parseFloat(parts[3]) || 0, toolCost: parseFloat(parts[4]) || 0 });
+        } else if(type === 'road'){
+          roads.push({ id: Date.now() + added, name, length: parseFloat(parts[1]) || 0 });
+        }
+        added++;
+      });
+      if(type === 'worker') save(STORAGE_KEYS.workers, workers);
+      else if(type === 'work') save(STORAGE_KEYS.works, works);
+      else if(type === 'road') save(STORAGE_KEYS.roads, roads);
+      renderCatalogs();
+      showToast('Импортировано: ' + added);
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+  input.click();
+}
+
+function updateDatalists(){
+  let dl = $('roadsList');
+  if(dl){
+    dl.innerHTML = roads.map(r => `<option value="${escapeHtml(r.name)}">`).join('');
+  }
+}
+
+// ===================== ЗАДАЧИ =====================
+
+function addTask(){
+  let text = $('newTaskText').value.trim();
+  let date = $('newTaskDate').value;
+  let important = $('newTaskImportant').checked;
+  if(!text){ showToast('Введите текст задачи'); return; }
+  if(!date){ showToast('Выберите дату'); return; }
+  tasks.push({ id: Date.now(), text, date, important, done: false });
+  save(STORAGE_KEYS.tasks, tasks);
+  $('newTaskText').value = '';
+  $('newTaskDate').value = '';
+  $('newTaskImportant').checked = false;
+  renderTasks();
+  showToast('Задача добавлена');
+}
+
+function toggleTaskDone(idx){
+  if(tasks[idx]){ tasks[idx].done = !tasks[idx].done; save(STORAGE_KEYS.tasks, tasks); renderTasks(); renderEntries(); }
+}
+
+function deleteTask(idx){
+  if(confirm('Удалить задачу?')){ tasks.splice(idx, 1); save(STORAGE_KEYS.tasks, tasks); renderTasks(); renderEntries(); }
+}
+
+function setTaskFilter(type, btn){
+  currentTaskFilter = type;
+  document.querySelectorAll('#subTasks .filter-chip').forEach(c => c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks(){
+  let container = $('tasksList');
+  if(!container) return;
+  
+  let filtered = tasks.slice();
+  if(currentTaskFilter === 'active') filtered = filtered.filter(t => !t.done);
+  else if(currentTaskFilter === 'done') filtered = filtered.filter(t => t.done);
+  else if(currentTaskFilter === 'important') filtered = filtered.filter(t => t.important);
+  
+  filtered.sort((a, b) => a.date.localeCompare(b.date));
+  
+  container.innerHTML = filtered.map((t, i) => {
+    let realIdx = tasks.indexOf(t);
+    return `<div class="task-item ${t.important ? 'important' : ''} ${t.done ? 'done' : ''}">
+      <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="App.toggleTaskDone(${realIdx})">
+      <div style="flex:1"><div>${escapeHtml(t.text)}</div><div style="font-size:.75rem;color:var(--text-secondary)">${formatDate(t.date)}</div></div>
+      <button class="del-btn" onclick="App.deleteTask(${realIdx})">🗑️</button>
+    </div>`;
+  }).join('') || '<div class="empty-state">Нет задач</div>';
+}
+
+// ===================== КАЛЕНДАРЬ =====================
+
+function renderCalendar(){
+  let container = $('calendarGrid2');
+  let monthLabel = $('calendarMonth2');
+  if(!container || !monthLabel) return;
+  
+  let y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  let firstDay = new Date(y, m, 1).getDay();
+  let daysInMonth = new Date(y, m + 1, 0).getDate();
+  let startOffset = firstDay === 0 ? 6 : firstDay - 1;
+  let monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  
+  monthLabel.textContent = monthNames[m] + ' ' + y;
+  
+  let html = '';
+  ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => html += `<div class="calendar-day header">${d}</div>`);
+  for(let i = 0; i < startOffset; i++) html += `<div class="calendar-day"></div>`;
+  
+  let today = todayStr();
+  for(let d = 1; d <= daysInMonth; d++){
+    let ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    let dayEntries = entries.filter(e => e.date === ds);
+    let dayTasks = tasks.filter(t => t.date === ds && !t.done);
+    let hasImportant = dayEntries.some(e => e.important);
+    
+    let cls = 'calendar-day';
+    if(ds === today) cls += ' today';
+    else if(hasImportant) cls += ' important-day';
+    else if(dayEntries.length) cls += ' has-entry';
+    if(dayTasks.length) cls += ' has-task';
+    
+    html += `<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function showDayDetails(date){
+  selectedCalendarDate = date;
+  let modal = $('dayModal');
+  let title = $('dayModalTitle');
+  let content = $('dayModalContent');
+  
+  title.textContent = '📅 ' + formatDate(date);
+  
+  let dayEntries = entries.filter(e => e.date === date);
+  let dayTasks = tasks.filter(t => t.date === date);
+  
+  let html = '';
+  if(dayTasks.length){
+    html += '<div style="font-weight:600;margin-bottom:8px">📋 Задачи:</div>';
+    dayTasks.forEach(t => {
+      let idx = tasks.indexOf(t);
+      html += `<div class="task-item ${t.important ? 'important' : ''} ${t.done ? 'done' : ''}">
+        <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="App.toggleTaskDone(${idx})">
+        <div style="flex:1">${escapeHtml(t.text)}</div>
+      </div>`;
+    });
+  }
+  
+  if(dayEntries.length){
+    html += '<div style="font-weight:600;margin:16px 0 8px">📋 Записи журнала:</div>';
+    dayEntries.forEach(e => {
+      let idx = entries.indexOf(e);
+      let objs = [...new Set(e.squads?.flatMap(s => s.objects || []) || [])];
+      html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="App.closeDayModal();App.editEntry(${idx})">
+        <div style="font-weight:600">${escapeHtml(objs.join(', '))}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${e.squads?.reduce((a,s) => a + (s.people?.length || 0), 0)} чел.</div>
+      </div>`;
+    });
+  }
+  
+  if(!html) html = '<div class="empty-state">Нет записей и задач</div>';
+  
+  content.innerHTML = html;
+  modal.classList.add('active');
+}
+
+function addEntryFromCalendar(){
+  closeDayModal();
+  if(selectedCalendarDate){
+    $('inpDate').value = selectedCalendarDate;
+    showPage('pageNew');
+  }
+}
+
+function closeDayModal(){ $('dayModal').classList.remove('active'); selectedCalendarDate = null; }
+
+// ===================== ТАБЕЛЬ =====================
+
+function renderTimesheet(){
+  let month = $('tsMonth').value;
+  let category = $('tsCategory').value;
+  if(!month) return;
+  
+  let [year, monthNum] = month.split('-').map(Number);
+  let daysInMonth = new Date(year, monthNum, 0).getDate();
+  
+  // Собираем данные из записей
+  let data = {};
+  let allWorkers = new Set();
+  
+  entries.filter(e => e.date.startsWith(month)).forEach(e => {
+    e.squads?.forEach(sq => {
+      if(category !== 'all' && sq.category !== category) return;
+      sq.people?.forEach(p => {
+        allWorkers.add(p.name);
+        if(!data[p.name]) data[p.name] = {};
+        let day = parseInt(e.date.slice(8));
+        data[p.name][day] = (data[p.name][day] || 0) + (parseFloat(p.hours) || 8);
+      });
+    });
+  });
+  
+  // Применяем ручные корректировки
+  Object.keys(timesheetOverrides).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!data[wName]) data[wName] = {};
+    data[wName][day] = timesheetOverrides[key];
+  });
+  
+  // Буквенные коды
+  Object.keys(timesheetLetters).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!data[wName]) data[wName] = {};
+    data[wName][day] = timesheetLetters[key];
+  });
+  
+  // Добавляем вручную добавленных работников
+  let manualWorkers = Object.keys(data).filter(w => !Array.from(allWorkers).includes(w));
+  
+  let html = '<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>ФИО</th>';
+  for(let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
+  html += '<th>Итого</th></tr></thead><tbody>';
+  
+  Object.keys(data).sort().forEach(wName => {
+    let total = 0;
+    html += `<tr><td>${escapeHtml(wName)}</td>`;
+    for(let d = 1; d <= daysInMonth; d++){
+      let val = data[wName][d];
+      let display = val !== undefined ? val : '';
+      let isLetter = typeof display === 'string' && isNaN(parseFloat(display));
+      let cellClass = 'ts-cell-editable';
+      if(isLetter) cellClass += ' letter-code';
+      html += `<td class="${cellClass}" onclick="App.editTimesheetCell('${jsAttr(wName)}',${d},${val !== undefined ? `'${jsAttr(String(val))}'` : 'undefined'})">${display}</td>`;
+      if(!isLetter && val) total += parseFloat(val) || 0;
+    }
+    html += `<td><b>${total.toFixed(1)}</b></td></tr>`;
+  });
+  
+  html += '</tbody></table></div>';
+  
+  $('timesheetResult').innerHTML = html;
+  $('tsControls').style.display = 'block';
+}
+
+function editTimesheetCell(wName, day, currentVal){
+  let newVal = prompt(`Часы для ${wName} на ${day} число:`, currentVal !== undefined ? currentVal : '');
+  if(newVal === null) return;
+  
+  let key = wName + '_' + day;
+  
+  if(newVal.trim() === ''){
+    delete timesheetOverrides[key];
+    delete timesheetLetters[key];
+  } else if(LETTER_CODES[newVal.toUpperCase()]){
+    timesheetLetters[key] = newVal.toUpperCase();
+    delete timesheetOverrides[key];
+  } else {
+    let num = parseFloat(newVal);
+    if(!isNaN(num)){
+      timesheetOverrides[key] = num;
+      delete timesheetLetters[key];
+    }
+  }
+  
+  save(STORAGE_KEYS.tsOverrides, timesheetOverrides);
+  save(STORAGE_KEYS.tsLetters, timesheetLetters);
+  renderTimesheet();
+}
+
+function clearTimesheetOverrides(){
+  if(!confirm('Сбросить все ручные корректировки?')) return;
+  timesheetOverrides = {};
+  timesheetLetters = {};
+  save(STORAGE_KEYS.tsOverrides, {});
+  save(STORAGE_KEYS.tsLetters, {});
+  renderTimesheet();
+  showToast('Корректировки сброшены');
+}
+
+function addTimesheetWorker(){
+  let name = prompt('ФИО работника:');
+  if(!name) return;
+  // Добавляем пустую запись, чтобы работник появился в табеле
+  renderTimesheet();
+  showToast('Работник добавлен (появится при заполнении)');
+}
+
+function exportTimesheetCSV(){
+  let month = $('tsMonth').value;
+  if(!month){ showToast('Выберите месяц'); return; }
+  
+  let [year, monthNum] = month.split('-').map(Number);
+  let daysInMonth = new Date(year, monthNum, 0).getDate();
+  
+  let csv = '\uFEFFФИО;';
+  for(let d = 1; d <= daysInMonth; d++) csv += d + ';';
+  csv += 'Итого\n';
+  
+  // Собираем данные аналогично renderTimesheet
+  let data = {};
+  entries.filter(e => e.date.startsWith(month)).forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.people?.forEach(p => {
+        if(!data[p.name]) data[p.name] = {};
+        let day = parseInt(e.date.slice(8));
+        data[p.name][day] = (data[p.name][day] || 0) + (parseFloat(p.hours) || 8);
+      });
+    });
+  });
+  
+  Object.keys(timesheetOverrides).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!data[wName]) data[wName] = {};
+    data[wName][day] = timesheetOverrides[key];
+  });
+  
+  Object.keys(timesheetLetters).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!data[wName]) data[wName] = {};
+    data[wName][day] = timesheetLetters[key];
+  });
+  
+  Object.keys(data).sort().forEach(wName => {
+    csv += wName + ';';
+    let total = 0;
+    for(let d = 1; d <= daysInMonth; d++){
+      let val = data[wName][d];
+      csv += (val !== undefined ? val : '') + ';';
+      if(typeof val === 'number') total += val;
+    }
+    csv += total.toFixed(1) + '\n';
+  });
+  
+  downloadFile(csv, `табель_${month}.csv`, 'text/csv;charset=utf-8');
+  showToast('CSV экспортирован');
+}
+
+function exportTimesheetExcel(){
+  let month = $('tsMonth').value;
+  if(!month){ showToast('Выберите месяц'); return; }
+  if(typeof XLSX === 'undefined'){ showToast('XLSX не загружен'); return; }
+  
+  let [year, monthNum] = month.split('-').map(Number);
+  let daysInMonth = new Date(year, monthNum, 0).getDate();
+  
+  let data = [];
+  let headers = ['ФИО'];
+  for(let d = 1; d <= daysInMonth; d++) headers.push(d);
+  headers.push('Итого');
+  
+  // Собираем данные
+  let tsData = {};
+  entries.filter(e => e.date.startsWith(month)).forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.people?.forEach(p => {
+        if(!tsData[p.name]) tsData[p.name] = {};
+        let day = parseInt(e.date.slice(8));
+        tsData[p.name][day] = (tsData[p.name][day] || 0) + (parseFloat(p.hours) || 8);
+      });
+    });
+  });
+  
+  Object.keys(timesheetOverrides).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!tsData[wName]) tsData[wName] = {};
+    tsData[wName][day] = timesheetOverrides[key];
+  });
+  
+  Object.keys(timesheetLetters).forEach(key => {
+    let [wName, day] = key.split('_');
+    if(!tsData[wName]) tsData[wName] = {};
+    tsData[wName][day] = timesheetLetters[key];
+  });
+  
+  Object.keys(tsData).sort().forEach(wName => {
+    let row = { 'ФИО': wName };
+    let total = 0;
+    for(let d = 1; d <= daysInMonth; d++){
+      let val = tsData[wName][d];
+      row[d] = val !== undefined ? val : '';
+      if(typeof val === 'number') total += val;
+    }
+    row['Итого'] = total.toFixed(1);
+    data.push(row);
+  });
+  
+  let ws = XLSX.utils.json_to_sheet(data, { header: headers });
+  let wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Табель');
+  XLSX.writeFile(wb, `табель_${month}.xlsx`);
+  showToast('Excel экспортирован');
+}
+
+// ===================== НАСТРОЙКИ =====================
+
+function saveAppSettings(){ settings.org=$('settingOrg').value.trim(); settings.master=$('settingMaster').value.trim(); save(STORAGE_KEYS.settings,settings); showToast('Настройки сохранены'); }
+function exportAllData(){ let data={entries,workers,works,tools,tmc,tasks,settings,roads,stockOrder,stockManual,templates,timesheetOverrides,timesheetLetters}; let json=JSON.stringify(data,null,2); downloadFile(json,'backup_'+todayStr()+'.json','application/json'); showToast('Резервная копия создана'); }
+function importAllData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(!confirm('Импортировать? Данные будут заменены!')) return; if(data.entries) entries=data.entries; if(data.workers) workers=data.workers; if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; if(data.tasks) tasks=data.tasks; if(data.settings) settings=data.settings; if(data.roads) roads=data.roads; if(data.stockOrder) stockOrder=data.stockOrder; if(data.stockManual) stockManual=data.stockManual; if(data.templates) templates=data.templates; if(data.timesheetOverrides) timesheetOverrides=data.timesheetOverrides; if(data.timesheetLetters) timesheetLetters=data.timesheetLetters; Object.keys(STORAGE_KEYS).forEach(k=>save(STORAGE_KEYS[k],eval(k))); renderEntries(); renderCatalogs(); renderTasks(); renderCalendar(); renderStock(); renderTemplates(); showToast('Импорт завершён'); }catch(err){ showToast('Ошибка файла'); } }; reader.readAsText(file); input.value=''; }
+function clearAllData(){ if(confirm('Удалить ВСЕ данные?')){ Object.values(STORAGE_KEYS).forEach(k=>localStorage.removeItem(k)); location.reload(); } }
+function setTheme(mode){ settings.theme=mode; save(STORAGE_KEYS.settings,settings); applyTheme(); }
+function applyTheme(){ if(settings.theme==='dark') document.body.classList.add('dark-mode'); else if(settings.theme==='light') document.body.classList.remove('dark-mode'); else document.body.classList.remove('dark-mode'); if(window.matchMedia('(prefers-color-scheme: dark)').matches && !settings.theme) document.body.classList.add('dark-mode'); }
+function exportNormsTemplate(){ let tpl={works,tools,tmc}; downloadFile(JSON.stringify(tpl,null,2),'norms_template.json','application/json'); showToast('Шаблон скачан'); }
+function importNormsData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; save(STORAGE_KEYS.works,works); save(STORAGE_KEYS.tools,tools); save(STORAGE_KEYS.tmc,tmc); renderCatalogs(); showToast('Нормативы загружены'); }catch(err){ showToast('Ошибка'); } }; reader.readAsText(file); input.value=''; }
+
+// ===================== ИНИЦИАЛИЗАЦИЯ =====================
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadAll(); applyTheme(); initOffline();
   if($('headerDate')) $('headerDate').textContent=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   if($('inpDate')) $('inpDate').value=todayStr(); if($('tsMonth')) $('tsMonth').value=new Date().toISOString().slice(0,7);
   if($('reportFrom')) $('reportFrom').value=todayStr(); if($('reportTo')) $('reportTo').value=todayStr(); if($('docMonth')) $('docMonth').value=new Date().toISOString().slice(0,7);
-  if(editingEntryIndex<0 && !loadDraft() && !formSquads.length) addSquad();
-  renderEntries(); renderCatalogsAll(); renderTasks(); renderCalendarGrid2(); renderStock(); renderTemplates(); renderRoadSelector();
+  updateDatalists(); if(editingEntryIndex<0 && !loadDraft() && !formSquads.length) addSquad();
+  renderEntries(); renderCatalogs(); renderTasks(); renderCalendar(); renderStock(); renderTemplates(); renderRoadSelector();
   if(settings.org && $('settingOrg')) $('settingOrg').value=settings.org;
   if(settings.master && $('settingMaster')) $('settingMaster').value=settings.master;
-  setInterval(()=>{ let now=new Date().toISOString().slice(0,16); entries.forEach(e=>{ if(e.reminder && e.reminder.slice(0,16)===now && !e.reminderShown){ e.reminderShown=true; save(STORAGE_KEYS.entries,entries); showToast('⏰ '+ (e.reminderText||'Напоминание')); } }); },60000);
+  if('Notification' in window && Notification.permission==='default') Notification.requestPermission();
+  setInterval(()=>{ let now=new Date().toISOString().slice(0,16); entries.forEach(e=>{ if(e.reminder && e.reminder.slice(0,16)===now && !e.reminderShown){ e.reminderShown=true; save(STORAGE_KEYS.entries,entries); if(Notification.permission==='granted') new Notification('Журнал ДРСУ',{body:e.reminderText||'Напоминание'}); showToast('⏰ '+(e.reminderText||'Напоминание')); } }); },60000);
 });
 
 return {
@@ -835,22 +2048,23 @@ return {
   openSTmcModal, closeSTmcModal, applySTmc,
   saveEntry, clearForm, cancelEdit, editEntry, deleteEntry, duplicateEntry,
   setFilter, toggleEntry, toggleMonth, deleteMonth,
-  addCatalogItem, deleteCatalogItem, editCatalogItem, saveCatalogItem, closeCatalogModal,
+  addCatalogItem, editCatalogItem, saveCatalogItem, deleteCatalogItem, closeCatalogModal,
   filterCatalog, highlightMatch, importCatalogCSV,
   addStockRow, updateStockOrder, deleteStockOrder, updateStockManual, deleteStockManual, editStockItem,
-  addTask, toggleTaskDone, deleteTask, setTaskFilter, renderTasks,
-  changeMonthCalendar, showDayDetails, addEntryFromCalendar, closeDayModal,
-  renderTimesheet, addTimesheetWorker, exportTimesheetCSV, exportTimesheetExcel, clearTimesheetOverrides,
+  addTask, toggleTaskDone, deleteTask, setTaskFilter,
+  changeMonth, showDayDetails, addEntryFromCalendar, closeDayModal,
+  editTimesheetCell, clearTimesheetOverrides, exportTimesheetCSV,
+  addTimesheetWorker, exportTimesheetExcel, renderTimesheet,
   generateSummaryReport, generateWorkersReport, generateObjectsReport,
   exportCSV, exportJSON, saveAppSettings, exportAllData, importAllData, clearAllData, setTheme,
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   exportNormsTemplate, importNormsData,
-  selectRoadForScale, renderRoadSelector, generateRoadKmReport,
-  renderCatalog: renderCatalogsAll
+  selectRoadForScale, renderRoadSelector, generateRoadKmReport
 };
 })();
+
 document.querySelector('#catSearch')?.addEventListener('input',function(){ App.filterCatalog(this.value); });
-document.querySelector('#journalSearch')?.addEventListener('input',function(){ App.setFilter(window.currentFilter||'all',null); });
+document.querySelector('#journalSearch')?.addEventListener('input',function(){ App.setFilter(App.currentFilter||'all',null); });
 </script>
 </body>
 </html>
