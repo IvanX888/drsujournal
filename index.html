@@ -206,6 +206,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCW0YPRgNC90LDQuyDQv9GA0L7QuNC30LLQvtC00YHRgtCy0LAg0YDQsNCx0L7RgiDQlNCg0KHQoyIsCiAgInNob3J0X25hbWUiOiAi0JTQoNCh0KMg0JbRg9GA0L3QsNC7IiwKICAiZGVzY3JpcHRpb24iOiAi0KPRh9GR0YIg0L/RgNC+0LjQt9Cy0L7QtNGB0YLQstCwINGA0LDQsdC+0YIsINGC0LDQsdC10LvRjCwg0YHQutC70LDQtCwg0LrQuNC70L7QvNC10YLRgNCw0LYiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzE1NjVjMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxNTY1YzAiLAogICJpY29ucyI6IFsKICAgIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IGZpbGw9JyUyMzE1NjVjMCcgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInLyUzRSUzQ3RleHQgeD0nOTYnIHk9JzExMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nODAnJTNF8J+TiyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCJ9LAogICAgeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJyUzRSUzQ3JlY3QgZmlsbD0nJTIzMTU2NWMwJyB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicvJTNFJTNDdGV4dCB4PScyNTYnIHk9JzMwMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nMjIwJyUzRfCfk4slM0MvdGV4dCUzRSUzQy9zdmclM0UiLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifQogIF0KfQ==">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -227,9 +228,10 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="card-title">🛣️ Километраж дорог</div>
     <div class="road-selector">
       <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
-        <option value="">📍 Выберите дорогу для просмотра</option>
+        <option value="">📍 Выберите дорогу для деталей</option>
       </select>
     </div>
+    <div id="roadsKmSummary" style="margin-top:12px"></div>
     <div id="roadKmScale"></div>
     <div id="roadKmHistory"></div>
   </div>
@@ -636,6 +638,7 @@ function setFilter(type,btn){
   document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderEntries();
+  renderRoadsKmSummary();
   if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
 }
 
@@ -776,15 +779,51 @@ function getRoadKmSegments(roadName, filterType){
 
 function renderRoadSelector(){
   let sel=$('roadSelector'); if(!sel) return;
-  let html='<option value="">📍 Выберите дорогу для просмотра</option>';
+  let html='<option value="">📍 Выберите дорогу для деталей</option>';
   roads.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${escapeHtml(r.name)}${r.length?' ('+r.length+' км)':''}</option>`; });
   sel.innerHTML=html;
   if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
+  renderRoadsKmSummary();
 }
 
 function selectRoadForScale(roadName){
   selectedRoadForScale=roadName;
   renderRoadKmScale(roadName);
+}
+
+function renderRoadsKmSummary(){
+  let container=$('roadsKmSummary');
+  if(!container) return;
+  if(!roads.length){ container.innerHTML='<div class="empty-state">Нет дорог в справочнике</div>'; return; }
+  let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
+  let html=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">Период: <b>${filterLabel}</b> | Кликните по дороге для деталей</div>`;
+  roads.forEach(road=>{
+    let segments=getRoadKmSegments(road.name, currentFilter);
+    let totalLength=parseFloat(road.length)||0;
+    let coveredKm=0;
+    if(totalLength>0 && segments.length>0){
+      let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
+      let merged=[];
+      sorted.forEach(s=>{
+        if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo});
+        else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); }
+      });
+      merged.forEach(m=>{ coveredKm+=(m.to-m.from); });
+    }
+    let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
+    let barColor=pct>=90?'var(--success)':(pct>50?'var(--primary)':'var(--accent)');
+    html+=`<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.selectRoadForScale('${jsAttr(road.name)}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:.9rem">${escapeHtml(road.name)}</span>
+        <span style="font-size:.8rem;color:var(--text-secondary)">${coveredKm.toFixed(1)} / ${totalLength} км <b style="color:${barColor}">(${pct.toFixed(0)}%)</b></span>
+      </div>
+      <div class="road-scale-bar" style="height:18px;background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)">
+        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:9px;transition:width .6s ease"></div>
+      </div>
+      ${segments.length?`<div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Участков: ${segments.length}${segments.some(s=>s.duplicate)?' | <span style="color:var(--accent)">⚠️ есть пересечения</span>':''}</div>`:''}
+    </div>`;
+  });
+  container.innerHTML=html;
 }
 
 function renderRoadKmScale(roadName){
@@ -1664,8 +1703,11 @@ function showDayDetails(date){
     dayEntries.forEach(e => {
       let idx = entries.indexOf(e);
       let objs = [...new Set(e.squads?.flatMap(s => s.objects || []) || [])];
-      html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer;border-left:3px solid var(--primary)" onclick="App.closeDayModal();App.editEntry(${idx})">
-        <div style="font-weight:600;color:var(--success)">${escapeHtml(objs.join(', '))}</div>
+      html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border-left:3px solid var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-weight:600;color:var(--success)">${escapeHtml(objs.join(', '))}</div>
+          <button class="btn btn-small btn-edit" onclick="App.closeDayModal();App.editEntry(${idx})">✏️ Изменить</button>
+        </div>
         <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${e.squads?.reduce((a,s) => a + (s.people?.length || 0), 0)} чел. | 🔧 ${e.squads?.reduce((a,s) => a + (s.works?.length || 0), 0)} работ</div>
       </div>`;
     });
@@ -1725,9 +1767,10 @@ function renderTimesheet(){
   });
   let html = '<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>ФИО</th>';
   for(let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
-  html += '<th>Итого</th></tr></thead><tbody>';
+  html += '<th>Дни</th><th>Часы</th></tr></thead><tbody>';
   Object.keys(data).sort().forEach(wName => {
     let total = 0;
+    let daysCount = 0;
     html += `<tr><td><b>${escapeHtml(wName)}</b></td>`;
     for(let d = 1; d <= daysInMonth; d++){
       let val = data[wName][d];
@@ -1737,8 +1780,9 @@ function renderTimesheet(){
       if(isLetter) cellClass += ' letter-code';
       html += `<td class="${cellClass}" onclick="App.editTimesheetCell('${jsAttr(wName)}',${d},${val !== undefined ? `'${jsAttr(String(val))}'` : 'undefined'})">${display}</td>`;
       if(!isLetter && val) total += parseFloat(val) || 0;
+      if(display !== '') daysCount++;
     }
-    html += `<td><b>${total.toFixed(1)}</b></td></tr>`;
+    html += `<td><b>${daysCount}</b></td><td><b>${total.toFixed(1)}</b></td></tr>`;
   });
   html += '</tbody></table></div>';
   $('timesheetResult').innerHTML = html;
@@ -1789,7 +1833,7 @@ function exportTimesheetCSV(){
   let daysInMonth = new Date(year, monthNum, 0).getDate();
   let csv = '\uFEFFФИО;';
   for(let d = 1; d <= daysInMonth; d++) csv += d + ';';
-  csv += 'Итого\n';
+  csv += 'Дни;Часы\n';
   let data = {};
   entries.filter(e => e.date.startsWith(month)).forEach(e => {
     e.squads?.forEach(sq => {
@@ -1813,12 +1857,14 @@ function exportTimesheetCSV(){
   Object.keys(data).sort().forEach(wName => {
     csv += wName + ';';
     let total = 0;
+    let daysCount = 0;
     for(let d = 1; d <= daysInMonth; d++){
       let val = data[wName][d];
       csv += (val !== undefined ? val : '') + ';';
       if(typeof val === 'number') total += val;
+      if(val !== undefined && String(val).trim() !== '') daysCount++;
     }
-    csv += total.toFixed(1) + '\n';
+    csv += daysCount + ';' + total.toFixed(1) + '\n';
   });
   downloadFile(csv, `табель_${month}.csv`, 'text/csv;charset=utf-8');
   showToast('CSV экспортирован');
@@ -1832,7 +1878,8 @@ function exportTimesheetExcel(){
   let data = [];
   let headers = ['ФИО'];
   for(let d = 1; d <= daysInMonth; d++) headers.push(d);
-  headers.push('Итого');
+  headers.push('Дни');
+  headers.push('Часы');
   let tsData = {};
   entries.filter(e => e.date.startsWith(month)).forEach(e => {
     e.squads?.forEach(sq => {
@@ -1856,12 +1903,15 @@ function exportTimesheetExcel(){
   Object.keys(tsData).sort().forEach(wName => {
     let row = { 'ФИО': wName };
     let total = 0;
+    let daysCount = 0;
     for(let d = 1; d <= daysInMonth; d++){
       let val = tsData[wName][d];
       row[d] = val !== undefined ? val : '';
       if(typeof val === 'number') total += val;
+      if(val !== undefined && String(val).trim() !== '') daysCount++;
     }
-    row['Итого'] = total.toFixed(1);
+    row['Дни'] = daysCount;
+    row['Часы'] = total.toFixed(1);
     data.push(row);
   });
   let ws = XLSX.utils.json_to_sheet(data, { header: headers });
@@ -1914,7 +1964,7 @@ return {
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   exportNormsTemplate, importNormsData,
   selectRoadForScale, renderRoadSelector, generateRoadKmReport,
-  renderEntries, renderCalendar
+  renderEntries, renderCalendar, renderRoadsKmSummary
 };
 })();
 
