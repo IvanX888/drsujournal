@@ -602,7 +602,7 @@ function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active');
   let pages=['pageJournal','pageNew','pageCalendar','pageTimesheet','pageReports','pageMore'];
   let idx=pages.indexOf(id); if(idx>=0){ let navs=document.querySelectorAll('.nav-btn'); navs.forEach(n=>n.classList.remove('active')); if(navs[idx]) navs[idx].classList.add('active'); }
-  if(id==='pageJournal'){ renderEntries(); renderRoadSelector(); }
+  if(id==='pageJournal'){ renderEntries(); renderRoadSelector(); renderRoadsKmSummary(); }
   if(id==='pageCalendar') renderCalendar();
   if(id==='pageTimesheet') renderTimesheet();
   if(id==='pageReports') renderReportRoadSelect();
@@ -658,18 +658,71 @@ function renderDayView(container, date){
   let dayTasks=tasks.filter(t=>t.date===date && !t.done);
   let html=`<div class="day-view-card">
     <div class="day-view-date">${dayName}, ${formatDate(date)}</div>
-    <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">Сегодня</div>
+    <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">${date===todayStr()?'Сегодня':'Выбранный день'}</div>
     <div class="day-view-tasks">`;
+
+  // Quick add task block
+  html+=`<div style="background:var(--bg);border-radius:12px;padding:10px;margin-bottom:12px;border:1px solid var(--border)">
+    <div style="font-weight:600;font-size:.85rem;margin-bottom:6px;color:var(--accent)">➕ Быстрая задача</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input type="text" id="dayQuickTask_${date}" placeholder="Что сделать..." style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:4px;font-size:.85rem"><input type="checkbox" id="dayQuickImp_${date}" style="width:18px;height:18px;accent-color:var(--danger)"> 🔴 Важная</label>
+      <button class="btn btn-accent btn-small" style="flex:1;min-width:120px" onclick="App.addQuickTaskFromDayView('${jsAttr(date)}')">Добавить задачу</button>
+    </div>
+  </div>`;
+
+  // Tasks section
   if(dayTasks.length){
     html+=`<div style="font-weight:600;margin-bottom:6px;color:var(--accent)">📋 Задачи (${dayTasks.length}):</div>`;
-    dayTasks.forEach(t=>{ let tIdx=tasks.indexOf(t); html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" onchange="App.toggleTaskDone(${tIdx})"> ${escapeHtml(t.text)}</div>`; });
-  } else html+=`<div style="color:var(--text-secondary)">Нет задач на сегодня</div>`;
+    dayTasks.forEach(t=>{ let tIdx=tasks.indexOf(t); html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" class="task-check" ${t.done?'checked':''} onchange="App.toggleTaskDone(${tIdx})"><div style="flex:1">${escapeHtml(t.text)}</div><button class="del-btn" onclick="App.deleteTask(${tIdx})">🗑️</button></div>`; });
+  } else html+=`<div style="color:var(--text-secondary);margin-bottom:8px">Нет задач</div>`;
+
+  // Entries section
   if(dayEntries.length){
-    html+=`<div style="font-weight:600;margin:12px 0 6px;color:var(--primary)">📋 Записей: ${dayEntries.length}</div>`;
-    dayEntries.forEach(e=>{ let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])]; html+=`<div style="font-size:.85rem;margin-bottom:4px;color:var(--text-secondary)">• <span class="text-success">${escapeHtml(objs.join(', '))}</span></div>`; });
+    html+=`<div style="font-weight:600;margin:12px 0 6px;color:var(--primary)">📋 Записей журнала: ${dayEntries.length}</div>`;
+    dayEntries.forEach(e=>{ 
+      let idx=entries.indexOf(e);
+      let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
+      let peopleCount=e.squads?.reduce((a,s)=>a+(s.people?.length||0),0)||0;
+      let worksCount=e.squads?.reduce((a,s)=>a+(s.works?.length||0),0)||0;
+      html+=`<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border-left:3px solid var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-weight:600;color:var(--success)">${escapeHtml(objs.join(', '))}</div>
+          <button class="btn btn-edit btn-small" onclick="App.editEntry(${idx})">✏️ Изменить</button>
+        </div>
+        <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${peopleCount} чел. | 🔧 ${worksCount} работ${e.important?' | <span style="color:var(--danger)">🔴 Важная</span>':''}</div>
+      </div>`; 
+    });
+  } else {
+    html+=`<div style="color:var(--text-secondary);margin:8px 0">Нет записей в журнале</div>`;
   }
+
+  // Action buttons
+  html+=`<div class="row-btns" style="margin-top:12px">
+    <button class="btn btn-primary btn-small" onclick="App.goToNewEntry('${jsAttr(date)}')">➕ Добавить наряд</button>
+    <button class="btn btn-accent btn-small" onclick="App.showPage('pageCalendar')">📅 Календарь</button>
+  </div>`;
+
   html+=`</div></div>`;
   container.innerHTML=html;
+}
+
+function addQuickTaskFromDayView(date){
+  let text = $(`dayQuickTask_${date}`)?.value.trim();
+  let important = $(`dayQuickImp_${date}`)?.checked || false;
+  if(!text){ showToast('Введите текст задачи'); return; }
+  tasks.push({ id: Date.now(), text, date, important, done: false });
+  save(STORAGE_KEYS.tasks, tasks);
+  $(`dayQuickTask_${date}`).value = '';
+  $(`dayQuickImp_${date}`).checked = false;
+  showToast('Задача добавлена');
+  renderEntries();
+}
+function goToNewEntry(date){
+  $('inpDate').value = date;
+  showPage('pageNew');
 }
 
 function renderWeekView(container){
@@ -1164,6 +1217,7 @@ function renderEntries(){
   if($('statWorkers')) $('statWorkers').textContent=maxWorkers;
   if($('statObjects')) $('statObjects').textContent=objectsSet.size;
   if($('statWorks')) $('statWorks').textContent=worksSet.size;
+  renderRoadsKmSummary();
 }
 function toggleEntry(idx){ let el=$('ent_'+idx); if(el) el.classList.toggle('expanded'); }
 function toggleMonth(month){ let el=$('month_'+month); if(el) el.classList.toggle('expanded'); }
@@ -1964,7 +2018,8 @@ return {
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   exportNormsTemplate, importNormsData,
   selectRoadForScale, renderRoadSelector, generateRoadKmReport,
-  renderEntries, renderCalendar, renderRoadsKmSummary
+  renderEntries, renderCalendar, renderRoadsKmSummary,
+  addQuickTaskFromDayView, goToNewEntry
 };
 })();
 
