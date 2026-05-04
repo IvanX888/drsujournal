@@ -591,8 +591,21 @@ function initOffline(){
   window.addEventListener('online', ()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge').classList.remove('show'); showToast('🌐 Соединение восстановлено'); });
   window.addEventListener('offline', ()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); showToast('📴 Офлайн-режим активирован'); });
   if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); }
+
+  // Cache current page for offline use
+  if('caches' in window){
+    caches.open('drsu-page-cache-v1').then(function(cache){
+      // Cache the current page document
+      let pageHtml = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+      let pageResponse = new Response(pageHtml, {status: 200, statusText: 'OK', headers: {'Content-Type': 'text/html'}});
+      cache.put(new Request(self.location.href), pageResponse);
+      // Also cache root path
+      cache.put(new Request('./'), pageResponse.clone());
+    }).catch(()=>{});
+  }
+
   if('serviceWorker' in navigator){
-    let swCode = "const CACHE_NAME='drsu-cache-v1';const urlsToCache=[self.location.href];self.addEventListener('install',function(e){e.waitUntil(caches.open(CACHE_NAME).then(function(cache){return cache.addAll(urlsToCache);}));self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(response){if(response) return response;return fetch(e.request).then(function(networkResponse){if(!networkResponse||networkResponse.status!==200||networkResponse.type!=='basic')return networkResponse;var responseClone=networkResponse.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,responseClone);});return networkResponse;}).catch(function(){return new Response('<h1>Офлайн</h1><p>Приложение работает без интернета.</p>',{headers:{'Content-Type':'text/html'}});});}));});";
+    let swCode = `const CACHE_NAME='drsu-cache-v2';self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(response){if(response) return response;return fetch(e.request).then(function(networkResponse){if(!networkResponse||networkResponse.status!==200)return networkResponse;var responseClone=networkResponse.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,responseClone);});return networkResponse;}).catch(function(){return caches.match(self.location.href).then(function(cached){if(cached)return cached;return new Response('<h1>📴 Офлайн-режим</h1><p>Приложение загружается из кэша. Подключитесь к интернету для обновления.</p>',{headers:{'Content-Type':'text/html; charset=utf-8'}});});});}));});`;
     let blob = new Blob([swCode], {type: 'application/javascript'});
     navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
   }
@@ -656,73 +669,32 @@ function renderDayView(container, date){
   let dayName=d.toLocaleDateString('ru-RU',{weekday:'long'});
   let dayEntries=entries.filter(e=>e.date===date);
   let dayTasks=tasks.filter(t=>t.date===date && !t.done);
-  let html=`<div class="day-view-card">
+  let html=`<div class="day-view-card" onclick="App.showDayDetails('${jsAttr(date)}')" style="cursor:pointer">
     <div class="day-view-date">${dayName}, ${formatDate(date)}</div>
-    <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">${date===todayStr()?'Сегодня':'Выбранный день'}</div>
-    <div class="day-view-tasks">`;
+    <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">${date===todayStr()?'Сегодня':'Нажмите для работы с днём'}</div>`;
 
-  // Quick add task block
-  html+=`<div style="background:var(--bg);border-radius:12px;padding:10px;margin-bottom:12px;border:1px solid var(--border)">
-    <div style="font-weight:600;font-size:.85rem;margin-bottom:6px;color:var(--accent)">➕ Быстрая задача</div>
-    <div style="display:flex;gap:6px;margin-bottom:6px">
-      <input type="text" id="dayQuickTask_${date}" placeholder="Что сделать..." style="flex:1;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem">
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:4px;font-size:.85rem"><input type="checkbox" id="dayQuickImp_${date}" style="width:18px;height:18px;accent-color:var(--danger)"> 🔴 Важная</label>
-      <button class="btn btn-accent btn-small" style="flex:1;min-width:120px" onclick="App.addQuickTaskFromDayView('${jsAttr(date)}')">Добавить задачу</button>
-    </div>
-  </div>`;
-
-  // Tasks section
+  // Show existing tasks if any
   if(dayTasks.length){
     html+=`<div style="font-weight:600;margin-bottom:6px;color:var(--accent)">📋 Задачи (${dayTasks.length}):</div>`;
-    dayTasks.forEach(t=>{ let tIdx=tasks.indexOf(t); html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" class="task-check" ${t.done?'checked':''} onchange="App.toggleTaskDone(${tIdx})"><div style="flex:1">${escapeHtml(t.text)}</div><button class="del-btn" onclick="App.deleteTask(${tIdx})">🗑️</button></div>`; });
-  } else html+=`<div style="color:var(--text-secondary);margin-bottom:8px">Нет задач</div>`;
-
-  // Entries section
-  if(dayEntries.length){
-    html+=`<div style="font-weight:600;margin:12px 0 6px;color:var(--primary)">📋 Записей журнала: ${dayEntries.length}</div>`;
-    dayEntries.forEach(e=>{ 
-      let idx=entries.indexOf(e);
-      let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
-      let peopleCount=e.squads?.reduce((a,s)=>a+(s.people?.length||0),0)||0;
-      let worksCount=e.squads?.reduce((a,s)=>a+(s.works?.length||0),0)||0;
-      html+=`<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border-left:3px solid var(--primary)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div style="font-weight:600;color:var(--success)">${escapeHtml(objs.join(', '))}</div>
-          <button class="btn btn-edit btn-small" onclick="App.editEntry(${idx})">✏️ Изменить</button>
-        </div>
-        <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${peopleCount} чел. | 🔧 ${worksCount} работ${e.important?' | <span style="color:var(--danger)">🔴 Важная</span>':''}</div>
-      </div>`; 
-    });
-  } else {
-    html+=`<div style="color:var(--text-secondary);margin:8px 0">Нет записей в журнале</div>`;
+    dayTasks.slice(0,3).forEach(t=>{ html+=`<div style="font-size:.85rem;margin-bottom:3px;color:var(--text)">• ${escapeHtml(t.text)}${t.important?' <span style="color:var(--danger)">🔴</span>':''}</div>`; });
+    if(dayTasks.length > 3) html+=`<div style="font-size:.8rem;color:var(--text-secondary)">...и ещё ${dayTasks.length - 3}</div>`;
   }
 
-  // Action buttons
-  html+=`<div class="row-btns" style="margin-top:12px">
-    <button class="btn btn-primary btn-small" onclick="App.goToNewEntry('${jsAttr(date)}')">➕ Добавить наряд</button>
-    <button class="btn btn-accent btn-small" onclick="App.showPage('pageCalendar')">📅 Календарь</button>
-  </div>`;
+  // Show entries count
+  if(dayEntries.length){
+    html+=`<div style="font-weight:600;margin-top:10px;color:var(--primary)">📋 Записей: ${dayEntries.length}</div>`;
+    dayEntries.slice(0,2).forEach(e=>{ 
+      let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
+      html+=`<div style="font-size:.85rem;margin-top:3px;color:var(--success)">• ${escapeHtml(objs.join(', '))}</div>`; 
+    });
+    if(dayEntries.length > 2) html+=`<div style="font-size:.8rem;color:var(--text-secondary)">...и ещё ${dayEntries.length - 2}</div>`;
+  } else {
+    html+=`<div style="color:var(--text-secondary);margin-top:10px;font-size:.9rem">Нет записей в журнале</div>`;
+  }
 
-  html+=`</div></div>`;
+  html+=`<div style="margin-top:12px;font-size:.8rem;color:var(--primary);text-align:center">👆 Нажмите для добавления задачи или наряда</div>`;
+  html+=`</div>`;
   container.innerHTML=html;
-}
-
-function addQuickTaskFromDayView(date){
-  let text = $(`dayQuickTask_${date}`)?.value.trim();
-  let important = $(`dayQuickImp_${date}`)?.checked || false;
-  if(!text){ showToast('Введите текст задачи'); return; }
-  tasks.push({ id: Date.now(), text, date, important, done: false });
-  save(STORAGE_KEYS.tasks, tasks);
-  $(`dayQuickTask_${date}`).value = '';
-  $(`dayQuickImp_${date}`).checked = false;
-  showToast('Задача добавлена');
-  renderEntries();
-}
-function goToNewEntry(date){
-  $('inpDate').value = date;
-  showPage('pageNew');
 }
 
 function renderWeekView(container){
@@ -847,23 +819,36 @@ function selectRoadForScale(roadName){
 function renderRoadsKmSummary(){
   let container=$('roadsKmSummary');
   if(!container) return;
-  if(!roads.length){ container.innerHTML='<div class="empty-state">Нет дорог в справочнике</div>'; return; }
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
-  let html=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">Период: <b>${filterLabel}</b> | Кликните по дороге для деталей</div>`;
+
+  // Collect only roads that have data in current filter period
+  let activeRoads = [];
   roads.forEach(road=>{
     let segments=getRoadKmSegments(road.name, currentFilter);
-    let totalLength=parseFloat(road.length)||0;
-    let coveredKm=0;
-    if(totalLength>0 && segments.length>0){
-      let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
-      let merged=[];
-      sorted.forEach(s=>{
-        if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo});
-        else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); }
-      });
-      merged.forEach(m=>{ coveredKm+=(m.to-m.from); });
+    if(segments.length > 0){
+      let totalLength=parseFloat(road.length)||0;
+      let coveredKm=0;
+      if(totalLength>0){
+        let sorted=segments.slice().sort((a,b)=>a.kmFrom-b.kmFrom);
+        let merged=[];
+        sorted.forEach(s=>{
+          if(merged.length===0) merged.push({from:s.kmFrom,to:s.kmTo});
+          else{ let last=merged[merged.length-1]; if(s.kmFrom<=last.to) last.to=Math.max(last.to,s.kmTo); else merged.push({from:s.kmFrom,to:s.kmTo}); }
+        });
+        merged.forEach(m=>{ coveredKm+=(m.to-m.from); });
+      }
+      let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
+      activeRoads.push({road, segments, coveredKm, totalLength, pct});
     }
-    let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
+  });
+
+  if(activeRoads.length === 0){
+    container.innerHTML=`<div class="empty-state">Нет данных по километражу за выбранный период<br><small style="color:var(--text-secondary)">(${filterLabel})</small></div>`;
+    return;
+  }
+
+  let html=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">Период: <b>${filterLabel}</b> | Дорог: ${activeRoads.length}</div>`;
+  activeRoads.forEach(({road, segments, coveredKm, totalLength, pct})=>{
     let barColor=pct>=90?'var(--success)':(pct>50?'var(--primary)':'var(--accent)');
     html+=`<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.selectRoadForScale('${jsAttr(road.name)}')">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -873,7 +858,7 @@ function renderRoadsKmSummary(){
       <div class="road-scale-bar" style="height:18px;background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)">
         <div style="width:${pct}%;height:100%;background:${barColor};border-radius:9px;transition:width .6s ease"></div>
       </div>
-      ${segments.length?`<div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Участков: ${segments.length}${segments.some(s=>s.duplicate)?' | <span style="color:var(--accent)">⚠️ есть пересечения</span>':''}</div>`:''}
+      <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Участков: ${segments.length}${segments.some(s=>s.duplicate)?' | <span style="color:var(--accent)">⚠️ есть пересечения</span>':''}</div>
     </div>`;
   });
   container.innerHTML=html;
@@ -2018,8 +2003,7 @@ return {
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   exportNormsTemplate, importNormsData,
   selectRoadForScale, renderRoadSelector, generateRoadKmReport,
-  renderEntries, renderCalendar, renderRoadsKmSummary,
-  addQuickTaskFromDayView, goToNewEntry
+  renderEntries, renderCalendar, renderRoadsKmSummary
 };
 })();
 
