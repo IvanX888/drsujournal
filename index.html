@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v16.1 (Исправленный)</title>
+<title>Журнал производства работ — ДРСУ v16.3 (Исправленная)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -78,8 +78,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .road-scale-segments{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
 .road-segment{padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:500;background:var(--bg);border:1px solid var(--border)}
 .road-segment.done{background:#e8f5e9;color:var(--success);border-color:var(--success)}
-.people-tag{padding:3px 8px;border-radius:20px;font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin:2px;background:#e3f2fd}
-.people-tag input.hours-inp{width:42px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;text-align:center;background:var(--card)}
+.people-tag{padding:3px 8px;border-radius:20px;font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin:2px;background:#e3f2fd;color:var(--primary-dark)}
+.people-tag.support{background:#fff3e0;color:var(--accent)}
+.people-tag input.hours-inp{width:42px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;text-align:center;background:var(--card);color:var(--text);margin-left:4px}
 .filter-bar{display:flex;gap:8px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}
 .filter-chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:.85rem;white-space:nowrap;cursor:pointer;flex-shrink:0;color:var(--text)}
 .filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
@@ -118,12 +119,13 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .subpanel{display:none}
 .subpanel.active{display:block}
 .catalog-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.catalog-actions{position:sticky;top:0;z-index:10;background:var(--card);padding:12px 0 8px;border-bottom:2px solid var(--border);margin-bottom:8px}
 .squad-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:2px solid var(--primary);box-shadow:var(--shadow)}
 .squad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:2px solid var(--border)}
 .squad-title{font-size:1.1rem;font-weight:700;color:var(--primary)}
 .squad-category{font-size:.8rem;background:var(--primary);color:#fff;padding:4px 12px;border-radius:20px}
 .object-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.object-tag{background:#e3f2fd;color:var(--primary-dark);padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:6px}
+.object-tag{background:#e8f5e9;color:var(--success);padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:6px;border:1px solid var(--success)}
 .object-tag .del-tag{background:rgba(0,0,0,.15);border:none;width:18px;height:18px;border-radius:50%;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .plan-box{background:var(--bg);border-radius:12px;padding:12px;margin-top:12px;font-size:.85rem;border:1px solid var(--border)}
 .plan-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border)}
@@ -146,6 +148,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .work-item{margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .work-item:last-child{border-bottom:none}
 .work-item input[type="number"]{width:80px;padding:4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
+.work-road-select{width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem}
 .km-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .km-inputs label{font-size:.75rem;color:var(--text-secondary)}
 .km-range-badge{background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px}
@@ -182,13 +185,26 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .stock-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .offline-badge{position:fixed;top:70px;right:16px;background:var(--danger);color:#fff;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow)}
 .offline-badge.show{display:block}
+.text-primary{color:var(--primary)}
+.text-success{color:var(--success)}
+.text-accent{color:var(--accent)}
+.text-danger{color:var(--danger)}
+.text-info{color:var(--info)}
+.text-secondary{color:var(--text-secondary)}
+.norm-progress{height:10px;background:var(--bg);border-radius:5px;overflow:hidden;margin:8px 0;border:1px solid var(--border)}
+.norm-progress-fill{height:100%;border-radius:5px;transition:width .3s ease}
+.norm-progress-fill.under{background:linear-gradient(90deg,var(--danger),var(--accent))}
+.norm-progress-fill.norm{background:var(--success)}
+.norm-progress-fill.over{background:linear-gradient(90deg,var(--accent),var(--danger))}
+.norm-progress-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-secondary);margin-top:2px}
+.work-object-label{display:inline-block;background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-right:6px}
+.work-object-label.multi{background:var(--edit)}
 @media(max-width:600px){
   .week-view{grid-template-columns:repeat(7,1fr);overflow-x:auto}
   .week-day-card{min-width:60px}
 }
 </style>
 <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCW0YPRgNC90LDQuyDQv9GA0L7QuNC30LLQvtC00YHRgtCy0LAg0YDQsNCx0L7RgiDQlNCg0KHQoyIsCiAgInNob3J0X25hbWUiOiAi0JTQoNCh0KMg0JbRg9GA0L3QsNC7IiwKICAiZGVzY3JpcHRpb24iOiAi0KPRh9GR0YIg0L/RgNC+0LjQt9Cy0L7QtNGB0YLQstCwINGA0LDQsdC+0YIsINGC0LDQsdC10LvRjCwg0YHQutC70LDQtCwg0LrQuNC70L7QvNC10YLRgNCw0LYiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzE1NjVjMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxNTY1YzAiLAogICJpY29ucyI6IFsKICAgIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IGZpbGw9JyUyMzE1NjVjMCcgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInLyUzRSUzQ3RleHQgeD0nOTYnIHk9JzExMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nODAnJTNF8J+TiyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCJ9LAogICAgeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJyUzRSUzQ3JlY3QgZmlsbD0nJTIzMTU2NWMwJyB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicvJTNFJTNDdGV4dCB4PScyNTYnIHk9JzMwMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nMjIwJyUzRfCfk4slM0MvdGV4dCUzRSUzQy9zdmclM0UiLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifQogIF0KfQ==">
-<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -363,19 +379,19 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <button class="subtab" onclick="App.showCatalog('catRoads',this)">🛣️ Дороги</button>
     </div>
     <div id="catWorkers" class="catalog-panel active">
-      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('worker')">➕ Добавить работника</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('worker')">📥 Импорт CSV</button></div>
+      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('worker')">➕ Добавить работника</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('worker')">📥 Импорт CSV</button></div>
       <div class="card" id="workersCatalogList"></div>
     </div>
     <div id="catWorks" class="catalog-panel" style="display:none">
-      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('work')">➕ Добавить вид работы</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('work')">📥 Импорт CSV</button></div>
+      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('work')">➕ Добавить вид работы</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('work')">📥 Импорт CSV</button></div>
       <div class="card" id="worksCatalogList"></div>
     </div>
     <div id="catTools" class="catalog-panel" style="display:none">
-      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('tool')">➕ Добавить инструмент</button></div>
+      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('tool')">➕ Добавить инструмент</button></div>
       <div class="card" id="toolsCatalogList"></div>
     </div>
     <div id="catRoads" class="catalog-panel" style="display:none">
-      <div class="card"><button class="btn btn-primary" onclick="App.addCatalogItem('road')">➕ Добавить дорогу / объект</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('road')">📥 Импорт CSV</button></div>
+      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('road')">➕ Добавить дорогу / объект</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('road')">📥 Импорт CSV</button></div>
       <div class="card" id="roadsCatalogList"></div>
     </div>
   </div>
@@ -456,7 +472,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.1 (Исправленный)</b><br>Все данные хранятся локально. Работает офлайн.</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.3 (Исправленная)</b><br>Все данные хранятся локально. Работает офлайн.</p>
     </div>
   </div>
 </div>
@@ -473,7 +489,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <div class="modal-overlay" id="sWorksModal">
   <div class="modal">
     <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
-    <div class="hint" style="margin-bottom:10px">Для каждой работы укажите объём, участок дороги (км) и (при наличии инструмента) часы работы.</div>
+    <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.</b></div>
     <div id="sWorksList"></div>
     <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
   </div>
@@ -491,7 +507,11 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal" style="max-height:90vh">
     <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
     <div id="dayModalContent"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.addEntryFromCalendar()">➕ Добавить запись</button><button class="btn btn-secondary" onclick="App.closeDayModal()">Закрыть</button></div>
+    <div class="row-btns" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
+      <button class="btn btn-accent" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
+      <button class="btn btn-secondary" onclick="App.closeDayModal()">Закрыть</button>
+    </div>
   </div>
 </div>
 
@@ -547,12 +567,12 @@ let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=
 let formSquads=[], draftTimer=null;
 let selectedRoadForScale='';
 
-function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){} }
+function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){ console.warn(e); } }
 function load(key,def){ try{ let v=localStorage.getItem(key); return v?JSON.parse(v):def; }catch(e){ return def; } }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function formatDate(d){ if(!d) return ''; let p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-function jsAttr(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function jsAttr(s){ return String(s).replace(/\\\\/g,"\\\\").replace(/'/g,"\\'"); }
 function showToast(msg){ let t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } }
 function $(id){ return document.getElementById(id); }
 function downloadFile(content,filename,type){ let blob=new Blob([content],{type}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
@@ -565,37 +585,14 @@ function loadAll(){
   timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{}); timesheetLetters=load(STORAGE_KEYS.tsLetters,{});
 }
 
-// ===================== OFFLINE =====================
 function initOffline(){
   window.addEventListener('online', ()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge').classList.remove('show'); showToast('🌐 Соединение восстановлено'); });
   window.addEventListener('offline', ()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); showToast('📴 Офлайн-режим активирован'); });
   if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); }
   if('serviceWorker' in navigator){
-    let swCode = `
-      const CACHE_NAME = 'drsu-cache-v1';
-      const urlsToCache = [ self.location.href ];
-      self.addEventListener('install', e => {
-        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache)));
-        self.skipWaiting();
-      });
-      self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
-      self.addEventListener('fetch', e => {
-        e.respondWith(caches.match(e.request).then(response => {
-          if(response) return response;
-          return fetch(e.request).then(networkResponse => {
-            if(!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') return networkResponse;
-            let responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(e.request, responseClone));
-            return networkResponse;
-          }).catch(() => {
-            return new Response('<h1>Офлайн</h1><p>Приложение работает без интернета.</p>', { headers: {'Content-Type': 'text/html'} });
-          });
-        }));
-      });
-    `;
+    let swCode = "const CACHE_NAME='drsu-cache-v1';const urlsToCache=[self.location.href];self.addEventListener('install',function(e){e.waitUntil(caches.open(CACHE_NAME).then(function(cache){return cache.addAll(urlsToCache);}));self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(response){if(response) return response;return fetch(e.request).then(function(networkResponse){if(!networkResponse||networkResponse.status!==200||networkResponse.type!=='basic')return networkResponse;var responseClone=networkResponse.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,responseClone);});return networkResponse;}).catch(function(){return new Response('<h1>Офлайн</h1><p>Приложение работает без интернета.</p>',{headers:{'Content-Type':'text/html'}});});}));});";
     let blob = new Blob([swCode], {type: 'application/javascript'});
-    let swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).then(() => console.log('SW registered')).catch(() => {});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
   }
 }
 
@@ -615,7 +612,6 @@ function showCatalog(id,btn){ document.querySelectorAll('.catalog-panel').forEac
 function showStockTab(id,btn){ document.querySelectorAll('.stock-panel').forEach(p=>p.style.display='none'); if($(id)) $(id).style.display='block'; if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } renderStock(); }
 function showReportTab(id,btn){ document.querySelectorAll('#pageReports .subpanel').forEach(p=>p.classList.remove('active')); if($(id)) $(id).classList.add('active'); if(btn){ btn.parentElement.querySelectorAll('.subtab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); } }
 
-// ===================== FILTERED ENTRIES =====================
 function getFilteredEntries(){
   let search=$('journalSearch')?.value.trim().toLowerCase()||'';
   let filtered=entries.slice();
@@ -643,19 +639,13 @@ function setFilter(type,btn){
   if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
 }
 
-// ===================== DYNAMIC CALENDAR =====================
 function renderDynamicCalendar(){
   let container=$('dynamicCalendar');
   if(!container) return;
   let today=todayStr();
-
-  if(currentFilter==='today'){
-    renderDayView(container, today);
-  } else if(currentFilter==='week'){
-    renderWeekView(container);
-  } else {
-    renderMonthView(container);
-  }
+  if(currentFilter==='today') renderDayView(container, today);
+  else if(currentFilter==='week') renderWeekView(container);
+  else renderMonthView(container);
 }
 
 function renderDayView(container, date){
@@ -668,12 +658,12 @@ function renderDayView(container, date){
     <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">Сегодня</div>
     <div class="day-view-tasks">`;
   if(dayTasks.length){
-    html+=`<div style="font-weight:600;margin-bottom:6px">📋 Задачи (${dayTasks.length}):</div>`;
-    dayTasks.forEach(t=>{ html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" onchange="App.toggleTaskDone(${tasks.indexOf(t)})"> ${escapeHtml(t.text)}</div>`; });
+    html+=`<div style="font-weight:600;margin-bottom:6px;color:var(--accent)">📋 Задачи (${dayTasks.length}):</div>`;
+    dayTasks.forEach(t=>{ let tIdx=tasks.indexOf(t); html+=`<div class="task-item${t.important?' important':''}"><input type="checkbox" onchange="App.toggleTaskDone(${tIdx})"> ${escapeHtml(t.text)}</div>`; });
   } else html+=`<div style="color:var(--text-secondary)">Нет задач на сегодня</div>`;
   if(dayEntries.length){
-    html+=`<div style="font-weight:600;margin:12px 0 6px">📋 Записей: ${dayEntries.length}</div>`;
-    dayEntries.forEach(e=>{ let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])]; html+=`<div style="font-size:.85rem;margin-bottom:4px">• ${escapeHtml(objs.join(', '))}</div>`; });
+    html+=`<div style="font-weight:600;margin:12px 0 6px;color:var(--primary)">📋 Записей: ${dayEntries.length}</div>`;
+    dayEntries.forEach(e=>{ let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])]; html+=`<div style="font-size:.85rem;margin-bottom:4px;color:var(--text-secondary)">• <span class="text-success">${escapeHtml(objs.join(', '))}</span></div>`; });
   }
   html+=`</div></div>`;
   container.innerHTML=html;
@@ -681,7 +671,7 @@ function renderDayView(container, date){
 
 function renderWeekView(container){
   let d=new Date();
-  let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
+  let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+(d.getDay()===0?-6:1));
   let html='<div class="week-view">';
   let dayNames=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
   for(let i=0;i<7;i++){
@@ -700,8 +690,8 @@ function renderWeekView(container){
       <div class="week-day-name">${dayNames[i]}</div>
       <div class="week-day-num">${cd.getDate()}</div>
       <div class="week-day-info">
-        ${dayEntries.length?`📋 ${dayEntries.length}<br>`:''}
-        ${dayTasks.length?`📌 ${dayTasks.length}`:''}
+        ${dayEntries.length?`<span class="text-primary">📋 ${dayEntries.length}</span><br>`:''}
+        ${dayTasks.length?`<span class="text-accent">📌 ${dayTasks.length}</span>`:''}
       </div>
     </div>`;
   }
@@ -716,7 +706,6 @@ function renderMonthView(container){
   let startOffset=firstDay===0?6:firstDay-1;
   let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   let label=monthNames[m]+' '+y;
-
   let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <button class="btn btn-secondary btn-small" onclick="App.changeMonth(-1)">◀</button>
     <span style="font-weight:700;font-size:1.1rem">${label}</span>
@@ -749,13 +738,11 @@ function changeMonth(delta){
   renderEntries();
 }
 
-// ===================== КИЛОМЕТРАЖ С ФИЛЬТРАМИ =====================
-
 function getRoadKmSegments(roadName, filterType){
   let sourceEntries = entries;
   if(filterType==='today') sourceEntries=entries.filter(e=>e.date===todayStr());
   else if(filterType==='week'){
-    let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+1);
+    let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+(d.getDay()===0?-6:1));
     let ed=new Date(sd); ed.setDate(ed.getDate()+6);
     sourceEntries=entries.filter(e=>{ let de=new Date(e.date); return de>=sd && de<=ed; });
   }
@@ -764,7 +751,6 @@ function getRoadKmSegments(roadName, filterType){
     let taskDates=new Set(tasks.filter(t=>!t.done).map(t=>t.date));
     sourceEntries=entries.filter(e=>taskDates.has(e.date));
   }
-
   let segments=[];
   sourceEntries.forEach((e, eIdx)=>{
     e.squads?.forEach((sq, sqIdx)=>{
@@ -825,11 +811,9 @@ function renderRoadKmScale(roadName){
     uniqueRanges=merged;
   }
   let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
-
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
-
   let html=`<div class="km-scale-container">`;
-  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: ${coveredKm.toFixed(1)} из ${totalLength} км</span></div>`;
+  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: <b class="text-success">${coveredKm.toFixed(1)}</b> из ${totalLength} км</span></div>`;
   html+=`<div class="km-scale-track">`;
   if(totalLength>0){
     uniqueRanges.forEach((range,i)=>{
@@ -840,28 +824,21 @@ function renderRoadKmScale(roadName){
       html+=`<div class="km-scale-label" style="left:${leftPct+widthPct/2}%; transform:translate(-50%,-50%)">${range.from}-${range.to}</div>`;
     });
   }
-  html+=`</div>`;
-  html+=`<div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
-  html+=`<div class="km-legend">
-    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div>
-    <div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход</div>
-  </div>`;
-  html+=`<div style="margin-top:12px;font-size:.9rem;font-weight:600;color:var(--primary)">Выполнено: ${pct.toFixed(1)}% (${coveredKm.toFixed(1)} км)</div>`;
-  html+=`</div>`;
+  html+=`</div><div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
+  html+=`<div class="km-legend"><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход</div></div>`;
+  html+=`<div style="margin-top:12px;font-size:1rem;font-weight:700;color:var(--primary)">Выполнено: <span class="text-success">${pct.toFixed(1)}%</span> (${coveredKm.toFixed(1)} км)</div></div>`;
   container.innerHTML=html;
-
   if(historyContainer){
-    if(segments.length===0){
-      historyContainer.innerHTML='<div class="empty-state">Нет данных по километражу за выбранный период</div>';
-    } else {
+    if(segments.length===0) historyContainer.innerHTML='<div class="empty-state">Нет данных по километражу за выбранный период</div>';
+    else {
       let hHtml='<div class="card-title" style="margin-top:16px">📜 История по участкам</div>';
       segments.forEach(s=>{
         hHtml+=`<div class="km-history-item${s.duplicate?' duplicate':''}">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <b>${s.kmFrom} – ${s.kmTo} км</b>
+            <b class="text-primary">${s.kmFrom} – ${s.kmTo} км</b>
             <span style="font-size:.75rem;color:var(--text-secondary)">${formatDate(s.entryDate)}</span>
           </div>
-          <div>${escapeHtml(s.workName)} — ${s.volume} ${s.unit||''}</div>
+          <div><span class="text-info">${escapeHtml(s.workName)}</span> — <b>${s.volume} ${s.unit||''}</b></div>
           ${s.duplicate?'<div style="color:var(--accent);font-size:.75rem">⚠️ Участок пересекается с другой работой</div>':''}
         </div>`;
       });
@@ -897,10 +874,9 @@ function generateRoadKmReport(){
     uniqueRanges=merged;
   }
   let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
-  let html=`<div class="card">
-    <div class="card-title">🛣️ ${escapeHtml(roadName)}</div>
+  let html=`<div class="card"><div class="card-title">🛣️ ${escapeHtml(roadName)}</div>
     <div style="font-size:1.2rem;font-weight:700;color:var(--primary);margin-bottom:8px">${pct.toFixed(1)}% выполнено</div>
-    <div style="margin-bottom:12px">${coveredKm.toFixed(1)} из ${totalLength} км</div>
+    <div style="margin-bottom:12px"><span class="text-success">${coveredKm.toFixed(1)}</span> из ${totalLength} км</div>
     <div class="km-scale-track" style="margin-bottom:16px">`;
   if(totalLength>0){
     uniqueRanges.forEach(r=>{
@@ -909,20 +885,17 @@ function generateRoadKmReport(){
       html+=`<div class="km-scale-done" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
     });
   }
-  html+=`</div>`;
+  html+=`</div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
   let workSummary={};
   segments.forEach(s=>{
     if(!workSummary[s.workName]) workSummary[s.workName]={total:0,unit:s.unit,ranges:[]};
     workSummary[s.workName].total+=s.volume;
     workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
   });
-  html+=`<table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
-  for(let w in workSummary) html+=`<tr><td>${escapeHtml(w)}</td><td>${workSummary[w].total.toFixed(2)} ${workSummary[w].unit}</td><td>${workSummary[w].ranges.join(', ')}</td></tr>`;
+  for(let w in workSummary) html+=`<tr><td class="text-info">${escapeHtml(w)}</td><td><b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit}</td><td>${workSummary[w].ranges.join(', ')}</td></tr>`;
   html+=`</table></div>`;
   container.innerHTML=html;
 }
-
-// ===================== НАРЯДЫ =====================
 
 function addSquad(data){
   let sid='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
@@ -948,10 +921,12 @@ function editWorkVolume(sid,idx){
   if(newVol!==null){ let v=parseFloat(newVol); if(!isNaN(v) && v>=0) w.volume=v; } 
   let newHours=prompt('Часы работы инструмента:',w.toolHours||0); 
   if(newHours!==null){ let h=parseFloat(newHours); if(!isNaN(h) && h>=0){ w.toolHours=h; let tool=tools.find(t=>t.id===w.toolId); if(tool) w.fuelLiters=Math.round(tool.fuelConsumption*h*100)/100; } }
-  let newKmFrom=prompt('От км:',w.kmFrom||0);
+  let newKmFrom=prompt('От км:',w.kmFrom!==undefined?w.kmFrom:'');
   if(newKmFrom!==null){ let k=parseFloat(newKmFrom); if(!isNaN(k)) w.kmFrom=k; }
-  let newKmTo=prompt('До км:',w.kmTo||0);
+  let newKmTo=prompt('До км:',w.kmTo!==undefined?w.kmTo:'');
   if(newKmTo!==null){ let k=parseFloat(newKmTo); if(!isNaN(k)) w.kmTo=k; }
+  let newRoad=prompt('Объект/дорога:',w.road||'');
+  if(newRoad!==null) w.road=newRoad.trim()||w.road;
   renderSquads(); scheduleDraftSave(); showToast('Работа обновлена'); 
 }
 function removeTmc(sid,idx){ let s=formSquads.find(x=>x.id===sid); if(s) s.tmc.splice(idx,1); renderSquads(); scheduleDraftSave(); }
@@ -963,21 +938,24 @@ function calcSquadPlanHtml(sq){
   let totalLaborNorm=0,totalWorkerCost=0,totalToolCost=0,totalFuel=0,totalMachineCost=0;
   (sq.works||[]).forEach(w=>{ if(w.laborCost) totalLaborNorm+=w.laborCost*w.volume; let wc=(w.directCost||0)-(w.toolCost||0); totalWorkerCost+=wc*w.volume; totalToolCost+=(w.toolCost||0)*w.volume; totalFuel+=w.fuelLiters||0; let tool=tools.find(t=>t.id===w.toolId); if(tool) totalMachineCost+=(tool.machineCostPerHour||0)*(w.toolHours||0); });
   let pct=totalPeopleHours>0?(totalLaborNorm/totalPeopleHours)*100:0; let diff=totalLaborNorm-totalPeopleHours;
-  let statusClass='ok',statusText='В пределах нормы (90-110%)';
-  if(pct<80){ statusClass='bad'; statusText='⚠️ Сильное недовыполнение!'; }
-  else if(pct<90){ statusClass='warn'; statusText='⚠️ Недовыполнение нормы.'; }
-  else if(pct>130){ statusClass='bad'; statusText='⚠️ Критическое превышение!'; }
-  else if(pct>110){ statusClass='warn'; statusText='⚠️ Превышение нормы.'; }
+  let statusClass='ok',statusText='В пределах нормы (90-110%)',progressClass='norm';
+  if(pct<80){ statusClass='bad'; statusText='⚠️ Сильное недовыполнение!'; progressClass='under'; }
+  else if(pct<90){ statusClass='warn'; statusText='⚠️ Недовыполнение нормы.'; progressClass='under'; }
+  else if(pct>130){ statusClass='bad'; statusText='⚠️ Критическое превышение!'; progressClass='over'; }
+  else if(pct>110){ statusClass='warn'; statusText='⚠️ Превышение нормы.'; progressClass='over'; }
+  let barPct=Math.min(130, Math.max(0, pct)); let barWidth=(barPct/130)*100;
   let html='<div class="plan-box"><div class="card-title">📊 Контроль норм наряда</div>';
-  html+='<div class="plan-row"><span class="plan-label">Норма трудозатрат:</span><span class="plan-value">'+totalLaborNorm.toFixed(1)+' чел-ч</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Норма трудозатрат:</span><span class="plan-value text-info">'+totalLaborNorm.toFixed(1)+' чел-ч</span></div>';
   html+='<div class="plan-row"><span class="plan-label">Факт часов (дорожные):</span><span class="plan-value '+statusClass+'">'+totalPeopleHours.toFixed(1)+' ч</span></div>';
   html+='<div class="plan-row"><span class="plan-label">Отклонение:</span><span class="plan-value '+statusClass+'">'+(diff>=0?'+':'')+diff.toFixed(1)+' чел-ч</span></div>';
-  html+='<div class="plan-row"><span class="plan-label">% выполнения:</span><span class="plan-value '+statusClass+'">'+pct.toFixed(1)+'%</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">% выполнения:</span><span class="plan-value '+statusClass+'"><b>'+pct.toFixed(1)+'%</b></span></div>';
+  html+='<div class="norm-progress"><div class="norm-progress-fill '+progressClass+'" style="width:'+barWidth+'%"></div></div>';
+  html+='<div class="norm-progress-labels"><span>0%</span><span>65%</span><span>130%</span></div>';
   html+='<div class="plan-row"><span class="plan-label">Статус:</span><span class="plan-value '+statusClass+'">'+statusText+'</span></div>';
-  html+='<div class="plan-row"><span class="plan-label">Зарплата рабочих:</span><span class="plan-value">'+totalWorkerCost.toFixed(2)+' руб.</span></div>';
-  if(totalToolCost>0) html+='<div class="plan-row"><span class="plan-label">Расходы на инструмент:</span><span class="plan-value">'+totalToolCost.toFixed(2)+' руб.</span></div>';
-  if(totalMachineCost>0) html+='<div class="plan-row"><span class="plan-label">Амортизация:</span><span class="plan-value">'+totalMachineCost.toFixed(2)+' руб.</span></div>';
-  if(totalFuel>0) html+='<div class="plan-row"><span class="plan-label">Расход бензина:</span><span class="plan-value">'+totalFuel.toFixed(2)+' л</span></div>';
+  html+='<div class="plan-row"><span class="plan-label">Зарплата рабочих:</span><span class="plan-value text-success">'+totalWorkerCost.toFixed(2)+' руб.</span></div>';
+  if(totalToolCost>0) html+='<div class="plan-row"><span class="plan-label">Расходы на инструмент:</span><span class="plan-value text-accent">'+totalToolCost.toFixed(2)+' руб.</span></div>';
+  if(totalMachineCost>0) html+='<div class="plan-row"><span class="plan-label">Амортизация:</span><span class="plan-value text-secondary">'+totalMachineCost.toFixed(2)+' руб.</span></div>';
+  if(totalFuel>0) html+='<div class="plan-row"><span class="plan-label">Расход бензина:</span><span class="plan-value text-info">'+totalFuel.toFixed(2)+' л</span></div>';
   html+='</div>'; return html;
 }
 
@@ -985,52 +963,34 @@ function renderSquads(){
   let container=$('squadsContainer'); if(!container) return; container.innerHTML='';
   formSquads.forEach((sq,index)=>{
     let catInfo=CATEGORIES[sq.category]||CATEGORIES.other;
-    
-    // Объекты теги
-    let objTags = (sq.objects || []).map((o, i) => 
-      `<span class="object-tag">${escapeHtml(o)}<button type="button" class="del-tag" onclick="App.removeObject('${jsAttr(sq.id)}',${i})">×</button></span>`
-    ).join('');
-    
-    // Работники
+    let objTags = (sq.objects || []).map((o, i) => `<span class="object-tag">${escapeHtml(o)}<button type="button" class="del-tag" onclick="App.removeObject('${jsAttr(sq.id)}',${i})">×</button></span>`).join('');
     let peoplePreview = (sq.people || []).map((p, pi) => {
       let w = workers.find(x => x.name === p.name);
       let cat = w ? w.category : 'other';
       let isNorm = CATEGORIES[cat] && CATEGORIES[cat].norm;
-      let bg = isNorm ? '#e3f2fd' : '#fff3e0';
-      let color = isNorm ? 'var(--primary-dark)' : 'var(--accent)';
-      return `<span class="people-tag" style="background:${bg};color:${color}">${escapeHtml(p.name)} ${isNorm ? '' : '(поддержка)'}<input type="number" class="hours-inp" value="${p.hours || 8}" min="0" max="24" step="0.5" onchange="App.updateWorkerHours('${jsAttr(sq.id)}',${pi},this.value)">ч</span>`;
+      let cls = isNorm ? 'people-tag' : 'people-tag support';
+      return `<span class="${cls}">${escapeHtml(p.name)} ${isNorm ? '' : '<small>(поддержка)</small>'}<input type="number" class="hours-inp" value="${p.hours || 8}" min="0" max="24" step="0.5" onchange="App.updateWorkerHours('${jsAttr(sq.id)}',${pi},this.value)">ч</span>`;
     }).join('');
-    
-    // Работы по дорогам
     let worksByRoad = {};
-    (sq.works || []).forEach((w, i) => {
-      let r = w.road || 'Без объекта';
-      if (!worksByRoad[r]) worksByRoad[r] = [];
-      worksByRoad[r].push({...w, idx: i});
-    });
-    
+    (sq.works || []).forEach((w, i) => { let r = w.road || 'Без объекта'; if (!worksByRoad[r]) worksByRoad[r] = []; worksByRoad[r].push({...w, idx: i}); });
     let worksHtml = '';
     Object.keys(worksByRoad).forEach(road => {
       let wlist = worksByRoad[road];
-      worksHtml += `<div class="road-block"><div class="road-title">🛣️ ${escapeHtml(road)}</div>`;
+      let isMulti = sq.objects && sq.objects.length > 1;
+      let objLabel = isMulti ? `<span class="work-object-label multi">${escapeHtml(road)}</span>` : `<span class="work-object-label">${escapeHtml(road)}</span>`;
+      worksHtml += `<div class="road-block">${objLabel}`;
       wlist.forEach(w => {
         let tool = tools.find(t => t.id === w.toolId);
         let fuel = w.fuelLiters || 0;
         let machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
         let workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
         let kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined) ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
-        worksHtml += `<div class="preview-item"><div class="preview-item-name">${escapeHtml(w.name)} — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}${workerCost.toFixed(2)} руб. | ${tool ? tool.name + ' ' + w.toolHours + 'ч | ' : ''}${fuel > 0 ? '⛽ ' + fuel.toFixed(2) + ' л | ' : ''}${machineCost > 0 ? '🛠️ ' + machineCost.toFixed(2) + ' руб. ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
+        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span> | ${tool ? '<span class="text-secondary">' + tool.name + ' ' + w.toolHours + 'ч</span> | ' : ''}${fuel > 0 ? '<span class="text-accent">⛽ ' + fuel.toFixed(2) + ' л</span> | ' : ''}${machineCost > 0 ? '<span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span> ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
       });
       worksHtml += '</div>';
     });
-    
-    // ТМЦ
-    let tmcPreview = (sq.tmc || []).map((t, i) => 
-      `<div class="preview-item"><div class="preview-item-name">${escapeHtml(t.name)}: <b>${t.qty} ${t.unit || ''}</b></div><button class="del-btn" onclick="App.removeTmc('${jsAttr(sq.id)}',${i})">🗑️</button></div>`
-    ).join('');
-    
+    let tmcPreview = (sq.tmc || []).map((t, i) => `<div class="preview-item" style="background:#f3e5f5"><div class="preview-item-name"><span class="text-primary">${escapeHtml(t.name)}</span>: <b>${t.qty} ${t.unit || ''}</b></div><button class="del-btn" onclick="App.removeTmc('${jsAttr(sq.id)}',${i})">🗑️</button></div>`).join('');
     let planHtml = calcSquadPlanHtml(sq);
-    
     let html = `<div class="squad-card" id="card_${sq.id}">
       <div class="squad-header"><div class="squad-title">Наряд #${index + 1}</div><div style="display:flex;align-items:center;gap:8px"><span class="squad-category" style="background:${catInfo.color}">${catInfo.name}</span><button type="button" class="squad-dup-btn" onclick="App.duplicateSquad('${jsAttr(sq.id)}')">📋</button></div></div>
       <div class="form-group"><label>Категория наряда</label><select onchange="App.changeSquadCategory('${jsAttr(sq.id)}',this.value)">${Object.keys(CATEGORIES).map(k => `<option value="${k}"${sq.category === k ? ' selected' : ''}>${CATEGORIES[k].name}</option>`).join('')}</select></div>
@@ -1044,14 +1004,11 @@ function renderSquads(){
       <div class="form-group"><label>План на завтра</label><textarea onchange="App.updateSquadField('${jsAttr(sq.id)}','planTomorrow',this.value)">${escapeHtml(sq.planTomorrow || '')}</textarea></div>
       <div class="form-group"><label>Заметки</label><textarea onchange="App.updateSquadField('${jsAttr(sq.id)}','notes',this.value)">${escapeHtml(sq.notes || '')}</textarea></div>
       <button type="button" class="btn btn-danger btn-small" onclick="App.removeSquad('${jsAttr(sq.id)}')">🗑️ Удалить наряд</button></div>`;
-    
     container.insertAdjacentHTML('beforeend', html);
   });
 }
 
-// ===================== МОДАЛКИ =====================
-
-function openSwModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let modal=$('swModal'); let list=$('swList'); let filtered=workers.slice(); list.innerHTML=filtered.map(w=>{ let selected=(sq.people||[]).some(p=>p.name===w.name); return '<label class="sw-item"><input type="checkbox" data-name="'+escapeHtml(w.name)+'"'+(selected?' checked':'')+'><span>'+escapeHtml(w.name)+' <small>('+(CATEGORIES[w.category]||CATEGORIES.other).name+(w.grade?', разр.'+w.grade:'')+')</small></span></label>'; }).join(''); modal.classList.add('active'); }
+function openSwModal(squadId){ currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; let modal=$('swModal'); let list=$('swList'); let filtered=workers.slice(); list.innerHTML=filtered.map(w=>{ let selected=(sq.people||[]).some(p=>p.name===w.name); return '<label class="sw-item"><input type="checkbox" data-name="'+escapeHtml(w.name)+'"'+(selected?' checked':'')+'><span><b>'+escapeHtml(w.name)+'</b> <small class="text-secondary">('+(CATEGORIES[w.category]||CATEGORIES.other).name+(w.grade?', разр.'+w.grade:'')+')</small></span></label>'; }).join(''); modal.classList.add('active'); }
 function closeSwModal(){ $('swModal').classList.remove('active'); currentSquadId=null; }
 function selectAllWorkers(checked){ document.querySelectorAll('#swList input[type="checkbox"]').forEach(cb=>cb.checked=checked); }
 function applySw(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#swList input:checked')).map(cb=>cb.dataset.name); sq.people=checked.map(name=>{ let existing=(sq.people||[]).find(p=>p.name===name); return existing||{name, hours:8}; }); renderSquads(); closeSwModal(); scheduleDraftSave(); }
@@ -1059,16 +1016,17 @@ function applySw(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) re
 function openSWorksModal(squadId){ 
   currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; 
   let modal=$('sWorksModal'); let list=$('sWorksList'); 
+  let squadObjects = sq.objects || [];
+  let objectsSelectHtml = squadObjects.length > 0 
+    ? `<select class="work-road-select"><option value="">📍 Выберите объект/дорогу</option>` + squadObjects.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') + `</select>`
+    : `<div style="color:var(--danger);font-size:.75rem;margin-bottom:4px">⚠️ Сначала добавьте объекты в наряд!</div>`;
   let filtered=works.slice(); 
   list.innerHTML=filtered.map(w=>{
-    return '<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong>'+escapeHtml(w.name)+'</strong> <small>('+(w.unit||'ед.')+')</small></label>'+
-    '<div style="margin-left:24px; margin-top:5px;">'+
-    '<label>Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> '+
-    '<label>Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label>'+
-    '<div class="km-inputs">'+
-    '<div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div>'+
-    '<div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div>'+
-    '</div>'+
+    return '<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong class="text-info">'+escapeHtml(w.name)+'</strong> <small class="text-secondary">('+(w.unit||'ед.')+')</small></label>'+
+    '<div style="margin-left:24px; margin-top:5px;">'+objectsSelectHtml+
+    '<label style="display:inline-block;margin-top:6px;margin-right:8px">Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> '+
+    '<label style="display:inline-block;margin-top:6px">Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label>'+
+    '<div class="km-inputs"><div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div><div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div></div>'+
     '</div></div>';
   }).join(''); 
   modal.classList.add('active'); 
@@ -1076,20 +1034,22 @@ function openSWorksModal(squadId){
 function closeSWorksModal(){ $('sWorksModal').classList.remove('active'); currentSquadId=null; }
 function applySWorks(){ 
   let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; 
-  let road=(sq.objects&&sq.objects[0])||'Без объекта'; 
   let checkboxes=document.querySelectorAll('#sWorksList .work-cb'); 
   checkboxes.forEach(cb=>{ 
     if(!cb.checked) return; 
-    let id=cb.dataset.id; let name=cb.dataset.name; let unit=cb.dataset.unit; 
+    let id=parseInt(cb.dataset.id); let name=cb.dataset.name; let unit=cb.dataset.unit; 
     let laborCost=parseFloat(cb.dataset.labor)||0; let directCost=parseFloat(cb.dataset.direct)||0; let toolCost=parseFloat(cb.dataset.toolcost)||0; 
     let volumeDiv=cb.closest('.work-item').querySelector('.work-volume'); 
     let hoursDiv=cb.closest('.work-item').querySelector('.work-hours');
     let kmFromDiv=cb.closest('.work-item').querySelector('.work-km-from');
     let kmToDiv=cb.closest('.work-item').querySelector('.work-km-to');
+    let roadSelect=cb.closest('.work-item').querySelector('.work-road-select');
     let volume=volumeDiv?parseFloat(volumeDiv.value):1; 
     let toolHours=hoursDiv?parseFloat(hoursDiv.value):0; 
     let kmFrom=kmFromDiv?parseFloat(kmFromDiv.value):undefined;
     let kmTo=kmToDiv?parseFloat(kmToDiv.value):undefined;
+    let road=roadSelect?roadSelect.value:((sq.objects&&sq.objects[0])||'Без объекта');
+    if(!road && sq.objects && sq.objects[0]) road = sq.objects[0];
     if(isNaN(volume)||volume<=0) volume=1; 
     if(isNaN(toolHours)) toolHours=0; 
     let fuelLiters=0; 
@@ -1097,18 +1057,16 @@ function applySWorks(){
     if(tool) fuelLiters=Math.round(tool.fuelConsumption*toolHours*100)/100; 
     let existing=sq.works.find(w=>w.id===id && w.road===road); 
     if(!existing){ 
-      sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId:'', toolHours, fuelLiters, kmFrom, kmTo }); 
+      sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId:id, toolHours, fuelLiters, kmFrom, kmTo }); 
     }else{ 
       existing.volume=volume; existing.toolHours=toolHours; existing.fuelLiters=fuelLiters; existing.kmFrom=kmFrom; existing.kmTo=kmTo;
     } 
   }); 
   renderSquads(); closeSWorksModal(); scheduleDraftSave(); 
 }
-function openSTmcModal(squadId){ currentSquadId=squadId; let modal=$('sTmcModal'); let list=$('sTmcList'); list.innerHTML=tmc.map(t=>'<label class="sw-item"><input type="checkbox" data-id="'+t.id+'" data-name="'+escapeHtml(t.name)+'" data-unit="'+escapeHtml(t.unit||'')+'" data-price="'+(t.price||0)+'"> '+escapeHtml(t.name)+' ('+t.unit+')</label>').join(''); modal.classList.add('active'); }
+function openSTmcModal(squadId){ currentSquadId=squadId; let modal=$('sTmcModal'); let list=$('sTmcList'); list.innerHTML=tmc.map(t=>'<label class="sw-item"><input type="checkbox" data-id="'+t.id+'" data-name="'+escapeHtml(t.name)+'" data-unit="'+escapeHtml(t.unit||'')+'" data-price="'+(t.price||0)+'"> <b>'+escapeHtml(t.name)+'</b> <small class="text-secondary">('+t.unit+')</small></label>').join(''); modal.classList.add('active'); }
 function closeSTmcModal(){ $('sTmcModal').classList.remove('active'); currentSquadId=null; }
-function applySTmc(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#sTmcList input:checked')); checked.forEach(cb=>{ let id=cb.dataset.id; if(!sq.tmc.some(t=>t.id===id)){ let qty=parseFloat(prompt('Количество '+cb.dataset.name+':','1')); if(isNaN(qty)||qty<=0) return; sq.tmc.push({ id, name:cb.dataset.name, unit:cb.dataset.unit, qty, price:parseFloat(cb.dataset.price)||0 }); } }); renderSquads(); closeSTmcModal(); scheduleDraftSave(); }
-
-// ===================== СОХРАНЕНИЕ =====================
+function applySTmc(){ let sq=formSquads.find(s=>s.id===currentSquadId); if(!sq) return; let checked=Array.from(document.querySelectorAll('#sTmcList input:checked')); checked.forEach(cb=>{ let id=parseInt(cb.dataset.id); if(!sq.tmc.some(t=>t.id===id)){ let qty=parseFloat(prompt('Количество '+cb.dataset.name+':','1')); if(isNaN(qty)||qty<=0) return; sq.tmc.push({ id, name:cb.dataset.name, unit:cb.dataset.unit, qty, price:parseFloat(cb.dataset.price)||0 }); } }); renderSquads(); closeSTmcModal(); scheduleDraftSave(); }
 
 function saveEntry(ev){ if(ev) ev.preventDefault(); if(!formSquads.length){ showToast('Добавьте хотя бы один наряд'); return false; }
   let date=$('inpDate').value; if(!date){ showToast('Укажите дату'); return false; }
@@ -1129,12 +1087,9 @@ function saveTemplate(){ if(!formSquads.length){ showToast('Нет нарядо�
 function loadTemplate(id){ if(!id) return; if(formSquads.length && !confirm('Заменить текущие наряды шаблоном?')) return; let t=templates.find(x=>x.id===parseInt(id)); if(!t) return; formSquads=JSON.parse(JSON.stringify(t.squads)); renderSquads(); scheduleDraftSave(); showToast('Шаблон загружен'); $('templateSelect').value=''; }
 function renderTemplates(){ let sel=$('templateSelect'); if(sel) sel.innerHTML='<option value="">📂 Загрузить шаблон</option>'+templates.map(t=>'<option value="'+t.id+'">'+escapeHtml(t.name)+'</option>').join(''); }
 
-// ===================== ЖУРНАЛ =====================
-
 function renderEntries(){
   let filtered=getFilteredEntries();
   renderDynamicCalendar();
-
   let months={};
   filtered.forEach(e=>{ let m=e.date.slice(0,7); if(!months[m]) months[m]=[]; months[m].push(e); });
   let monthNames=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
@@ -1163,7 +1118,6 @@ function renderEntries(){
   });
   if(!html) html='<div class="empty-state">Нет записей</div>';
   let list=$('entriesList'); if(list) list.innerHTML=html;
-
   let today=todayStr();
   let todayEntries=entries.filter(e=>e.date===today);
   let maxWorkers=0, objectsSet=new Set(), worksSet=new Set();
@@ -1195,39 +1149,37 @@ function renderEntryDetails(e){
   let html='';
   e.squads?.forEach((sq,si)=>{
     let catInfo=CATEGORIES[sq.category]||CATEGORIES.other;
-    html+=`<div style="margin-top:8px;"><b>Наряд ${si+1} (${catInfo.name})</b></div>`;
-    if(sq.objects?.length) html+=`<div>📍 ${sq.objects.map(escapeHtml).join(', ')}</div>`;
+    html+=`<div style="margin-top:8px;"><b>Наряд ${si+1} (<span style="color:${catInfo.color}">${catInfo.name}</span>)</b></div>`;
+    if(sq.objects?.length) html+=`<div>📍 <span class="text-success">${sq.objects.map(escapeHtml).join(', ')}</span></div>`;
     if(sq.people?.length){
       let normPeople=sq.people.filter(p=>{ let w=workers.find(x=>x.name===p.name); return !w||(CATEGORIES[w.category]&&CATEGORIES[w.category].norm); });
       let supPeople=sq.people.filter(p=>{ let w=workers.find(x=>x.name===p.name); return w&&!CATEGORIES[w.category]?.norm; });
-      if(normPeople.length) html+=`<div>👷 Дорожные: ${normPeople.map(p=>escapeHtml(p.name)+' ('+(p.hours||8)+'ч)').join(', ')}</div>`;
-      if(supPeople.length) html+=`<div>🚛 Прочие: ${supPeople.map(p=>escapeHtml(p.name)+' ('+(p.hours||8)+'ч)').join(', ')}</div>`;
+      if(normPeople.length) html+=`<div>👷 <span class="text-primary">Дорожные:</span> ${normPeople.map(p=>escapeHtml(p.name)+' ('+(p.hours||8)+'ч)').join(', ')}</div>`;
+      if(supPeople.length) html+=`<div>🚛 <span class="text-accent">Прочие:</span> ${supPeople.map(p=>escapeHtml(p.name)+' ('+(p.hours||8)+'ч)').join(', ')}</div>`;
     }
     if(sq.works?.length){
       let byRoad={};
       sq.works.forEach(w=>{ let r=w.road||'Без объекта'; if(!byRoad[r]) byRoad[r]=[]; byRoad[r].push(w); });
       for(let road in byRoad){
-        html+=`<div class="road-block"><div class="road-title">🛣️ ${escapeHtml(road)}</div>`;
+        html+=`<div class="road-block"><div class="road-title">🛣️ <span class="text-success">${escapeHtml(road)}</span></div>`;
         byRoad[road].forEach(w=>{
           let tool=tools.find(t=>t.id===w.toolId);
           let machineCost=tool?(tool.machineCostPerHour||0)*(w.toolHours||0):0;
           let workerCost=((w.directCost||0)-(w.toolCost||0))*w.volume;
-          let kmInfo = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ` | 🛣️ ${w.kmFrom}–${w.kmTo} км` : '';
-          html+=`<div>• ${escapeHtml(w.name)} — <b>${w.volume} ${w.unit||''}</b>${kmInfo}${w.laborCost?`<br>&nbsp;&nbsp;Норма: ${(w.laborCost*w.volume).toFixed(1)} чел-ч`:''}${workerCost?`<br>&nbsp;&nbsp;Рабочие: ${workerCost.toFixed(2)} руб. | Инстр.: ${((w.toolCost||0)*w.volume).toFixed(2)} руб.`:''}${tool?`<br>&nbsp;&nbsp;Инструмент: ${escapeHtml(tool.name)} ${w.toolHours||0}ч | ⛽ ${(w.fuelLiters||0).toFixed(2)} л | Аморт. ${machineCost.toFixed(2)} руб.`:''}</div>`;
+          let kmInfo2 = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ' | 🛣️ <span class="text-info">'+w.kmFrom+'–'+w.kmTo+' км</span>' : '';
+          html+=`<div>• <span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit||''}</b>${kmInfo2}${w.laborCost?`<br>&nbsp;&nbsp;Норма: <span class="text-secondary">${(w.laborCost*w.volume).toFixed(1)} чел-ч</span>`:''}${workerCost?`<br>&nbsp;&nbsp;Рабочие: <span class="text-success">${workerCost.toFixed(2)} руб.</span> | Инстр.: <span class="text-accent">${((w.toolCost||0)*w.volume).toFixed(2)} руб.</span>`:''}${tool?`<br>&nbsp;&nbsp;Инструмент: <span class="text-secondary">${escapeHtml(tool.name)} ${w.toolHours||0}ч</span> | <span class="text-accent">⛽ ${(w.fuelLiters||0).toFixed(2)} л</span> | Аморт. <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>`:''}</div>`;
         });
         html+=`</div>`;
       }
     }
-    if(sq.tmc?.length) html+=`<div>📦 ТМЦ: ${sq.tmc.map(t=>`${escapeHtml(t.name)}: ${t.qty} ${t.unit}`).join(', ')}</div>`;
-    if(sq.planToday) html+=`<div>✅ Выполнено: ${escapeHtml(sq.planToday)}</div>`;
-    if(sq.planTomorrow) html+=`<div>📅 План: ${escapeHtml(sq.planTomorrow)}</div>`;
+    if(sq.tmc?.length) html+=`<div>📦 <span class="text-primary">ТМЦ:</span> ${sq.tmc.map(t=>`${escapeHtml(t.name)}: <b>${t.qty}</b> ${t.unit}`).join(', ')}</div>`;
+    if(sq.planToday) html+=`<div>✅ <span class="text-success">Выполнено:</span> ${escapeHtml(sq.planToday)}</div>`;
+    if(sq.planTomorrow) html+=`<div>📅 <span class="text-info">План:</span> ${escapeHtml(sq.planTomorrow)}</div>`;
     html+='<hr>';
   });
-  if(e.reminder) html+=`<div>⏰ Напоминание: ${new Date(e.reminder).toLocaleString()} — ${escapeHtml(e.reminderText||'')}</div>`;
+  if(e.reminder) html+=`<div>⏰ <span class="text-accent">Напоминание:</span> ${new Date(e.reminder).toLocaleString()} — ${escapeHtml(e.reminderText||'')}</div>`;
   return html;
 }
-
-// ===================== СКЛАД =====================
 
 function addStockRow(type){ let name=prompt('Название материала:'); if(!name) return; let unit=prompt('Единица измерения:')||'шт'; let price=parseFloat(prompt('Цена за единицу:')||0); let id=Date.now(); let item={id,name,unit,qty:0,price}; if(type==='order'){ stockOrder.push(item); save(STORAGE_KEYS.stockOrder,stockOrder); } else { stockManual.push({...item,history:[]}); save(STORAGE_KEYS.stockManual,stockManual); } renderStock(); }
 function updateStockOrder(id,field,value){ let item=stockOrder.find(s=>s.id==id); if(item){ if(field==='qty') item.qty=parseFloat(value)||0; else if(field==='price') item.price=parseFloat(value)||0; save(STORAGE_KEYS.stockOrder,stockOrder); renderStock(); } }
@@ -1251,13 +1203,13 @@ function renderStock(){
   let orderDiv=$('orderStockList'); 
   if(orderDiv){ 
     if(stockOrder.length){ 
-      orderDiv.innerHTML=stockOrder.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Остаток: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockOrder(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockOrder(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('order',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockOrder(${t.id})">🗑️</button></div></div></div>`).join(''); 
+      orderDiv.innerHTML=stockOrder.map(t=>`<div class="tmc-row"><div><b class="text-primary">${escapeHtml(t.name)}</b> <small class="text-secondary">(${t.unit})</small></div><div>Остаток: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockOrder(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockOrder(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('order',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockOrder(${t.id})">🗑️</button></div></div></div>`).join(''); 
     } else orderDiv.innerHTML='<div class="empty-state">Нет ТМЦ. Добавьте или импортируйте нормативы.</div>'; 
   }
   let manualDiv=$('manualStockList'); 
   if(manualDiv){ 
     if(stockManual.length){ 
-      manualDiv.innerHTML=stockManual.map(t=>`<div class="tmc-row"><div><b>${escapeHtml(t.name)}</b> (${t.unit})</div><div>Количество: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockManual(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockManual(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('manual',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockManual(${t.id})">🗑️</button></div></div></div>`).join(''); 
+      manualDiv.innerHTML=stockManual.map(t=>`<div class="tmc-row"><div><b class="text-primary">${escapeHtml(t.name)}</b> <small class="text-secondary">(${t.unit})</small></div><div>Количество: <input type="number" step="0.01" value="${t.qty}" onchange="App.updateStockManual(${t.id},'qty',this.value)"> ${t.unit} | Цена: <input type="number" step="0.01" value="${t.price}" onchange="App.updateStockManual(${t.id},'price',this.value)"> руб.<div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockItem('manual',${t.id})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStockManual(${t.id})">🗑️</button></div></div></div>`).join(''); 
     } else manualDiv.innerHTML='<div class="empty-state">Нет ТМЦ.</div>'; 
   }
   let historyDiv=$('manualStockHistory'); 
@@ -1266,12 +1218,10 @@ function renderStock(){
     stockManual.forEach(t=>{ if(t.history) t.history.forEach(h=>allHistory.push({material:t.name,...h})); }); 
     allHistory.sort((a,b)=>(b.date||'').localeCompare(a.date)); 
     if(allHistory.length){ 
-      historyDiv.innerHTML='<table class="report-table"><tr><th>Дата</th><th>Материал</th><th>Поле</th><th>Было</th><th>Стало</th></tr>'+allHistory.slice(0,50).map(h=>`<tr><td>${h.date}</td><td>${escapeHtml(h.material)}</td><td>${h.field}</td><td>${h.old!==undefined?h.old:''}</td><td>${h.new!==undefined?h.new:''}</td></tr>`).join('')+'</table>'; 
+      historyDiv.innerHTML='<table class="report-table"><tr><th>Дата</th><th>Материал</th><th>Поле</th><th>Было</th><th>Стало</th></table>'+allHistory.slice(0,50).map(h=>`<tr><td>${h.date}</td><td class="text-primary">${escapeHtml(h.material)}</td><td>${h.field}</td><td>${h.old!==undefined?h.old:''}</td><td>${h.new!==undefined?h.new:''}</td></tr>`).join('')+'<table>'; 
     } else historyDiv.innerHTML='<div class="empty-state">Нет операций</div>'; 
   } 
 }
-
-// ===================== ОТЧЁТЫ =====================
 
 function generateSummaryReport(){ 
   let from=$('reportFrom').value, to=$('reportTo').value; 
@@ -1287,17 +1237,15 @@ function generateSummaryReport(){
       }); 
     }); 
   }); 
-  let html=`<div class="card"><div class="card-title">Сводный отчёт ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><div>Видов работ: ${Object.keys(workTotals).length}</div><table class="report-table"><tr><th>Работа</th><th>Объём</th></td>${Object.values(workTotals).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.total} ${w.unit}</td></tr>`).join('')}</table></div>`; 
+  let html=`<div class="card"><div class="card-title">Сводный отчёт ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: <b>${filtered.length}</b></div><div>Видов работ: <b>${Object.keys(workTotals).length}</b></div><table class="report-table"><tr><th>Работа</th><th>Объём</th></tr>${Object.values(workTotals).map(w=>`<tr><td class="text-info">${escapeHtml(w.name)}</td><td><b>${w.total}</b> ${w.unit}</td></tr>`).join('')}</table></div>`; 
   $('reportResult').innerHTML=html; 
 }
-
 function generateWorkersReport(){ 
   let from=$('reportFrom').value, to=$('reportTo').value; 
   if(!from||!to){ showToast('Выберите период'); return; } 
   let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
   let cat=$('reportCategory').value;
   if(cat!=='all') filtered=filtered.filter(e=>e.squads?.some(s=>s.category===cat));
-
   let workerStats={};
   filtered.forEach(e=>{
     e.squads?.forEach(sq=>{
@@ -1311,16 +1259,13 @@ function generateWorkersReport(){
       });
     });
   });
-
-  let html=`<div class="card"><div class="card-title">👷 Отчёт по работникам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><table class="report-table"><tr><th>Работник</th><th>Часов</th><th>Дней</th><th>Работ</th><th>Объекты</th></tr>${Object.values(workerStats).map(w=>`<tr><td>${escapeHtml(w.name)}</td><td>${w.hours.toFixed(1)}</td><td>${w.days}</td><td>${w.works}</td><td>${Array.from(w.objects).map(escapeHtml).join(', ')}</td></tr>`).join('')}</table></div>`;
+  let html=`<div class="card"><div class="card-title">👷 Отчёт по работникам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: <b>${filtered.length}</b></div><table class="report-table"><tr><th>Работник</th><th>Часов</th><th>Дней</th><th>Работ</th><th>Объекты</th></tr>${Object.values(workerStats).map(w=>`<tr><td class="text-primary"><b>${escapeHtml(w.name)}</b></td><td>${w.hours.toFixed(1)}</td><td>${w.days}</td><td>${w.works}</td><td>${Array.from(w.objects).map(escapeHtml).join(', ')}</td></tr>`).join('')}</table></div>`;
   $('reportResult').innerHTML=html;
 }
-
 function generateObjectsReport(){ 
   let from=$('reportFrom').value, to=$('reportTo').value; 
   if(!from||!to){ showToast('Выберите период'); return; } 
   let filtered=entries.filter(e=>e.date>=from&&e.date<=to);
-
   let objectStats={};
   filtered.forEach(e=>{
     e.squads?.forEach(sq=>{
@@ -1333,11 +1278,9 @@ function generateObjectsReport(){
       });
     });
   });
-
-  let html=`<div class="card"><div class="card-title">📍 Отчёт по объектам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: ${filtered.length}</div><table class="report-table"><tr><th>Объект</th><th>Записей</th><th>Объём работ</th><th>Работников</th><th>Часов</th></tr>${Object.values(objectStats).map(o=>`<tr><td>${escapeHtml(o.name)}</td><td>${o.entries}</td><td>${o.works.toFixed(2)}</td><td>${o.people}</td><td>${o.hours.toFixed(1)}</td></tr>`).join('')}</table></div>`;
+  let html=`<div class="card"><div class="card-title">📍 Отчёт по объектам ${formatDate(from)} — ${formatDate(to)}</div><div>Записей: <b>${filtered.length}</b></div><table class="report-table"><tr><th>Объект</th><th>Записей</th><th>Объём работ</th><th>Работников</th><th>Часов</th></tr>${Object.values(objectStats).map(o=>`<tr><td class="text-success"><b>${escapeHtml(o.name)}</b></td><td>${o.entries}</td><td>${o.works.toFixed(2)}</td><td>${o.people}</td><td>${o.hours.toFixed(1)}</td></tr>`).join('')}</table></div>`;
   $('reportResult').innerHTML=html;
 }
-
 function exportCSV(){ 
   let from=$('reportFrom').value, to=$('reportTo').value; 
   if(!from||!to){ showToast('Сначала сформируйте отчёт'); return; }
@@ -1347,12 +1290,11 @@ function exportCSV(){
     let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])].join(', ');
     let people=e.squads?.reduce((a,s)=>a+(s.people?.map(p=>p.name).join(', ')||''),'');
     let works=e.squads?.flatMap(s=>s.works?.map(w=>w.name)||[]).join(', ');
-    csv+=`${e.date};${objs};${people};${works};${e.important?'Да':'Нет'}\n`;
+    csv+=e.date+';'+objs+';'+people+';'+works+';'+(e.important?'Да':'Нет')+'\n';
   });
   downloadFile(csv,`отчёт_${from}_${to}.csv`,'text/csv;charset=utf-8');
   showToast('CSV экспортирован');
 }
-
 function exportJSON(){ 
   let from=$('reportFrom').value, to=$('reportTo').value; 
   if(!from||!to){ showToast('Сначала сформируйте отчёт'); return; }
@@ -1361,7 +1303,6 @@ function exportJSON(){
   downloadFile(json,`отчёт_${from}_${to}.json`,'application/json');
   showToast('JSON экспортирован');
 }
-
 async function generateOrderDoc(){ 
   if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
   let month=$('docMonth').value; let obj=$('docObject').value||'Без объекта';
@@ -1392,7 +1333,6 @@ async function generateOrderDoc(){
   let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='наряд_задание_'+month+'.xlsx'; a.click();
   showToast('Наряд-задание сформирован');
 }
-
 async function generateTimesheetDoc(){ 
   if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
   let month=$('docMonth').value; let obj=$('docObject').value||'';
@@ -1410,7 +1350,6 @@ async function generateTimesheetDoc(){
   let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='табель_док_'+month+'.xlsx'; a.click();
   showToast('Табель сформирован');
 }
-
 async function generateS29Doc(){ 
   if(typeof ExcelJS==='undefined'){ showToast('ExcelJS не загружен'); return; }
   let month=$('docMonth').value; let obj=$('docObject').value||'';
@@ -1444,7 +1383,6 @@ async function generateS29Doc(){
   let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='С29_'+month+'.xlsx'; a.click();
   showToast('С-29 сформирован');
 }
-
 function exportEntryExcel(idx){ 
   let e=entries[idx]; if(!e) return; 
   if(typeof XLSX==='undefined'){ showToast('XLSX не загружен'); return; } 
@@ -1456,56 +1394,35 @@ function exportEntryExcel(idx){
   showToast('Excel сохранён'); 
 }
 
-// ===================== КАТАЛОГИ =====================
-
 function renderCatalogs(){
   let search = ($('catSearch')?.value || '').toLowerCase();
-  
-  // Работники
   let wList = $('workersCatalogList');
   if(wList){
     let filtered = workers.filter(w => !search || w.name.toLowerCase().includes(search) || (w.category && CATEGORIES[w.category]?.name.toLowerCase().includes(search)));
-    wList.innerHTML = filtered.map((w, i) => 
-      `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b> <small>(${(CATEGORIES[w.category] || CATEGORIES.other).name}${w.grade ? ', разр.' + w.grade : ''})</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('worker', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker', ${i})">🗑️</button></div></div>`
-    ).join('') || '<div class="empty-state">Нет работников</div>';
+    wList.innerHTML = filtered.map((w, i) => `<div class="catalog-item"><div><b class="text-primary">${escapeHtml(w.name)}</b> <small class="text-secondary">(${(CATEGORIES[w.category] || CATEGORIES.other).name}${w.grade ? ', разр.' + w.grade : ''})</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('worker', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker', ${i})">🗑️</button></div></div>`).join('') || '<div class="empty-state">Нет работников</div>';
   }
-  
-  // Виды работ
   let worksList = $('worksCatalogList');
   if(worksList){
     let filtered = works.filter(w => !search || w.name.toLowerCase().includes(search));
-    worksList.innerHTML = filtered.map((w, i) => 
-      `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b> <small>(${w.unit || 'ед.'})</small><br><small>Норма: ${w.laborCost || 0} чел-ч, Прямые: ${w.directCost || 0} руб., Инстр.: ${w.toolCost || 0} руб.</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('work', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work', ${i})">🗑️</button></div></div>`
-    ).join('') || '<div class="empty-state">Нет видов работ</div>';
+    worksList.innerHTML = filtered.map((w, i) => `<div class="catalog-item"><div><b class="text-info">${escapeHtml(w.name)}</b> <small class="text-secondary">(${w.unit || 'ед.'})</small><br><small>Норма: <span class="text-primary">${w.laborCost || 0}</span> чел-ч, Прямые: <span class="text-success">${w.directCost || 0}</span> руб., Инстр.: <span class="text-accent">${w.toolCost || 0}</span> руб.</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('work', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work', ${i})">🗑️</button></div></div>`).join('') || '<div class="empty-state">Нет видов работ</div>';
   }
-  
-  // Инструменты
   let toolsList = $('toolsCatalogList');
   if(toolsList){
     let filtered = tools.filter(t => !search || t.name.toLowerCase().includes(search));
-    toolsList.innerHTML = filtered.map((t, i) => 
-      `<div class="catalog-item"><div><b>${escapeHtml(t.name)}</b><br><small>Расход: ${t.fuelConsumption || 0} л/ч, Аморт.: ${t.machineCostPerHour || 0} руб/ч</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('tool', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool', ${i})">🗑️</button></div></div>`
-    ).join('') || '<div class="empty-state">Нет инструментов</div>';
+    toolsList.innerHTML = filtered.map((t, i) => `<div class="catalog-item"><div><b class="text-secondary">${escapeHtml(t.name)}</b><br><small>Расход: <span class="text-accent">${t.fuelConsumption || 0}</span> л/ч, Аморт.: <span class="text-secondary">${t.machineCostPerHour || 0}</span> руб/ч</small></div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('tool', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool', ${i})">🗑️</button></div></div>`).join('') || '<div class="empty-state">Нет инструментов</div>';
   }
-  
-  // Дороги
   let roadsList = $('roadsCatalogList');
   if(roadsList){
     let filtered = roads.filter(r => !search || r.name.toLowerCase().includes(search));
-    roadsList.innerHTML = filtered.map((r, i) => 
-      `<div class="catalog-item"><div><b>${escapeHtml(r.name)}</b>${r.length ? ' <small>(' + r.length + ' км)</small>' : ''}</div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road', ${i})">🗑️</button></div></div>`
-    ).join('') || '<div class="empty-state">Нет дорог</div>';
+    roadsList.innerHTML = filtered.map((r, i) => `<div class="catalog-item"><div><b class="text-success">${escapeHtml(r.name)}</b>${r.length ? ' <small class="text-secondary">(' + r.length + ' км)</small>' : ''}</div><div><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road', ${i})">✏️</button> <button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road', ${i})">🗑️</button></div></div>`).join('') || '<div class="empty-state">Нет дорог</div>';
   }
-  
   updateDatalists();
 }
-
 function addCatalogItem(type){
   catalogType = type;
   catalogEditingId = null;
   let title = '';
   let formHtml = '';
-  
   if(type === 'worker'){
     title = 'Добавить работника';
     formHtml = `<div class="form-group"><label>ФИО</label><input type="text" id="catName" placeholder="Иванов И.И."></div>
@@ -1528,12 +1445,10 @@ function addCatalogItem(type){
     formHtml = `<div class="form-group"><label>Название</label><input type="text" id="catName" placeholder="Например: а/д ПУ-3"></div>
       <div class="form-group"><label>Протяжённость (км)</label><input type="number" id="catLength" step="0.1" placeholder="0"></div>`;
   }
-  
   $('catalogModalTitle').textContent = title;
   $('catalogForm').innerHTML = formHtml;
   $('catalogModal').classList.add('active');
 }
-
 function editCatalogItem(type, idx){
   catalogType = type;
   catalogEditingId = idx;
@@ -1543,7 +1458,6 @@ function editCatalogItem(type, idx){
   else if(type === 'tool') item = tools[idx];
   else if(type === 'road') item = roads[idx];
   if(!item) return;
-  
   addCatalogItem(type);
   $('catName').value = item.name || '';
   if(type === 'worker'){
@@ -1561,13 +1475,10 @@ function editCatalogItem(type, idx){
     $('catLength').value = item.length || '';
   }
 }
-
 function saveCatalogItem(){
   let name = $('catName')?.value.trim();
   if(!name){ showToast('Введите название'); return; }
-  
   let item = { id: Date.now(), name };
-  
   if(catalogType === 'worker'){
     item.category = $('catCategory').value;
     item.grade = $('catGrade').value;
@@ -1590,12 +1501,10 @@ function saveCatalogItem(){
     if(catalogEditingId !== null) roads[catalogEditingId] = item; else roads.push(item);
     save(STORAGE_KEYS.roads, roads);
   }
-  
   closeCatalogModal();
   renderCatalogs();
   showToast('Сохранено');
 }
-
 function deleteCatalogItem(type, idx){
   if(!confirm('Удалить?')) return;
   if(type === 'worker') workers.splice(idx, 1);
@@ -1607,11 +1516,8 @@ function deleteCatalogItem(type, idx){
   renderCatalogs();
   showToast('Удалено');
 }
-
 function closeCatalogModal(){ $('catalogModal').classList.remove('active'); catalogType = ''; catalogEditingId = null; }
 function filterCatalog(val){ renderCatalogs(); }
-function highlightMatch(text, search){ if(!search) return escapeHtml(text); let re = new RegExp('(' + search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'); return escapeHtml(text).replace(re, '<mark>$1</mark>'); }
-
 function importCatalogCSV(type){
   let input = document.createElement('input');
   input.type = 'file';
@@ -1621,7 +1527,7 @@ function importCatalogCSV(type){
     if(!file) return;
     let reader = new FileReader();
     reader.onload = function(e){
-      let lines = e.target.result.split('\n').filter(l => l.trim());
+      let lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
       let added = 0;
       lines.forEach(line => {
         let parts = line.split(';');
@@ -1647,15 +1553,12 @@ function importCatalogCSV(type){
   };
   input.click();
 }
-
 function updateDatalists(){
   let dl = $('roadsList');
   if(dl){
     dl.innerHTML = roads.map(r => `<option value="${escapeHtml(r.name)}">`).join('');
   }
 }
-
-// ===================== ЗАДАЧИ =====================
 
 function addTask(){
   let text = $('newTaskText').value.trim();
@@ -1671,33 +1574,26 @@ function addTask(){
   renderTasks();
   showToast('Задача добавлена');
 }
-
 function toggleTaskDone(idx){
   if(tasks[idx]){ tasks[idx].done = !tasks[idx].done; save(STORAGE_KEYS.tasks, tasks); renderTasks(); renderEntries(); }
 }
-
 function deleteTask(idx){
   if(confirm('Удалить задачу?')){ tasks.splice(idx, 1); save(STORAGE_KEYS.tasks, tasks); renderTasks(); renderEntries(); }
 }
-
 function setTaskFilter(type, btn){
   currentTaskFilter = type;
   document.querySelectorAll('#subTasks .filter-chip').forEach(c => c.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderTasks();
 }
-
 function renderTasks(){
   let container = $('tasksList');
   if(!container) return;
-  
   let filtered = tasks.slice();
   if(currentTaskFilter === 'active') filtered = filtered.filter(t => !t.done);
   else if(currentTaskFilter === 'done') filtered = filtered.filter(t => t.done);
   else if(currentTaskFilter === 'important') filtered = filtered.filter(t => t.important);
-  
   filtered.sort((a, b) => a.date.localeCompare(b.date));
-  
   container.innerHTML = filtered.map((t, i) => {
     let realIdx = tasks.indexOf(t);
     return `<div class="task-item ${t.important ? 'important' : ''} ${t.done ? 'done' : ''}">
@@ -1708,84 +1604,87 @@ function renderTasks(){
   }).join('') || '<div class="empty-state">Нет задач</div>';
 }
 
-// ===================== КАЛЕНДАРЬ =====================
-
 function renderCalendar(){
   let container = $('calendarGrid2');
   let monthLabel = $('calendarMonth2');
   if(!container || !monthLabel) return;
-  
   let y = currentMonth.getFullYear(), m = currentMonth.getMonth();
   let firstDay = new Date(y, m, 1).getDay();
   let daysInMonth = new Date(y, m + 1, 0).getDate();
   let startOffset = firstDay === 0 ? 6 : firstDay - 1;
   let monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-  
   monthLabel.textContent = monthNames[m] + ' ' + y;
-  
   let html = '';
   ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(d => html += `<div class="calendar-day header">${d}</div>`);
   for(let i = 0; i < startOffset; i++) html += `<div class="calendar-day"></div>`;
-  
   let today = todayStr();
   for(let d = 1; d <= daysInMonth; d++){
     let ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     let dayEntries = entries.filter(e => e.date === ds);
     let dayTasks = tasks.filter(t => t.date === ds && !t.done);
     let hasImportant = dayEntries.some(e => e.important);
-    
     let cls = 'calendar-day';
     if(ds === today) cls += ' today';
     else if(hasImportant) cls += ' important-day';
     else if(dayEntries.length) cls += ' has-entry';
     if(dayTasks.length) cls += ' has-task';
-    
     html += `<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
   }
   container.innerHTML = html;
 }
-
 function showDayDetails(date){
   selectedCalendarDate = date;
   let modal = $('dayModal');
   let title = $('dayModalTitle');
   let content = $('dayModalContent');
-  
   title.textContent = '📅 ' + formatDate(date);
-  
   let dayEntries = entries.filter(e => e.date === date);
   let dayTasks = tasks.filter(t => t.date === date);
-  
-  let html = '';
+  let html = `<div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
+    <div style="font-weight:600;margin-bottom:8px;color:var(--accent)">➕ Быстрая задача</div>
+    <div class="form-group" style="margin-bottom:8px"><input type="text" id="quickTaskText_${date}" placeholder="Что сделать..." style="width:100%;padding:10px;border-radius:8px;border:1.5px solid var(--border)"></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <label style="display:flex;align-items:center;gap:4px;font-size:.9rem"><input type="checkbox" id="quickTaskImportant_${date}" style="width:18px;height:18px;accent-color:var(--danger)"> 🔴 Важная</label>
+      <button class="btn btn-accent btn-small" style="flex:1" onclick="App.addTaskFromCalendar()">Добавить задачу</button>
+    </div>
+  </div>`;
   if(dayTasks.length){
-    html += '<div style="font-weight:600;margin-bottom:8px">📋 Задачи:</div>';
+    html += '<div style="font-weight:600;margin-bottom:8px;color:var(--accent)">📋 Задачи:</div>';
     dayTasks.forEach(t => {
       let idx = tasks.indexOf(t);
       html += `<div class="task-item ${t.important ? 'important' : ''} ${t.done ? 'done' : ''}">
         <input type="checkbox" class="task-check" ${t.done ? 'checked' : ''} onchange="App.toggleTaskDone(${idx})">
         <div style="flex:1">${escapeHtml(t.text)}</div>
+        <button class="del-btn" onclick="App.deleteTask(${idx})">🗑️</button>
       </div>`;
     });
   }
-  
   if(dayEntries.length){
-    html += '<div style="font-weight:600;margin:16px 0 8px">📋 Записи журнала:</div>';
+    html += '<div style="font-weight:600;margin:16px 0 8px;color:var(--primary)">📋 Записи журнала:</div>';
     dayEntries.forEach(e => {
       let idx = entries.indexOf(e);
       let objs = [...new Set(e.squads?.flatMap(s => s.objects || []) || [])];
-      html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer" onclick="App.closeDayModal();App.editEntry(${idx})">
-        <div style="font-weight:600">${escapeHtml(objs.join(', '))}</div>
-        <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${e.squads?.reduce((a,s) => a + (s.people?.length || 0), 0)} чел.</div>
+      html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;cursor:pointer;border-left:3px solid var(--primary)" onclick="App.closeDayModal();App.editEntry(${idx})">
+        <div style="font-weight:600;color:var(--success)">${escapeHtml(objs.join(', '))}</div>
+        <div style="font-size:.8rem;color:var(--text-secondary)">👷 ${e.squads?.reduce((a,s) => a + (s.people?.length || 0), 0)} чел. | 🔧 ${e.squads?.reduce((a,s) => a + (s.works?.length || 0), 0)} работ</div>
       </div>`;
     });
   }
-  
-  if(!html) html = '<div class="empty-state">Нет записей и задач</div>';
-  
+  if(!dayTasks.length && !dayEntries.length) html += '<div class="empty-state">Нет записей и задач</div>';
   content.innerHTML = html;
   modal.classList.add('active');
 }
-
+function addTaskFromCalendar(){
+  if(!selectedCalendarDate) return;
+  let text = $(`quickTaskText_${selectedCalendarDate}`)?.value.trim();
+  let important = $(`quickTaskImportant_${selectedCalendarDate}`)?.checked || false;
+  if(!text){ showToast('Введите текст задачи'); return; }
+  tasks.push({ id: Date.now(), text, date: selectedCalendarDate, important, done: false });
+  save(STORAGE_KEYS.tasks, tasks);
+  showToast('Задача добавлена');
+  showDayDetails(selectedCalendarDate);
+  renderEntries();
+}
 function addEntryFromCalendar(){
   closeDayModal();
   if(selectedCalendarDate){
@@ -1793,23 +1692,16 @@ function addEntryFromCalendar(){
     showPage('pageNew');
   }
 }
-
 function closeDayModal(){ $('dayModal').classList.remove('active'); selectedCalendarDate = null; }
-
-// ===================== ТАБЕЛЬ =====================
 
 function renderTimesheet(){
   let month = $('tsMonth').value;
   let category = $('tsCategory').value;
   if(!month) return;
-  
   let [year, monthNum] = month.split('-').map(Number);
   let daysInMonth = new Date(year, monthNum, 0).getDate();
-  
-  // Собираем данные из записей
   let data = {};
   let allWorkers = new Set();
-  
   entries.filter(e => e.date.startsWith(month)).forEach(e => {
     e.squads?.forEach(sq => {
       if(category !== 'all' && sq.category !== category) return;
@@ -1821,31 +1713,22 @@ function renderTimesheet(){
       });
     });
   });
-  
-  // Применяем ручные корректировки
   Object.keys(timesheetOverrides).forEach(key => {
     let [wName, day] = key.split('_');
     if(!data[wName]) data[wName] = {};
     data[wName][day] = timesheetOverrides[key];
   });
-  
-  // Буквенные коды
   Object.keys(timesheetLetters).forEach(key => {
     let [wName, day] = key.split('_');
     if(!data[wName]) data[wName] = {};
     data[wName][day] = timesheetLetters[key];
   });
-  
-  // Добавляем вручную добавленных работников
-  let manualWorkers = Object.keys(data).filter(w => !Array.from(allWorkers).includes(w));
-  
   let html = '<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>ФИО</th>';
   for(let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
   html += '<th>Итого</th></tr></thead><tbody>';
-  
   Object.keys(data).sort().forEach(wName => {
     let total = 0;
-    html += `<tr><td>${escapeHtml(wName)}</td>`;
+    html += `<tr><td><b>${escapeHtml(wName)}</b></td>`;
     for(let d = 1; d <= daysInMonth; d++){
       let val = data[wName][d];
       let display = val !== undefined ? val : '';
@@ -1857,19 +1740,14 @@ function renderTimesheet(){
     }
     html += `<td><b>${total.toFixed(1)}</b></td></tr>`;
   });
-  
   html += '</tbody></table></div>';
-  
   $('timesheetResult').innerHTML = html;
   $('tsControls').style.display = 'block';
 }
-
 function editTimesheetCell(wName, day, currentVal){
   let newVal = prompt(`Часы для ${wName} на ${day} число:`, currentVal !== undefined ? currentVal : '');
   if(newVal === null) return;
-  
   let key = wName + '_' + day;
-  
   if(newVal.trim() === ''){
     delete timesheetOverrides[key];
     delete timesheetLetters[key];
@@ -1883,12 +1761,10 @@ function editTimesheetCell(wName, day, currentVal){
       delete timesheetLetters[key];
     }
   }
-  
   save(STORAGE_KEYS.tsOverrides, timesheetOverrides);
   save(STORAGE_KEYS.tsLetters, timesheetLetters);
   renderTimesheet();
 }
-
 function clearTimesheetOverrides(){
   if(!confirm('Сбросить все ручные корректировки?')) return;
   timesheetOverrides = {};
@@ -1898,27 +1774,22 @@ function clearTimesheetOverrides(){
   renderTimesheet();
   showToast('Корректировки сброшены');
 }
-
 function addTimesheetWorker(){
   let name = prompt('ФИО работника:');
   if(!name) return;
-  // Добавляем пустую запись, чтобы работник появился в табеле
+  if(!workers.find(w=>w.name===name)) workers.push({id:Date.now(), name:name, category:'other'});
+  save(STORAGE_KEYS.workers, workers);
   renderTimesheet();
-  showToast('Работник добавлен (появится при заполнении)');
+  showToast('Работник добавлен');
 }
-
 function exportTimesheetCSV(){
   let month = $('tsMonth').value;
   if(!month){ showToast('Выберите месяц'); return; }
-  
   let [year, monthNum] = month.split('-').map(Number);
   let daysInMonth = new Date(year, monthNum, 0).getDate();
-  
   let csv = '\uFEFFФИО;';
   for(let d = 1; d <= daysInMonth; d++) csv += d + ';';
   csv += 'Итого\n';
-  
-  // Собираем данные аналогично renderTimesheet
   let data = {};
   entries.filter(e => e.date.startsWith(month)).forEach(e => {
     e.squads?.forEach(sq => {
@@ -1929,19 +1800,16 @@ function exportTimesheetCSV(){
       });
     });
   });
-  
   Object.keys(timesheetOverrides).forEach(key => {
     let [wName, day] = key.split('_');
     if(!data[wName]) data[wName] = {};
     data[wName][day] = timesheetOverrides[key];
   });
-  
   Object.keys(timesheetLetters).forEach(key => {
     let [wName, day] = key.split('_');
     if(!data[wName]) data[wName] = {};
     data[wName][day] = timesheetLetters[key];
   });
-  
   Object.keys(data).sort().forEach(wName => {
     csv += wName + ';';
     let total = 0;
@@ -1952,25 +1820,19 @@ function exportTimesheetCSV(){
     }
     csv += total.toFixed(1) + '\n';
   });
-  
   downloadFile(csv, `табель_${month}.csv`, 'text/csv;charset=utf-8');
   showToast('CSV экспортирован');
 }
-
 function exportTimesheetExcel(){
   let month = $('tsMonth').value;
   if(!month){ showToast('Выберите месяц'); return; }
   if(typeof XLSX === 'undefined'){ showToast('XLSX не загружен'); return; }
-  
   let [year, monthNum] = month.split('-').map(Number);
   let daysInMonth = new Date(year, monthNum, 0).getDate();
-  
   let data = [];
   let headers = ['ФИО'];
   for(let d = 1; d <= daysInMonth; d++) headers.push(d);
   headers.push('Итого');
-  
-  // Собираем данные
   let tsData = {};
   entries.filter(e => e.date.startsWith(month)).forEach(e => {
     e.squads?.forEach(sq => {
@@ -1981,19 +1843,16 @@ function exportTimesheetExcel(){
       });
     });
   });
-  
   Object.keys(timesheetOverrides).forEach(key => {
     let [wName, day] = key.split('_');
     if(!tsData[wName]) tsData[wName] = {};
     tsData[wName][day] = timesheetOverrides[key];
   });
-  
   Object.keys(timesheetLetters).forEach(key => {
     let [wName, day] = key.split('_');
     if(!tsData[wName]) tsData[wName] = {};
     tsData[wName][day] = timesheetLetters[key];
   });
-  
   Object.keys(tsData).sort().forEach(wName => {
     let row = { 'ФИО': wName };
     let total = 0;
@@ -2005,15 +1864,12 @@ function exportTimesheetExcel(){
     row['Итого'] = total.toFixed(1);
     data.push(row);
   });
-  
   let ws = XLSX.utils.json_to_sheet(data, { header: headers });
   let wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Табель');
   XLSX.writeFile(wb, `табель_${month}.xlsx`);
   showToast('Excel экспортирован');
 }
-
-// ===================== НАСТРОЙКИ =====================
 
 function saveAppSettings(){ settings.org=$('settingOrg').value.trim(); settings.master=$('settingMaster').value.trim(); save(STORAGE_KEYS.settings,settings); showToast('Настройки сохранены'); }
 function exportAllData(){ let data={entries,workers,works,tools,tmc,tasks,settings,roads,stockOrder,stockManual,templates,timesheetOverrides,timesheetLetters}; let json=JSON.stringify(data,null,2); downloadFile(json,'backup_'+todayStr()+'.json','application/json'); showToast('Резервная копия создана'); }
@@ -2023,8 +1879,6 @@ function setTheme(mode){ settings.theme=mode; save(STORAGE_KEYS.settings,setting
 function applyTheme(){ if(settings.theme==='dark') document.body.classList.add('dark-mode'); else if(settings.theme==='light') document.body.classList.remove('dark-mode'); else document.body.classList.remove('dark-mode'); if(window.matchMedia('(prefers-color-scheme: dark)').matches && !settings.theme) document.body.classList.add('dark-mode'); }
 function exportNormsTemplate(){ let tpl={works,tools,tmc}; downloadFile(JSON.stringify(tpl,null,2),'norms_template.json','application/json'); showToast('Шаблон скачан'); }
 function importNormsData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; save(STORAGE_KEYS.works,works); save(STORAGE_KEYS.tools,tools); save(STORAGE_KEYS.tmc,tmc); renderCatalogs(); showToast('Нормативы загружены'); }catch(err){ showToast('Ошибка'); } }; reader.readAsText(file); input.value=''; }
-
-// ===================== ИНИЦИАЛИЗАЦИЯ =====================
 
 document.addEventListener('DOMContentLoaded',()=>{
   loadAll(); applyTheme(); initOffline();
@@ -2049,22 +1903,23 @@ return {
   saveEntry, clearForm, cancelEdit, editEntry, deleteEntry, duplicateEntry,
   setFilter, toggleEntry, toggleMonth, deleteMonth,
   addCatalogItem, editCatalogItem, saveCatalogItem, deleteCatalogItem, closeCatalogModal,
-  filterCatalog, highlightMatch, importCatalogCSV,
+  filterCatalog, importCatalogCSV,
   addStockRow, updateStockOrder, deleteStockOrder, updateStockManual, deleteStockManual, editStockItem,
   addTask, toggleTaskDone, deleteTask, setTaskFilter,
-  changeMonth, showDayDetails, addEntryFromCalendar, closeDayModal,
+  changeMonth, showDayDetails, addEntryFromCalendar, addTaskFromCalendar, closeDayModal,
   editTimesheetCell, clearTimesheetOverrides, exportTimesheetCSV,
   addTimesheetWorker, exportTimesheetExcel, renderTimesheet,
   generateSummaryReport, generateWorkersReport, generateObjectsReport,
   exportCSV, exportJSON, saveAppSettings, exportAllData, importAllData, clearAllData, setTheme,
   saveTemplate, loadTemplate, exportEntryExcel, generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   exportNormsTemplate, importNormsData,
-  selectRoadForScale, renderRoadSelector, generateRoadKmReport
+  selectRoadForScale, renderRoadSelector, generateRoadKmReport,
+  renderEntries, renderCalendar
 };
 })();
 
 document.querySelector('#catSearch')?.addEventListener('input',function(){ App.filterCatalog(this.value); });
-document.querySelector('#journalSearch')?.addEventListener('input',function(){ App.setFilter(App.currentFilter||'all',null); });
+document.querySelector('#journalSearch')?.addEventListener('input',function(){ App.renderEntries(); });
 </script>
 </body>
 </html>
