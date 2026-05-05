@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
 <title>Журнал производства работ — ДРСУ v16.3 (Исправленная)</title>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js "></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js "></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js "></script>
 <style>
 :root{--primary:#1565c0;--primary-light:#1976d2;--primary-dark:#0d47a1;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
 @media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}}
@@ -207,6 +207,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogItCW0YPRgNC90LDQuyDQv9GA0L7QuNC30LLQvtC00YHRgtCy0LAg0YDQsNCx0L7RgiDQlNCg0KHQoyIsCiAgInNob3J0X25hbWUiOiAi0JTQoNCh0KMg0JbRg9GA0L3QsNC7IiwKICAiZGVzY3JpcHRpb24iOiAi0KPRh9GR0YIg0L/RgNC+0LjQt9Cy0L7QtNGB0YLQstCwINGA0LDQsdC+0YIsINGC0LDQsdC10LvRjCwg0YHQutC70LDQtCwg0LrQuNC70L7QvNC10YLRgNCw0LYiLAogICJzdGFydF91cmwiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzE1NjVjMCIsCiAgInRoZW1lX2NvbG9yIjogIiMxNTY1YzAiLAogICJpY29ucyI6IFsKICAgIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IGZpbGw9JyUyMzE1NjVjMCcgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInLyUzRSUzQ3RleHQgeD0nOTYnIHk9JzExMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nODAnJTNF8J+TiyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsICJzaXplcyI6ICIxOTJ4MTkyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCJ9LAogICAgeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJyUzRSUzQ3JlY3QgZmlsbD0nJTIzMTU2NWMwJyB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicvJTNFJTNDdGV4dCB4PScyNTYnIHk9JzMwMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nd2hpdGUnIGZvbnQtc2l6ZT0nMjIwJyUzRfCfk4slM0MvdGV4dCUzRSUzQy9zdmclM0UiLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifQogIF0KfQ==">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -219,7 +220,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 
 <div class="page active" id="pageJournal">
   <div class="kpi-row">
-    <div class="kpi-item"><div class="kpi-value" id="statWorkers">0</div><div class="kpi-label">👷 На смене (макс)</div></div>
+    <div class="kpi-item"><div class="kpi-value" id="statWorkers" style="font-size:.82rem;white-space:normal;word-break:break-word;line-height:1.35;max-height:70px;overflow-y:auto">—</div><div class="kpi-label">👷 На смене (<span id="statWorkersCount">0</span>)</div></div>
     <div class="kpi-item"><div class="kpi-value" id="statObjects">0</div><div class="kpi-label">📍 Объектов</div></div>
     <div class="kpi-item"><div class="kpi-value" id="statWorks">0</div><div class="kpi-label">🔧 Видов работ</div></div>
   </div>
@@ -234,6 +235,11 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div id="roadsKmSummary" style="margin-top:12px"></div>
     <div id="roadKmScale"></div>
     <div id="roadKmHistory"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📍 Объекты сегодня (% выполнения нормы)</div>
+    <div id="todayObjectsNorm"></div>
   </div>
 
   <div class="card">
@@ -810,6 +816,53 @@ function renderRoadSelector(){
   if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
   renderRoadsKmSummary();
 }
+function renderTodayObjectsNorm(){
+  let container=$('todayObjectsNorm');
+  if(!container) return;
+  let today=todayStr();
+  let todayEntries=entries.filter(e=>e.date===today);
+  let objStats={};
+  todayEntries.forEach(e=>{
+    e.squads?.forEach(sq=>{
+      let roadWorkers=sq.people?.filter(p=>{
+        let w=workers.find(x=>x.name===p.name);
+        return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
+      })||[];
+      let factHours=roadWorkers.reduce((s,p)=>s+(parseFloat(p.hours)||8),0);
+      sq.objects?.forEach(o=>{
+        if(!objStats[o]) objStats[o]={name:o, factHours:0, normHours:0, workers:new Set()};
+        objStats[o].factHours+=factHours;
+        roadWorkers.forEach(p=>objStats[o].workers.add(p.name));
+      });
+      sq.works?.forEach(w=>{
+        let road=w.road || (sq.objects&&sq.objects[0]) || 'Без объекта';
+        if(!objStats[road]) objStats[road]={name:road, factHours:0, normHours:0, workers:new Set()};
+        objStats[road].normHours+=(w.laborCost||0)*w.volume;
+      });
+    });
+  });
+  let html='';
+  Object.values(objStats).forEach(o=>{
+    let pct=o.factHours>0?(o.normHours/o.factHours)*100:0;
+    let statusClass='ok', progressClass='norm';
+    if(pct<80){ statusClass='bad'; progressClass='under'; }
+    else if(pct<90){ statusClass='warn'; progressClass='under'; }
+    else if(pct>130){ statusClass='bad'; progressClass='over'; }
+    else if(pct>110){ statusClass='warn'; progressClass='over'; }
+    let barWidth=Math.min(130, Math.max(0, pct));
+    html+=`<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-weight:600;font-size:.9rem">${escapeHtml(o.name)}</span>
+        <span class="norm-badge ${statusClass}">${pct.toFixed(0)}%</span>
+      </div>
+      <div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:6px">👷 ${o.workers.size} чел. | ⏱️ ${o.factHours.toFixed(1)}ч факт / ${o.normHours.toFixed(1)}ч норма</div>
+      <div class="norm-progress"><div class="norm-progress-fill ${progressClass}" style="width:${(barWidth/130)*100}%"></div></div>
+    </div>`;
+  });
+  if(!html) html='<div class="empty-state">Нет объектов на сегодня</div>';
+  container.innerHTML=html;
+}
+
 
 function selectRoadForScale(roadName){
   selectedRoadForScale=roadName;
@@ -889,20 +942,38 @@ function renderRoadKmScale(roadName){
   }
   let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
+
+  // Build lanes for overlapping segments
+  let lanes=[];
+  segments.forEach(s=>{
+    let placed=false;
+    for(let lane of lanes){
+      let last=lane[lane.length-1];
+      if(s.kmFrom >= last.kmTo){ lane.push(s); placed=true; break; }
+    }
+    if(!placed) lanes.push([s]);
+  });
+  let laneHeight=14;
+  let trackHeight=Math.max(48, lanes.length*laneHeight+8);
+
   let html=`<div class="km-scale-container">`;
-  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: <b class="text-success">${coveredKm.toFixed(1)}</b> из ${totalLength} км</span></div>`;
-  html+=`<div class="km-scale-track">`;
+  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: <b class="text-success">${coveredKm.toFixed(1)}</b> из ${totalLength} км | Участков: ${segments.length}${lanes.length>1?' | Дорожек: '+lanes.length:''}</span></div>`;
+  html+=`<div class="km-scale-track" style="height:${trackHeight}px; position:relative;">`;
   if(totalLength>0){
-    uniqueRanges.forEach((range,i)=>{
-      let leftPct=(range.from/totalLength)*100;
-      let widthPct=((range.to-range.from)/totalLength)*100;
-      let isDup=segments.some(s=>{ let a=Math.max(s.kmFrom,range.from); let b=Math.min(s.kmTo,range.to); return b>a && s.duplicate; });
-      html+=`<div class="km-scale-done${isDup?' duplicate':''}" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
-      html+=`<div class="km-scale-label" style="left:${leftPct+widthPct/2}%; transform:translate(-50%,-50%)">${range.from}-${range.to}</div>`;
+    lanes.forEach((lane,li)=>{
+      let top=li*laneHeight+4;
+      lane.forEach(s=>{
+        let leftPct=(s.kmFrom/totalLength)*100;
+        let widthPct=((s.kmTo-s.kmFrom)/totalLength)*100;
+        html+=`<div class="km-scale-done${s.duplicate?' duplicate':''}" style="position:absolute; left:${leftPct}%; width:${widthPct}%; top:${top}px; height:${laneHeight-2}px; border-radius:4px;" title="${escapeHtml(s.workName)}: ${s.kmFrom}-${s.kmTo} км, ${formatDate(s.entryDate)}"></div>`;
+        if(widthPct>6){
+          html+=`<div class="km-scale-label" style="position:absolute; left:${leftPct+widthPct/2}%; top:${top+(laneHeight-2)/2}px; transform:translate(-50%,-50%); font-size:.6rem; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.6); pointer-events:none;">${s.kmFrom}-${s.kmTo}</div>`;
+        }
+      });
     });
   }
   html+=`</div><div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
-  html+=`<div class="km-legend"><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход</div></div>`;
+  html+=`<div class="km-legend"><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Уникальный участок</div><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--warning),var(--accent))"></div>Повторный проход / пересечение</div></div>`;
   html+=`<div style="margin-top:12px;font-size:1rem;font-weight:700;color:var(--primary)">Выполнено: <span class="text-success">${pct.toFixed(1)}%</span> (${coveredKm.toFixed(1)} км)</div></div>`;
   container.innerHTML=html;
   if(historyContainer){
@@ -1197,12 +1268,14 @@ function renderEntries(){
   let list=$('entriesList'); if(list) list.innerHTML=html;
   let today=todayStr();
   let todayEntries=entries.filter(e=>e.date===today);
-  let maxWorkers=0, objectsSet=new Set(), worksSet=new Set();
-  todayEntries.forEach(e=>{ e.squads?.forEach(s=>{ maxWorkers=Math.max(maxWorkers,s.people?.length||0); s.objects?.forEach(o=>objectsSet.add(o)); s.works?.forEach(w=>worksSet.add(w.name)); }); });
-  if($('statWorkers')) $('statWorkers').textContent=maxWorkers;
+  let todayWorkers=new Set(), objectsSet=new Set(), worksSet=new Set();
+  todayEntries.forEach(e=>{ e.squads?.forEach(s=>{ s.people?.forEach(p=>todayWorkers.add(p.name)); s.objects?.forEach(o=>objectsSet.add(o)); s.works?.forEach(w=>worksSet.add(w.name)); }); });
+  if($('statWorkers')) $('statWorkers').innerHTML=todayWorkers.size?Array.from(todayWorkers).map(n=>`<div>${escapeHtml(n)}</div>`).join(''):'—';
+  if($('statWorkersCount')) $('statWorkersCount').textContent=todayWorkers.size;
   if($('statObjects')) $('statObjects').textContent=objectsSet.size;
   if($('statWorks')) $('statWorks').textContent=worksSet.size;
   renderRoadsKmSummary();
+  renderTodayObjectsNorm();
 }
 function toggleEntry(idx){ let el=$('ent_'+idx); if(el) el.classList.toggle('expanded'); }
 function toggleMonth(month){ let el=$('month_'+month); if(el) el.classList.toggle('expanded'); }
@@ -1767,11 +1840,11 @@ function addTaskFromCalendar(){
   renderEntries();
 }
 function addEntryFromCalendar(){
+  if(!selectedCalendarDate) return;
+  $('inpDate').value = selectedCalendarDate;
   closeDayModal();
-  if(selectedCalendarDate){
-    $('inpDate').value = selectedCalendarDate;
-    showPage('pageNew');
-  }
+  showPage('pageNew');
+  if(!formSquads.length) addSquad();
 }
 function closeDayModal(){ $('dayModal').classList.remove('active'); selectedCalendarDate = null; }
 
@@ -1969,8 +2042,81 @@ function applyTheme(){ if(settings.theme==='dark') document.body.classList.add('
 function exportNormsTemplate(){ let tpl={works,tools,tmc}; downloadFile(JSON.stringify(tpl,null,2),'norms_template.json','application/json'); showToast('Шаблон скачан'); }
 function importNormsData(input){ let file=input.files[0]; if(!file) return; let reader=new FileReader(); reader.onload=e=>{ try{ let data=JSON.parse(e.target.result); if(data.works) works=data.works; if(data.tools) tools=data.tools; if(data.tmc) tmc=data.tmc; save(STORAGE_KEYS.works,works); save(STORAGE_KEYS.tools,tools); save(STORAGE_KEYS.tmc,tmc); renderCatalogs(); showToast('Нормативы загружены'); }catch(err){ showToast('Ошибка'); } }; reader.readAsText(file); input.value=''; }
 
+function initDefaultData(){
+  if(!works.length){
+    works=[
+      {id:1,name:'Обрезка деревьев',unit:'шт',laborCost:0.50,directCost:18.00,toolCost:2.50},
+      {id:2,name:'Покос травы механизированный',unit:'км',laborCost:2.00,directCost:85.00,toolCost:18.00},
+      {id:3,name:'Покос травы ручной',unit:'м²',laborCost:0.08,directCost:5.50,toolCost:0},
+      {id:4,name:'Покос кустарников',unit:'км',laborCost:4.20,directCost:130.00,toolCost:25.00},
+      {id:5,name:'Вырубка поросли',unit:'м²',laborCost:0.18,directCost:14.00,toolCost:3.50},
+      {id:6,name:'Очистка обочин от поросли',unit:'км',laborCost:3.20,directCost:95.00,toolCost:12.00},
+      {id:7,name:'Обрезка веток в придорожной полосе',unit:'км',laborCost:1.60,directCost:48.00,toolCost:6.00},
+      {id:8,name:'Удаление аварийных деревьев',unit:'шт',laborCost:3.50,directCost:110.00,toolCost:30.00},
+      {id:9,name:'Расчистка видимости на перекрёстках',unit:'шт',laborCost:2.20,directCost:65.00,toolCost:9.00},
+      {id:10,name:'Уборка валежника',unit:'м³',laborCost:1.30,directCost:38.00,toolCost:6.00},
+      {id:11,name:'Фрезерование пней',unit:'шт',laborCost:1.80,directCost:55.00,toolCost:8.00},
+      {id:12,name:'Покос травы трактором с косилкой',unit:'га',laborCost:1.50,directCost:70.00,toolCost:35.00}
+    ];
+    save(STORAGE_KEYS.works,works);
+  }
+  if(!tools.length){
+    tools=[
+      {id:1,name:'Бензопила',fuelConsumption:0.60,machineCostPerHour:5.5},
+      {id:2,name:'Кусторез',fuelConsumption:0.80,machineCostPerHour:8.0},
+      {id:3,name:'Трактор-косилка',fuelConsumption:5.50,machineCostPerHour:48.0},
+      {id:4,name:'Мотокоса',fuelConsumption:0.70,machineCostPerHour:4.5},
+      {id:5,name:'Газонокосилка',fuelConsumption:1.20,machineCostPerHour:13.0},
+      {id:6,name:'Фреза для пней',fuelConsumption:1.50,machineCostPerHour:18.0}
+    ];
+    save(STORAGE_KEYS.tools,tools);
+  }
+  if(!roads.length){
+    roads=[
+      {id:1,name:'а/д ПУ-3',length:45.2},
+      {id:2,name:'а/д ПУ-5',length:32.0},
+      {id:3,name:'а/д ПУ-7',length:28.5},
+      {id:4,name:'а/д ПУ-10',length:15.0},
+      {id:5,name:'а/д ПУ-12',length:22.3},
+      {id:6,name:'а/д ПУ-15',length:38.0}
+    ];
+    save(STORAGE_KEYS.roads,roads);
+  }
+  if(!workers.length){
+    workers=[
+      {id:1,name:'Иванов А.П.',category:'road',grade:'5'},
+      {id:2,name:'Петров В.С.',category:'road',grade:'4'},
+      {id:3,name:'Сидоров К.М.',category:'road',grade:'3'},
+      {id:4,name:'Кузнецов Д.А.',category:'gazelle',grade:''},
+      {id:5,name:'Смирнов Е.В.',category:'tractor',grade:'6'},
+      {id:6,name:'Попов Н.И.',category:'road',grade:'4'},
+      {id:7,name:'Васильев О.Р.',category:'maz',grade:''},
+      {id:8,name:'Михайлов П.Т.',category:'other',grade:''},
+      {id:9,name:'Фёдоров С.Г.',category:'road',grade:'5'},
+      {id:10,name:'Николаев А.В.',category:'road',grade:'3'}
+    ];
+    save(STORAGE_KEYS.workers,workers);
+  }
+  if(!tmc.length){
+    tmc=[
+      {id:1,name:'Бензин АИ-92',unit:'л',price:55.0},
+      {id:2,name:'Дизельное топливо',unit:'л',price:58.0},
+      {id:3,name:'Моторное масло',unit:'л',price:450.0},
+      {id:4,name:'Цепь бензопильная',unit:'шт',price:850.0},
+      {id:5,name:'Леска для триммера',unit:'м',price:3.5},
+      {id:6,name:'Перчатки рабочие',unit:'пар',price:120.0},
+      {id:7,name:'Напильник',unit:'шт',price:180.0}
+    ];
+    save(STORAGE_KEYS.tmc,tmc);
+  }
+  if(!stockOrder.length){
+    stockOrder=tmc.map(t=>({...t,qty:100}));
+    save(STORAGE_KEYS.stockOrder,stockOrder);
+  }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
-  loadAll(); applyTheme(); initOffline();
+  loadAll(); initDefaultData(); applyTheme(); initOffline();
   if($('headerDate')) $('headerDate').textContent=new Date().toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   if($('inpDate')) $('inpDate').value=todayStr(); if($('tsMonth')) $('tsMonth').value=new Date().toISOString().slice(0,7);
   if($('reportFrom')) $('reportFrom').value=todayStr(); if($('reportTo')) $('reportTo').value=todayStr(); if($('docMonth')) $('docMonth').value=new Date().toISOString().slice(0,7);
