@@ -218,7 +218,24 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   .week-view{grid-template-columns:repeat(7,1fr);overflow-x:auto}
   .week-day-card{min-width:60px}
 }
+
+/* FIX: Тёмная тема для важных задач */
+.dark-mode .task-item.important{background:rgba(198,40,40,.22);color:var(--text)}
+/* FIX: Тёмная тема для задач в календаре */
+.dark-mode .calendar-day.has-task{background:#e65100;color:#fff}
+/* FIX: Тёмная тема для недельного вида */
+.dark-mode .week-day-card.has-task{background:#e65100;color:#fff}
+.dark-mode .week-day-card.has-entry{background:#1565c0;color:#fff}
+.dark-mode .week-day-card.important{background:#c62828;color:#fff}
+/* FIX: Тёмная тема для истории км */
+.dark-mode .km-history-item.multi{background:rgba(21,101,192,.22)}
+/* FIX: Тёмная тема для тегов объектов */
+.dark-mode .object-tag{background:rgba(46,125,50,.25);color:#81c784;border-color:#2e7d32}
+/* FIX: Тёмная тема для людей */
+.dark-mode .people-tag{background:rgba(21,101,192,.25);color:#90caf9}
+.dark-mode .people-tag.support{background:rgba(255,111,0,.25);color:#ffcc80}
 </style>
+<base target="_blank">
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
@@ -1670,7 +1687,7 @@ function showDayDetails(date){
     dayEntries.forEach(e=>{
       let idx=entries.indexOf(e);
       let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
-      html+=`<div class="entry-item" style="margin-bottom:8px" onclick="App.toggleEntry(${idx})">
+      html+=`<div class="entry-item" style="margin-bottom:8px" onclick="this.classList.toggle('expanded')">
         <div class="entry-header"><div><div class="entry-object">${objs.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div></div><div class="entry-toggle-icon">▼</div></div>
         <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
       </div>`;
