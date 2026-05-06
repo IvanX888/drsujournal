@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v16.5 (Растительный мир + Техника)</title>
+<title>Журнал производства работ — ДРСУ v16.6 (Офлайн + Надёжное сохранение)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -211,6 +211,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   .week-day-card{min-width:60px}
 }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -248,7 +249,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
   </div>
 
-  <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата...">
+  <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата..." oninput="App.renderEntries()">
   <div class="filter-bar">
     <button class="filter-chip active" onclick="App.setFilter('all',this)">Все</button>
     <button class="filter-chip" onclick="App.setFilter('today',this)">Сегодня</button>
@@ -387,7 +388,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <button class="subtab" onclick="App.showSubtab('subSettings',this)">⚙️ Настройки</button>
   </div>
   <div class="subpanel active" id="subCatalogs">
-    <input type="text" class="search-box catalog-search" id="catSearch" placeholder="🔍 Поиск по справочнику...">
+    <input type="text" class="search-box catalog-search" id="catSearch" placeholder="🔍 Поиск по справочнику..." oninput="App.renderCatalogs()">
     <div class="subtabs">
       <button class="subtab active" onclick="App.showCatalog('catWorkers',this)">👷 Работники</button>
       <button class="subtab" onclick="App.showCatalog('catWorks',this)">🔧 Виды работ</button>
@@ -488,7 +489,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.5 (Растительный мир + Техника)</b><br>Все данные хранятся локально. Работает офлайн.</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.6 (Офлайн + Надёжное сохранение)</b><br>Все данные хранятся локально. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».</p>
     </div>
   </div>
 </div>
@@ -582,43 +583,146 @@ let currentFilter='all', currentTaskFilter='all', currentMonth=new Date(), selec
 let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=null;
 let formSquads=[], draftTimer=null;
 let selectedRoadForScale='';
+let storageAvailable = false;
 
-function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){ console.warn(e); } }
-function load(key,def){ try{ let v=localStorage.getItem(key); return v?JSON.parse(v):def; }catch(e){ return def; } }
+/* ---------- Надёжность хранилища ---------- */
+function checkStorage(){
+  try {
+    const test = '__drsu_storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    storageAvailable = true;
+    return true;
+  } catch(e) {
+    storageAvailable = false;
+    console.warn('localStorage недоступен:', e);
+    return false;
+  }
+}
+
+function save(key,val){
+  if(!storageAvailable){ 
+    console.warn('Storage not available, cannot save', key);
+    return; 
+  }
+  try{ 
+    localStorage.setItem(key,JSON.stringify(val)); 
+  }catch(e){ 
+    console.warn('Save error for key', key, e);
+    if(e.name === 'QuotaExceededError' || e.code === 22 || e.number === 22){
+      showToast('⚠️ Хранилище переполнено! Экспортируйте и очистите данные.');
+    }
+  } 
+}
+
+function load(key,def){ 
+  if(!storageAvailable) return def;
+  try{ 
+    let v=localStorage.getItem(key); 
+    if(v === null) return def;
+    return JSON.parse(v); 
+  }catch(e){ 
+    console.warn('Load error for key', key, e);
+    return def; 
+  } 
+}
+
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function formatDate(d){ if(!d) return ''; let p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-function jsAttr(s){ return String(s).replace(/\\\\/g,"\\\\").replace(/'/g,"\\'"); }
+function jsAttr(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
 function showToast(msg){ let t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } }
 function $(id){ return document.getElementById(id); }
 function downloadFile(content,filename,type){ let blob=new Blob([content],{type}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
 function loadAll(){
-  entries=load(STORAGE_KEYS.entries,[]); workers=load(STORAGE_KEYS.workers,[]); works=load(STORAGE_KEYS.works,[]);
-  tools=load(STORAGE_KEYS.tools,[]); tmc=load(STORAGE_KEYS.tmc,[]); tasks=load(STORAGE_KEYS.tasks,[]);
-  settings=load(STORAGE_KEYS.settings,{}); roads=load(STORAGE_KEYS.roads,[]); stockOrder=load(STORAGE_KEYS.stockOrder,[]);
-  stockManual=load(STORAGE_KEYS.stockManual,[]); templates=load(STORAGE_KEYS.templates,[]);
-  timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{}); timesheetLetters=load(STORAGE_KEYS.tsLetters,{});
+  if(!storageAvailable) return;
+  entries=load(STORAGE_KEYS.entries,[]) || []; 
+  workers=load(STORAGE_KEYS.workers,[]) || []; 
+  works=load(STORAGE_KEYS.works,[]) || [];
+  tools=load(STORAGE_KEYS.tools,[]) || []; 
+  tmc=load(STORAGE_KEYS.tmc,[]) || []; 
+  tasks=load(STORAGE_KEYS.tasks,[]) || [];
+  settings=load(STORAGE_KEYS.settings,{}) || {}; 
+  roads=load(STORAGE_KEYS.roads,[]) || []; 
+  stockOrder=load(STORAGE_KEYS.stockOrder,[]) || [];
+  stockManual=load(STORAGE_KEYS.stockManual,[]) || []; 
+  templates=load(STORAGE_KEYS.templates,[]) || [];
+  timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{}) || {}; 
+  timesheetLetters=load(STORAGE_KEYS.tsLetters,{}) || {};
 }
 
+/* ---------- Офлайн и Service Worker ---------- */
 function initOffline(){
-  window.addEventListener('online', ()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge').classList.remove('show'); showToast('🌐 Соединение восстановлено'); });
-  window.addEventListener('offline', ()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); showToast('📴 Офлайн-режим активирован'); });
-  if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); }
-
-  if('caches' in window){
-    caches.open('drsu-page-cache-v1').then(function(cache){
-      let pageHtml = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
-      let pageResponse = new Response(pageHtml, {status: 200, statusText: 'OK', headers: {'Content-Type': 'text/html'}});
-      cache.put(new Request(self.location.href), pageResponse);
-      cache.put(new Request('./'), pageResponse.clone());
-    }).catch(()=>{});
+  function setOnlineStatus(){
+    if(navigator.onLine){
+      if($('netStatus')) $('netStatus').textContent='● Онлайн'; 
+      if($('offlineBadge')) $('offlineBadge').classList.remove('show');
+    } else {
+      if($('netStatus')) $('netStatus').textContent='● Офлайн'; 
+      if($('offlineBadge')) $('offlineBadge').classList.add('show');
+    }
   }
+  window.addEventListener('online', ()=>{ setOnlineStatus(); showToast('🌐 Соединение восстановлено'); });
+  window.addEventListener('offline', ()=>{ setOnlineStatus(); showToast('📴 Офлайн-режим активирован'); });
+  setOnlineStatus();
 
   if('serviceWorker' in navigator){
-    let swCode = `const CACHE_NAME='drsu-cache-v2';self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(response){if(response) return response;return fetch(e.request).then(function(networkResponse){if(!networkResponse||networkResponse.status!==200)return networkResponse;var responseClone=networkResponse.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,responseClone);});return networkResponse;}).catch(function(){return caches.match(self.location.href).then(function(cached){if(cached)return cached;return new Response('<h1>📴 Офлайн-режим</h1><p>Приложение загружается из кэша. Подключитесь к интернету для обновления.</p>',{headers:{'Content-Type':'text/html; charset=utf-8'}});});});}));});`;
-    let blob = new Blob([swCode], {type: 'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+    const swCode = `
+      const CACHE_NAME = 'drsu-cache-v3';
+      const URLS_TO_CACHE = [
+        self.location.href,
+        'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+        'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js',
+        'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
+      ];
+      self.addEventListener('install', function(e){
+        e.waitUntil(
+          caches.open(CACHE_NAME).then(function(cache){
+            return cache.addAll(URLS_TO_CACHE);
+          }).catch(function(err){
+            console.warn('Cache addAll failed:', err);
+            self.skipWaiting();
+          })
+        );
+        self.skipWaiting();
+      });
+      self.addEventListener('activate', function(e){
+        e.waitUntil(
+          caches.keys().then(function(keyList){
+            return Promise.all(keyList.map(function(key){
+              if(key !== CACHE_NAME) return caches.delete(key);
+            }));
+          }).then(function(){
+            return self.clients.claim();
+          })
+        );
+      });
+      self.addEventListener('fetch', function(e){
+        e.respondWith(
+          caches.match(e.request).then(function(response){
+            if(response) return response;
+            return fetch(e.request).then(function(networkResponse){
+              if(!networkResponse || networkResponse.status !== 200) return networkResponse;
+              var responseClone = networkResponse.clone();
+              caches.open(CACHE_NAME).then(function(cache){
+                cache.put(e.request, responseClone);
+              });
+              return networkResponse;
+            }).catch(function(){
+              return caches.match(self.location.href).then(function(cached){
+                if(cached) return cached;
+                return new Response('<h1>📴 Офлайн-режим</h1><p>Приложение загружается из кэша. Подключитесь к интернету для обновления.</p>', {headers:{'Content-Type':'text/html; charset=utf-8'}});
+              });
+            });
+          })
+        );
+      });
+    `;
+    const blob = new Blob([swCode], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob))
+      .then(function(reg){ console.log('SW registered', reg); })
+      .catch(function(err){ console.warn('SW registration failed', err); });
   }
 }
 
@@ -669,8 +773,7 @@ function setFilter(type,btn){
 function renderDynamicCalendar(){
   let container=$('dynamicCalendar');
   if(!container) return;
-  let today=todayStr();
-  if(currentFilter==='today') renderDayView(container, today);
+  if(currentFilter==='today') renderDayView(container, todayStr());
   else if(currentFilter==='week') renderWeekView(container);
   else renderMonthView(container);
 }
@@ -1008,9 +1111,13 @@ function addSquad(data){
 function removeSquad(sid){ formSquads=formSquads.filter(s=>s.id!==sid); renderSquads(); scheduleDraftSave(); }
 function duplicateSquad(sid){ let src=formSquads.find(s=>s.id===sid); if(src){ let dup=JSON.parse(JSON.stringify(src)); dup.id='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); formSquads.push(dup); renderSquads(); scheduleDraftSave(); showToast('Наряд продублирован'); } }
 function scheduleDraftSave(){ if(draftTimer) clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,2000); }
-function saveDraft(){ let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; save(STORAGE_KEYS.draft,draft); }
+function saveDraft(){ 
+  if(!storageAvailable) return;
+  let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; 
+  save(STORAGE_KEYS.draft,draft); 
+}
 function loadDraft(){ let d=load(STORAGE_KEYS.draft,null); if(d&&d.squads&&d.squads.length){ $('inpDate').value=d.date||todayStr(); $('inpImportant').checked=d.important; $('inpReminder').value=d.reminder; $('inpReminderText').value=d.reminderText; $('inpWeather').value=d.weather; $('inpWeatherCond').value=d.weatherCond; $('inpNotes').value=d.notes; formSquads=d.squads; renderSquads(); $('draftBadge').style.display='block'; return true; } return false; }
-function clearDraft(){ localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
+function clearDraft(){ if(!storageAvailable) return; localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
 function changeSquadCategory(sid,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s.category=val; renderSquads(); scheduleDraftSave(); } }
 function updateSquadField(sid,field,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s[field]=val; scheduleDraftSave(); } }
 function addObject(sid){ let inp=$('objInp_'+sid); if(!inp) return; let v=inp.value.trim(); if(!v){ showToast('Введите или выберите объект'); return; } let s=formSquads.find(x=>x.id===sid); if(s){ if(!s.objects.includes(v)){ s.objects.push(v); inp.value=''; renderSquads(); scheduleDraftSave(); showToast('Объект добавлен'); } else{ showToast('Объект уже есть'); inp.value=''; } } }
@@ -1087,7 +1194,11 @@ function renderSquads(){
         let machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
         let workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
         let kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined) ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
-        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span> | ${tool ? '<span class="text-secondary">' + tool.name + ' ' + w.toolHours + 'ч</span> | ' : ''}${fuel > 0 ? '<span class="text-accent">⛽ ' + fuel.toFixed(2) + ' л</span> | ' : ''}${machineCost > 0 ? '<span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span> ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
+        let toolHtml = '';
+        if(tool){
+          toolHtml = `<br>&nbsp;&nbsp;Инструмент: <span class="text-secondary">${escapeHtml(tool.name)} ${w.toolHours||0}ч${w.fuelLiters?` | ⛽ <span class="text-accent">${w.fuelLiters.toFixed(2)} л</span>`:''}${machineCost?` | 🛠️ <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>`:''}</span>`;
+        }
+        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit||''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span> | ${tool ? '<span class="text-secondary">' + tool.name + ' ' + w.toolHours + 'ч</span> | ' : ''}${fuel > 0 ? '<span class="text-accent">⛽ ' + fuel.toFixed(2) + ' л</span> | ' : ''}${machineCost > 0 ? '<span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span> ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
       });
       worksHtml += '</div>';
     });
@@ -2072,7 +2183,7 @@ function initDefaultData(){
       { id: 109, name: "Разделка упавших деревьев Ø до 20 см", unit: "10 деревьев", laborCost: 5.94, directCost: 76.47, toolCost: 0 },
       { id: 110, name: "Сжигание порубочных остатков", unit: "10 плот. м³", laborCost: 0, directCost: 4.88, toolCost: 0 },
       { id: 111, name: "Уборка мусора с дороги вручную", unit: "км", laborCost: 2.1, directCost: 26.29, toolCost: 0 },
-      { id: 112, name: "Перевозка грузов трактором с прицепом", unit: "т", laborCost: 0, directCost: 58.49, toolCost: 0 }  // условная расценка (1 маш.-ч трактора = 58.49 руб.)
+      { id: 112, name: "Перевозка грузов трактором с прицепом", unit: "т", laborCost: 0, directCost: 58.49, toolCost: 0 }
     ];
     save(STORAGE_KEYS.works,works);
   }
@@ -2117,6 +2228,7 @@ function initDefaultData(){
 }
 
 function init(){
+  checkStorage();
   loadAll();
   initDefaultData();
   applyTheme();
@@ -2139,6 +2251,37 @@ function init(){
   renderCalendar();
   renderRoadSelector();
   if(!loadDraft()) addSquad();
+
+  if(!storageAvailable){
+    setTimeout(()=>showToast('⚠️ Локальное хранилище недоступно! Данные не будут сохраняться между сессиями. Используйте Экспорт.'), 1500);
+  }
+
+  // Автосохранение черновика каждые 10 секунд
+  setInterval(function(){
+    if(formSquads.length > 0 && editingEntryIndex < 0){
+      saveDraft();
+    }
+  }, 10000);
+
+  // Форсированное сохранение при закрытии/обновлении вкладки
+  window.addEventListener('beforeunload', function(){
+    if(formSquads.length > 0 && editingEntryIndex < 0){
+      saveDraft();
+    }
+    save(STORAGE_KEYS.entries, entries);
+    save(STORAGE_KEYS.workers, workers);
+    save(STORAGE_KEYS.works, works);
+    save(STORAGE_KEYS.tools, tools);
+    save(STORAGE_KEYS.tmc, tmc);
+    save(STORAGE_KEYS.tasks, tasks);
+    save(STORAGE_KEYS.settings, settings);
+    save(STORAGE_KEYS.roads, roads);
+    save(STORAGE_KEYS.stockOrder, stockOrder);
+    save(STORAGE_KEYS.stockManual, stockManual);
+    save(STORAGE_KEYS.templates, templates);
+    save(STORAGE_KEYS.tsOverrides, timesheetOverrides);
+    save(STORAGE_KEYS.tsLetters, timesheetLetters);
+  });
 }
 
 return {
