@@ -745,10 +745,8 @@ async function save(key,val){
       if(e.name === 'QuotaExceededError' || e.code === 22 || e.number === 22){
         storageError = 'Хранилище переполнено!';
         showToast('⚠️ Хранилище переполнено! Экспортируйте и очистите данные.');
-        showSaveIndicator(false, '⚠️ Переполнено');
       } else {
         storageError = e.name + ': ' + e.message;
-        showSaveIndicator(false, '❌ Ошибка сохранения');
       }
     }
   }
@@ -799,13 +797,6 @@ async function saveAllData(){
   results.push(await save(STORAGE_KEYS.tsLetters, timesheetLetters));
 
   let allOk = results.every(r => r === true);
-  if(allOk && storageAvailable) {
-    showSaveIndicator(true, '💾 Сохранено');
-  } else if (!allOk && !storageAvailable) {
-    showSaveIndicator(false, '⚠️ Только в памяти!');
-  } else if (!allOk) {
-    showSaveIndicator(false, '⚠️ Частично сохранено');
-  }
   return allOk;
 }
 
@@ -2572,9 +2563,7 @@ async function init(){
   });
 
   // Показываем статус хранилища
-  setTimeout(() => {
-    showStorageStatus();
-  }, 1000);
+  
 
   // FAB — показ/скрытие
   (function(){
