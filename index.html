@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v16.7 (Надёжное сохранение)</title>
+<title>Журнал производства работ — ДРСУ v16.8 (Исправленное сохранение)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -209,6 +209,11 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .save-indicator{position:fixed;top:70px;right:16px;background:var(--success);color:#fff;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow);transition:opacity .3s}
 .save-indicator.show{display:block}
 .save-indicator.error{background:var(--danger)}
+.storage-status{position:fixed;top:70px;left:16px;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow)}
+.storage-status.ok{background:var(--success);color:#fff}
+.storage-status.warn{background:var(--warning);color:#000}
+.storage-status.error{background:var(--danger);color:#fff}
+.storage-status.show{display:block}
 @media(max-width:600px){
   .week-view{grid-template-columns:repeat(7,1fr);overflow-x:auto}
   .week-day-card{min-width:60px}
@@ -216,11 +221,13 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
 <div class="offline-badge" id="offlineBadge">📴 Офлайн-режим</div>
 <div class="save-indicator" id="saveIndicator">💾 Сохранено</div>
+<div class="storage-status" id="storageStatus"></div>
 
 <div class="app-header">
   <div><h1>📋 Журнал производства работ</h1><div class="date-today" id="headerDate"></div></div>
@@ -494,7 +501,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.7 (Надёжное сохранение)</b><br>Все данные хранятся локально. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.8 (Исправленное сохранение)</b><br>Все данные хранятся локально. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».<br><br><b style="color:var(--danger)">⚠️ ВАЖНО:</b> Если данные не сохраняются — проверьте, не отключены ли куки/хранилище в браузере, и не используете ли вы режим инкогнито.</p>
     </div>
   </div>
 </div>
@@ -589,6 +596,7 @@ let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=
 let formSquads=[], draftTimer=null;
 let selectedRoadForScale='';
 let storageAvailable = false;
+let storageError = '';
 let memoryBackup = {}; // Резервная копия в памяти на случай недоступности localStorage
 
 /* ---------- Надёжность хранилища ---------- */
@@ -596,14 +604,30 @@ function checkStorage(){
   try {
     const test = '__drsu_storage_test__';
     localStorage.setItem(test, test);
+    const result = localStorage.getItem(test) === test;
     localStorage.removeItem(test);
-    storageAvailable = true;
-    return true;
+    storageAvailable = result;
+    if (!result) storageError = 'localStorage не работает корректно';
+    return result;
   } catch(e) {
     storageAvailable = false;
+    storageError = e.name + ': ' + e.message;
     console.warn('localStorage недоступен:', e);
     return false;
   }
+}
+
+function showStorageStatus() {
+  let ind = $('storageStatus');
+  if(!ind) return;
+  if (storageAvailable) {
+    ind.textContent = '✅ Хранилище OK';
+    ind.className = 'storage-status ok show';
+  } else {
+    ind.textContent = '⚠️ ' + (storageError || 'Хранилище недоступно');
+    ind.className = 'storage-status warn show';
+  }
+  setTimeout(() => { ind.classList.remove('show'); }, 3000);
 }
 
 function showSaveIndicator(success, msg){
@@ -614,49 +638,86 @@ function showSaveIndicator(success, msg){
   setTimeout(() => { ind.classList.remove('show'); }, 2000);
 }
 
-function save(key,val){
-  // Всегда сохраняем в память как резерв
-  memoryBackup[key] = JSON.parse(JSON.stringify(val));
-
-  if(!storageAvailable){ 
-    console.warn('Storage not available, saved to memory only', key);
-    return false; 
+async function save(key,val){
+  // 1. Всегда сохраняем в память как резерв
+  try {
+    memoryBackup[key] = JSON.parse(JSON.stringify(val));
+  } catch(e) {
+    console.warn('Memory backup failed for', key, e);
   }
-  try{ 
-    let json = JSON.stringify(val);
-    localStorage.setItem(key, json);
-    return true;
-  }catch(e){ 
-    console.warn('Save error for key', key, e);
-    if(e.name === 'QuotaExceededError' || e.code === 22 || e.number === 22){
-      showToast('⚠️ Хранилище переполнено! Экспортируйте и очистите данные.');
-      showSaveIndicator(false, '⚠️ Переполнено');
-    } else {
-      showSaveIndicator(false, '❌ Ошибка сохранения');
+
+  // 2. Пробуем localStorage
+  let lsSuccess = false;
+  if(storageAvailable){
+    try{
+      let json = JSON.stringify(val);
+      localStorage.setItem(key, json);
+      lsSuccess = true;
+    } catch(e){
+      console.warn('localStorage save error for key', key, e);
+      if(e.name === 'QuotaExceededError' || e.code === 22 || e.number === 22){
+        storageError = 'Хранилище переполнено!';
+        showToast('⚠️ Хранилище переполнено! Экспортируйте и очистите данные.');
+        showSaveIndicator(false, '⚠️ Переполнено');
+      } else {
+        storageError = e.name + ': ' + e.message;
+        showSaveIndicator(false, '❌ Ошибка сохранения');
+      }
     }
-    return false;
-  } 
+  }
+
+  // 3. Пробуем IndexedDB как резерв (если localStorage не сработал)
+  if (!lsSuccess && typeof indexedDB !== 'undefined') {
+    try {
+      const request = indexedDB.open('DRSU_Backup', 1);
+      request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('data')) {
+          db.createObjectStore('data', { keyPath: 'key' });
+        }
+      };
+      request.onsuccess = function(event) {
+        const db = event.target.result;
+        try {
+          const tx = db.transaction(['data'], 'readwrite');
+          const store = tx.objectStore('data');
+          store.put({ key: key, value: JSON.stringify(val), timestamp: Date.now() });
+          console.log('Saved to IndexedDB:', key);
+        } catch(e) {
+          console.warn('IndexedDB save failed:', key, e);
+        }
+      };
+    } catch(e) {
+      console.warn('IndexedDB error:', e);
+    }
+  }
+
+  return lsSuccess;
 }
 
-function saveAllData(){
+async function saveAllData(){
   let results = [];
-  results.push(save(STORAGE_KEYS.entries, entries));
-  results.push(save(STORAGE_KEYS.workers, workers));
-  results.push(save(STORAGE_KEYS.works, works));
-  results.push(save(STORAGE_KEYS.tools, tools));
-  results.push(save(STORAGE_KEYS.tmc, tmc));
-  results.push(save(STORAGE_KEYS.tasks, tasks));
-  results.push(save(STORAGE_KEYS.settings, settings));
-  results.push(save(STORAGE_KEYS.roads, roads));
-  results.push(save(STORAGE_KEYS.stockOrder, stockOrder));
-  results.push(save(STORAGE_KEYS.stockManual, stockManual));
-  results.push(save(STORAGE_KEYS.templates, templates));
-  results.push(save(STORAGE_KEYS.tsOverrides, timesheetOverrides));
-  results.push(save(STORAGE_KEYS.tsLetters, timesheetLetters));
+  results.push(await save(STORAGE_KEYS.entries, entries));
+  results.push(await save(STORAGE_KEYS.workers, workers));
+  results.push(await save(STORAGE_KEYS.works, works));
+  results.push(await save(STORAGE_KEYS.tools, tools));
+  results.push(await save(STORAGE_KEYS.tmc, tmc));
+  results.push(await save(STORAGE_KEYS.tasks, tasks));
+  results.push(await save(STORAGE_KEYS.settings, settings));
+  results.push(await save(STORAGE_KEYS.roads, roads));
+  results.push(await save(STORAGE_KEYS.stockOrder, stockOrder));
+  results.push(await save(STORAGE_KEYS.stockManual, stockManual));
+  results.push(await save(STORAGE_KEYS.templates, templates));
+  results.push(await save(STORAGE_KEYS.tsOverrides, timesheetOverrides));
+  results.push(await save(STORAGE_KEYS.tsLetters, timesheetLetters));
 
   let allOk = results.every(r => r === true);
   if(allOk && storageAvailable) {
     showSaveIndicator(true, '💾 Сохранено');
+  } else if (!allOk && !storageAvailable) {
+    showSaveIndicator(false, '⚠️ Только в памяти!');
+  } else if (!allOk) {
+    showSaveIndicator(false, '⚠️ Частично сохранено');
   }
   return allOk;
 }
@@ -691,8 +752,48 @@ function showToast(msg){ let t=document.getElementById('toast'); if(t){ t.textCo
 function $(id){ return document.getElementById(id); }
 function downloadFile(content,filename,type){ let blob=new Blob([content],{type}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
-function loadAll(){
-  if(!storageAvailable) return;
+async function loadAll(){
+  // Если localStorage недоступен, пробуем IndexedDB
+  if(!storageAvailable && typeof indexedDB !== 'undefined') {
+    try {
+      const request = indexedDB.open('DRSU_Backup', 1);
+      request.onupgradeneeded = function(event) {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('data')) {
+          db.createObjectStore('data', { keyPath: 'key' });
+        }
+      };
+      await new Promise((resolve) => {
+        request.onsuccess = async function(event) {
+          const db = event.target.result;
+          const keys = Object.values(STORAGE_KEYS);
+          for (let key of keys) {
+            try {
+              const tx = db.transaction(['data'], 'readonly');
+              const store = tx.objectStore('data');
+              const getRequest = store.get(key);
+              await new Promise((res) => {
+                getRequest.onsuccess = function() {
+                  if (getRequest.result) {
+                    try {
+                      const data = JSON.parse(getRequest.result.value);
+                      memoryBackup[key] = data;
+                      console.log('Loaded from IndexedDB:', key);
+                    } catch(e) {}
+                  }
+                  res();
+                };
+                getRequest.onerror = () => res();
+              });
+            } catch(e) {}
+          }
+          resolve();
+        };
+        request.onerror = () => resolve();
+      });
+    } catch(e) { console.warn('IndexedDB load error:', e); }
+  }
+
   entries=load(STORAGE_KEYS.entries,[]) || []; 
   workers=load(STORAGE_KEYS.workers,[]) || []; 
   works=load(STORAGE_KEYS.works,[]) || [];
@@ -2300,9 +2401,9 @@ function initDefaultData(){
   }
 }
 
-function init(){
+async function init(){
   checkStorage();
-  loadAll();
+  await loadAll();
   initDefaultData();
   applyTheme();
   $('headerDate').textContent=new Date().toLocaleDateString('ru-RU',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -2326,36 +2427,39 @@ function init(){
   if(!loadDraft()) addSquad();
 
   if(!storageAvailable){
-    setTimeout(()=>showToast('⚠️ localStorage недоступен! Данные сохраняются только в памяти. Экспортируйте перед закрытием!'), 1500);
+    setTimeout(()=>showToast('⚠️ localStorage недоступен! Данные сохраняются в IndexedDB/памяти. Экспортируйте перед закрытием!'), 1500);
   }
 
   // Автосохранение черновика каждые 5 секунд + полное сохранение
-  setInterval(function(){
+  setInterval(async function(){
     if(formSquads.length > 0 && editingEntryIndex < 0){
       saveDraft();
-      saveAllData();
+      await saveAllData();
     }
   }, 5000);
 
   // Форсированное сохранение при закрытии/обновлении вкладки
   window.addEventListener('beforeunload', function(e){
-    // Сначала сохраняем черновик если нужно
     if(formSquads.length > 0 && editingEntryIndex < 0){
       saveDraft();
     }
-    // Принудительно сохраняем ВСЕ данные
     saveAllData();
   });
 
   // Дополнительно сохраняем при смене видимости вкладки
-  document.addEventListener('visibilitychange', function(){
+  document.addEventListener('visibilitychange', async function(){
     if(document.visibilityState === 'hidden'){
       if(formSquads.length > 0 && editingEntryIndex < 0){
         saveDraft();
       }
-      saveAllData();
+      await saveAllData();
     }
   });
+
+  // Показываем статус хранилища
+  setTimeout(() => {
+    showStorageStatus();
+  }, 1000);
 }
 
 return {
