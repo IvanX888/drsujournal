@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v16.6 (Офлайн + Надёжное сохранение)</title>
+<title>Журнал производства работ — ДРСУ v16.6 (Стабильный)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -211,7 +211,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   .week-day-card{min-width:60px}
 }
 </style>
-<base target="_blank">
 </head>
 <body>
 
@@ -249,7 +248,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
   </div>
 
-  <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата..." oninput="App.renderEntries()">
+  <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата...">
   <div class="filter-bar">
     <button class="filter-chip active" onclick="App.setFilter('all',this)">Все</button>
     <button class="filter-chip" onclick="App.setFilter('today',this)">Сегодня</button>
@@ -371,7 +370,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   </div>
   <div class="subpanel" id="repMachines">
     <div class="card">
-      <div class="card-title">🚜 Стоимость эксплуатации машин и механизмов (по образцу ведомости №426)</div>
+      <div class="card-title">🚜 Стоимость эксплуатации машин и механизмов</div>
       <div class="form-group"><label>Период с</label><input type="date" id="machFrom"></div>
       <div class="form-group"><label>Период по</label><input type="date" id="machTo"></div>
       <button class="btn btn-primary" onclick="App.generateMachinesCost()">Рассчитать</button>
@@ -388,7 +387,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <button class="subtab" onclick="App.showSubtab('subSettings',this)">⚙️ Настройки</button>
   </div>
   <div class="subpanel active" id="subCatalogs">
-    <input type="text" class="search-box catalog-search" id="catSearch" placeholder="🔍 Поиск по справочнику..." oninput="App.renderCatalogs()">
+    <input type="text" class="search-box catalog-search" id="catSearch" placeholder="🔍 Поиск по справочнику...">
     <div class="subtabs">
       <button class="subtab active" onclick="App.showCatalog('catWorkers',this)">👷 Работники</button>
       <button class="subtab" onclick="App.showCatalog('catWorks',this)">🔧 Виды работ</button>
@@ -489,7 +488,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.6 (Офлайн + Надёжное сохранение)</b><br>Все данные хранятся локально. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v16.6 (Стабильный)</b><br>Все данные хранятся локально. Работает офлайн.</p>
     </div>
   </div>
 </div>
@@ -557,14 +556,22 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 const App = (function() {
 'use strict';
 
-const PREFIX = 'drsu_v16_';
+// ========== КЛЮЧИ ХРАНЕНИЯ – СТАБИЛЬНЫЕ, НЕ ЗАВИСЯТ ОТ ВЕРСИИ ==========
 const STORAGE_KEYS = {
-  entries: PREFIX+'entries', workers: PREFIX+'workers', works: PREFIX+'works',
-  tools: PREFIX+'tools', tmc: PREFIX+'tmc', tasks: PREFIX+'tasks',
-  settings: PREFIX+'settings', roads: PREFIX+'roads', draft: PREFIX+'draft',
-  tsOverrides: PREFIX+'ts_overrides', tsLetters: PREFIX+'ts_letters',
-  stockOrder: PREFIX+'stock_order', stockManual: PREFIX+'stock_manual',
-  templates: PREFIX+'templates'
+  entries: 'drsu_entries',
+  workers: 'drsu_workers',
+  works: 'drsu_works',
+  tools: 'drsu_tools',
+  tmc: 'drsu_tmc',
+  tasks: 'drsu_tasks',
+  settings: 'drsu_settings',     // отдельный стабильный ключ
+  roads: 'drsu_roads',
+  draft: 'drsu_draft',
+  tsOverrides: 'drsu_ts_overrides',
+  tsLetters: 'drsu_ts_letters',
+  stockOrder: 'drsu_stock_order',
+  stockManual: 'drsu_stock_manual',
+  templates: 'drsu_templates'
 };
 
 const CATEGORIES = {
@@ -583,146 +590,109 @@ let currentFilter='all', currentTaskFilter='all', currentMonth=new Date(), selec
 let editingEntryIndex=-1, currentSquadId=null, catalogType='', catalogEditingId=null;
 let formSquads=[], draftTimer=null;
 let selectedRoadForScale='';
-let storageAvailable = false;
 
-/* ---------- Надёжность хранилища ---------- */
-function checkStorage(){
-  try {
-    const test = '__drsu_storage_test__';
-    localStorage.setItem(test, test);
-    localStorage.removeItem(test);
-    storageAvailable = true;
-    return true;
-  } catch(e) {
-    storageAvailable = false;
-    console.warn('localStorage недоступен:', e);
-    return false;
-  }
-}
-
-function save(key,val){
-  if(!storageAvailable){ 
-    console.warn('Storage not available, cannot save', key);
-    return; 
-  }
-  try{ 
-    localStorage.setItem(key,JSON.stringify(val)); 
-  }catch(e){ 
-    console.warn('Save error for key', key, e);
-    if(e.name === 'QuotaExceededError' || e.code === 22 || e.number === 22){
-      showToast('⚠️ Хранилище переполнено! Экспортируйте и очистите данные.');
-    }
-  } 
-}
-
-function load(key,def){ 
-  if(!storageAvailable) return def;
-  try{ 
-    let v=localStorage.getItem(key); 
-    if(v === null) return def;
-    return JSON.parse(v); 
-  }catch(e){ 
-    console.warn('Load error for key', key, e);
-    return def; 
-  } 
-}
-
+function save(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); }catch(e){ console.warn(e); } }
+function load(key,def){ try{ let v=localStorage.getItem(key); return v?JSON.parse(v):def; }catch(e){ return def; } }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function formatDate(d){ if(!d) return ''; let p=d.split('-'); return p[2]+'.'+p[1]+'.'+p[0]; }
 function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m; }); }
-function jsAttr(s){ return String(s).replace(/\\/g,"\\\\").replace(/'/g,"\\'"); }
+function jsAttr(s){ return String(s).replace(/\\\\/g,"\\\\").replace(/'/g,"\\'"); }
 function showToast(msg){ let t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); } }
 function $(id){ return document.getElementById(id); }
 function downloadFile(content,filename,type){ let blob=new Blob([content],{type}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
 function loadAll(){
-  if(!storageAvailable) return;
-  entries=load(STORAGE_KEYS.entries,[]) || []; 
-  workers=load(STORAGE_KEYS.workers,[]) || []; 
-  works=load(STORAGE_KEYS.works,[]) || [];
-  tools=load(STORAGE_KEYS.tools,[]) || []; 
-  tmc=load(STORAGE_KEYS.tmc,[]) || []; 
-  tasks=load(STORAGE_KEYS.tasks,[]) || [];
-  settings=load(STORAGE_KEYS.settings,{}) || {}; 
-  roads=load(STORAGE_KEYS.roads,[]) || []; 
-  stockOrder=load(STORAGE_KEYS.stockOrder,[]) || [];
-  stockManual=load(STORAGE_KEYS.stockManual,[]) || []; 
-  templates=load(STORAGE_KEYS.templates,[]) || [];
-  timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{}) || {}; 
-  timesheetLetters=load(STORAGE_KEYS.tsLetters,{}) || {};
+  entries=load(STORAGE_KEYS.entries,[]);
+  workers=load(STORAGE_KEYS.workers,[]);
+  works=load(STORAGE_KEYS.works,[]);
+  tools=load(STORAGE_KEYS.tools,[]);
+  tmc=load(STORAGE_KEYS.tmc,[]);
+  tasks=load(STORAGE_KEYS.tasks,[]);
+  settings=load(STORAGE_KEYS.settings,{});
+  roads=load(STORAGE_KEYS.roads,[]);
+  stockOrder=load(STORAGE_KEYS.stockOrder,[]);
+  stockManual=load(STORAGE_KEYS.stockManual,[]);
+  templates=load(STORAGE_KEYS.templates,[]);
+  timesheetOverrides=load(STORAGE_KEYS.tsOverrides,{});
+  timesheetLetters=load(STORAGE_KEYS.tsLetters,{});
 }
 
-/* ---------- Офлайн и Service Worker ---------- */
-function initOffline(){
-  function setOnlineStatus(){
-    if(navigator.onLine){
-      if($('netStatus')) $('netStatus').textContent='● Онлайн'; 
-      if($('offlineBadge')) $('offlineBadge').classList.remove('show');
-    } else {
-      if($('netStatus')) $('netStatus').textContent='● Офлайн'; 
-      if($('offlineBadge')) $('offlineBadge').classList.add('show');
-    }
+// Инициализация начальных данных (только если справочники пусты)
+function initDefaultData(){
+  if(works.length===0){
+    works = [
+      { id: 100, name: "Срезание кустарника кусторезом со сбором", unit: "1000 м²", laborCost: 18.2, directCost: 280.18, toolCost: 0 },
+      { id: 101, name: "Срезание кустарника и деревьев Ø до 120 мм со сбором", unit: "1000 м²", laborCost: 21.6, directCost: 334.06, toolCost: 0 },
+      { id: 102, name: "Обрезка крон деревьев Ø до 100 мм", unit: "крона", laborCost: 0.23, directCost: 4.02, toolCost: 0 },
+      { id: 103, name: "Обрезка крон деревьев Ø 100-150 мм", unit: "крона", laborCost: 0.39, directCost: 6.81, toolCost: 0 },
+      { id: 104, name: "Обрезка крон деревьев Ø 150-200 мм", unit: "крона", laborCost: 0.50, directCost: 8.74, toolCost: 0 },
+      { id: 105, name: "Обрезка крон деревьев Ø 200-250 мм", unit: "крона", laborCost: 0.71, directCost: 12.41, toolCost: 0 },
+      { id: 106, name: "Обрезка крон деревьев Ø 250-400 мм", unit: "крона", laborCost: 0.95, directCost: 16.60, toolCost: 0 },
+      { id: 107, name: "Валка и разделка деревьев Ø до 20 см", unit: "10 деревьев", laborCost: 6.6, directCost: 84.97, toolCost: 0 },
+      { id: 108, name: "Валка и разделка деревьев Ø 30-40 см", unit: "10 деревьев", laborCost: 12.93, directCost: 166.46, toolCost: 0 },
+      { id: 109, name: "Разделка упавших деревьев Ø до 20 см", unit: "10 деревьев", laborCost: 5.94, directCost: 76.47, toolCost: 0 },
+      { id: 110, name: "Сжигание порубочных остатков", unit: "10 плот. м³", laborCost: 0, directCost: 4.88, toolCost: 0 },
+      { id: 111, name: "Уборка мусора с дороги вручную", unit: "км", laborCost: 2.1, directCost: 26.29, toolCost: 0 },
+      { id: 112, name: "Перевозка грузов трактором с прицепом", unit: "т", laborCost: 0, directCost: 58.49, toolCost: 0 }
+    ];
+    save(STORAGE_KEYS.works,works);
   }
-  window.addEventListener('online', ()=>{ setOnlineStatus(); showToast('🌐 Соединение восстановлено'); });
-  window.addEventListener('offline', ()=>{ setOnlineStatus(); showToast('📴 Офлайн-режим активирован'); });
-  setOnlineStatus();
+  if(tools.length===0){
+    tools = [
+      { id: 1, name: "Кусторез Husqvarna 343R", fuelConsumption: 0.8, machineCostPerHour: 7.27, salaryPerHour: 0 },
+      { id: 2, name: "Бензопила Husqvarna", fuelConsumption: 0.6, machineCostPerHour: 3.94, salaryPerHour: 0 },
+      { id: 3, name: "Трактор колесный 96 кВт", fuelConsumption: 5.5, machineCostPerHour: 58.49, salaryPerHour: 18.67 },
+      { id: 4, name: "Автомобиль-самосвал 10 т", fuelConsumption: 8.0, machineCostPerHour: 37.97, salaryPerHour: 19.91 }
+    ];
+    save(STORAGE_KEYS.tools,tools);
+  }
+  if(roads.length===0){
+    roads = [
+      { id: 1, name: "а/д ПУ-3", length: 45.2 },
+      { id: 2, name: "Н-6002", length: 32.0 },
+      { id: 3, name: "Н-6270", length: 28.5 },
+      { id: 4, name: "Н-6380", length: 15.0 }
+    ];
+    save(STORAGE_KEYS.roads,roads);
+  }
+  if(tmc.length===0){
+    tmc = [
+      { id: 1, name: "Бензин АИ-92", unit: "л", price: 55.0 },
+      { id: 2, name: "Дизельное топливо", unit: "л", price: 58.0 },
+      { id: 3, name: "Моторное масло 2Т", unit: "л", price: 450.0 }
+    ];
+    save(STORAGE_KEYS.tmc,tmc);
+  }
+  if(stockOrder.length===0){
+    stockOrder = tmc.map(t=>({...t, qty: 100}));
+    save(STORAGE_KEYS.stockOrder,stockOrder);
+  }
+  if(workers.length===0){
+    workers = [
+      { name: "Иванов А.П.", category: "road", grade: 5 },
+      { name: "Петров В.С.", category: "road", grade: 4 },
+      { name: "Сидоров К.М.", category: "tractor", grade: 6 }
+    ];
+    save(STORAGE_KEYS.workers,workers);
+  }
+}
 
+function initOffline(){
+  window.addEventListener('online', ()=>{ $('netStatus').textContent='● Онлайн'; $('offlineBadge').classList.remove('show'); showToast('🌐 Соединение восстановлено'); });
+  window.addEventListener('offline', ()=>{ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); showToast('📴 Офлайн-режим активирован'); });
+  if(!navigator.onLine){ $('netStatus').textContent='● Офлайн'; $('offlineBadge').classList.add('show'); }
+  if('caches' in window){
+    caches.open('drsu-page-cache-v1').then(function(cache){
+      let pageHtml = new Blob([document.documentElement.outerHTML], {type: 'text/html'});
+      let pageResponse = new Response(pageHtml, {status: 200, statusText: 'OK', headers: {'Content-Type': 'text/html'}});
+      cache.put(new Request(self.location.href), pageResponse);
+      cache.put(new Request('./'), pageResponse.clone());
+    }).catch(()=>{});
+  }
   if('serviceWorker' in navigator){
-    const swCode = `
-      const CACHE_NAME = 'drsu-cache-v3';
-      const URLS_TO_CACHE = [
-        self.location.href,
-        'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
-        'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js',
-        'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js'
-      ];
-      self.addEventListener('install', function(e){
-        e.waitUntil(
-          caches.open(CACHE_NAME).then(function(cache){
-            return cache.addAll(URLS_TO_CACHE);
-          }).catch(function(err){
-            console.warn('Cache addAll failed:', err);
-            self.skipWaiting();
-          })
-        );
-        self.skipWaiting();
-      });
-      self.addEventListener('activate', function(e){
-        e.waitUntil(
-          caches.keys().then(function(keyList){
-            return Promise.all(keyList.map(function(key){
-              if(key !== CACHE_NAME) return caches.delete(key);
-            }));
-          }).then(function(){
-            return self.clients.claim();
-          })
-        );
-      });
-      self.addEventListener('fetch', function(e){
-        e.respondWith(
-          caches.match(e.request).then(function(response){
-            if(response) return response;
-            return fetch(e.request).then(function(networkResponse){
-              if(!networkResponse || networkResponse.status !== 200) return networkResponse;
-              var responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME).then(function(cache){
-                cache.put(e.request, responseClone);
-              });
-              return networkResponse;
-            }).catch(function(){
-              return caches.match(self.location.href).then(function(cached){
-                if(cached) return cached;
-                return new Response('<h1>📴 Офлайн-режим</h1><p>Приложение загружается из кэша. Подключитесь к интернету для обновления.</p>', {headers:{'Content-Type':'text/html; charset=utf-8'}});
-              });
-            });
-          })
-        );
-      });
-    `;
-    const blob = new Blob([swCode], {type: 'application/javascript'});
-    navigator.serviceWorker.register(URL.createObjectURL(blob))
-      .then(function(reg){ console.log('SW registered', reg); })
-      .catch(function(err){ console.warn('SW registration failed', err); });
+    let swCode = `const CACHE_NAME='drsu-cache-v2';self.addEventListener('install',function(e){self.skipWaiting();});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(response){if(response) return response;return fetch(e.request).then(function(networkResponse){if(!networkResponse||networkResponse.status!==200)return networkResponse;var responseClone=networkResponse.clone();caches.open(CACHE_NAME).then(function(cache){cache.put(e.request,responseClone);});return networkResponse;}).catch(function(){return caches.match(self.location.href).then(function(cached){if(cached)return cached;return new Response('<h1>📴 Офлайн-режим</h1><p>Приложение загружается из кэша. Подключитесь к интернету для обновления.</p>',{headers:{'Content-Type':'text/html; charset=utf-8'}});});});}));});`;
+    let blob = new Blob([swCode], {type: 'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
   }
 }
 
@@ -773,7 +743,8 @@ function setFilter(type,btn){
 function renderDynamicCalendar(){
   let container=$('dynamicCalendar');
   if(!container) return;
-  if(currentFilter==='today') renderDayView(container, todayStr());
+  let today=todayStr();
+  if(currentFilter==='today') renderDayView(container, today);
   else if(currentFilter==='week') renderWeekView(container);
   else renderMonthView(container);
 }
@@ -786,13 +757,11 @@ function renderDayView(container, date){
   let html=`<div class="day-view-card" onclick="App.showDayDetails('${jsAttr(date)}')" style="cursor:pointer">
     <div class="day-view-date">${dayName}, ${formatDate(date)}</div>
     <div style="font-size:.9rem;color:var(--text-secondary);margin-bottom:8px">${date===todayStr()?'Сегодня':'Нажмите для работы с днём'}</div>`;
-
   if(dayTasks.length){
     html+=`<div style="font-weight:600;margin-bottom:6px;color:var(--accent)">📋 Задачи (${dayTasks.length}):</div>`;
     dayTasks.slice(0,3).forEach(t=>{ html+=`<div style="font-size:.85rem;margin-bottom:3px;color:var(--text)">• ${escapeHtml(t.text)}${t.important?' <span style="color:var(--danger)">🔴</span>':''}</div>`; });
     if(dayTasks.length > 3) html+=`<div style="font-size:.8rem;color:var(--text-secondary)">...и ещё ${dayTasks.length - 3}</div>`;
   }
-
   if(dayEntries.length){
     html+=`<div style="font-weight:600;margin-top:10px;color:var(--primary)">📋 Записей: ${dayEntries.length}</div>`;
     dayEntries.slice(0,2).forEach(e=>{ 
@@ -803,7 +772,6 @@ function renderDayView(container, date){
   } else {
     html+=`<div style="color:var(--text-secondary);margin-top:10px;font-size:.9rem">Нет записей в журнале</div>`;
   }
-
   html+=`<div style="margin-top:12px;font-size:.8rem;color:var(--primary);text-align:center">👆 Нажмите для добавления задачи или наряда</div>`;
   html+=`</div>`;
   container.innerHTML=html;
@@ -936,7 +904,6 @@ function renderRoadsKmSummary(){
   let container=$('roadsKmSummary');
   if(!container) return;
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
-
   let activeRoads = [];
   roads.forEach(road=>{
     let segments=getRoadKmSegments(road.name, currentFilter);
@@ -956,12 +923,10 @@ function renderRoadsKmSummary(){
       activeRoads.push({road, segments, coveredKm, totalLength, pct});
     }
   });
-
   if(activeRoads.length === 0){
     container.innerHTML=`<div class="empty-state">Нет данных по километражу за выбранный период<br><small style="color:var(--text-secondary)">(${filterLabel})</small></div>`;
     return;
   }
-
   let html=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">Период: <b>${filterLabel}</b> | Дорог: ${activeRoads.length}</div>`;
   activeRoads.forEach(({road, segments, coveredKm, totalLength, pct})=>{
     let barColor=pct>=90?'var(--success)':(pct>50?'var(--primary)':'var(--accent)');
@@ -1090,7 +1055,7 @@ function generateRoadKmReport(){
       html+=`<div class="km-scale-done" style="left:${leftPct}%; width:${widthPct}%;"></div>`;
     });
   }
-  html+=`</div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
+  html+=`</div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th><tr>`;
   let workSummary={};
   segments.forEach(s=>{
     if(!workSummary[s.workName]) workSummary[s.workName]={total:0,unit:s.unit,ranges:[]};
@@ -1111,13 +1076,9 @@ function addSquad(data){
 function removeSquad(sid){ formSquads=formSquads.filter(s=>s.id!==sid); renderSquads(); scheduleDraftSave(); }
 function duplicateSquad(sid){ let src=formSquads.find(s=>s.id===sid); if(src){ let dup=JSON.parse(JSON.stringify(src)); dup.id='sq_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); formSquads.push(dup); renderSquads(); scheduleDraftSave(); showToast('Наряд продублирован'); } }
 function scheduleDraftSave(){ if(draftTimer) clearTimeout(draftTimer); draftTimer=setTimeout(saveDraft,2000); }
-function saveDraft(){ 
-  if(!storageAvailable) return;
-  let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; 
-  save(STORAGE_KEYS.draft,draft); 
-}
+function saveDraft(){ let draft={ date:$('inpDate')?.value||'', important:$('inpImportant')?.checked||false, reminder:$('inpReminder')?.value||'', reminderText:$('inpReminderText')?.value||'', weather:$('inpWeather')?.value||'', weatherCond:$('inpWeatherCond')?.value||'', notes:$('inpNotes')?.value||'', squads:JSON.parse(JSON.stringify(formSquads)) }; save(STORAGE_KEYS.draft,draft); }
 function loadDraft(){ let d=load(STORAGE_KEYS.draft,null); if(d&&d.squads&&d.squads.length){ $('inpDate').value=d.date||todayStr(); $('inpImportant').checked=d.important; $('inpReminder').value=d.reminder; $('inpReminderText').value=d.reminderText; $('inpWeather').value=d.weather; $('inpWeatherCond').value=d.weatherCond; $('inpNotes').value=d.notes; formSquads=d.squads; renderSquads(); $('draftBadge').style.display='block'; return true; } return false; }
-function clearDraft(){ if(!storageAvailable) return; localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
+function clearDraft(){ localStorage.removeItem(STORAGE_KEYS.draft); if($('draftBadge')) $('draftBadge').style.display='none'; }
 function changeSquadCategory(sid,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s.category=val; renderSquads(); scheduleDraftSave(); } }
 function updateSquadField(sid,field,val){ let s=formSquads.find(x=>x.id===sid); if(s){ s[field]=val; scheduleDraftSave(); } }
 function addObject(sid){ let inp=$('objInp_'+sid); if(!inp) return; let v=inp.value.trim(); if(!v){ showToast('Введите или выберите объект'); return; } let s=formSquads.find(x=>x.id===sid); if(s){ if(!s.objects.includes(v)){ s.objects.push(v); inp.value=''; renderSquads(); scheduleDraftSave(); showToast('Объект добавлен'); } else{ showToast('Объект уже есть'); inp.value=''; } } }
@@ -1194,11 +1155,7 @@ function renderSquads(){
         let machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
         let workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
         let kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined) ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
-        let toolHtml = '';
-        if(tool){
-          toolHtml = `<br>&nbsp;&nbsp;Инструмент: <span class="text-secondary">${escapeHtml(tool.name)} ${w.toolHours||0}ч${w.fuelLiters?` | ⛽ <span class="text-accent">${w.fuelLiters.toFixed(2)} л</span>`:''}${machineCost?` | 🛠️ <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>`:''}</span>`;
-        }
-        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit||''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span> | ${tool ? '<span class="text-secondary">' + tool.name + ' ' + w.toolHours + 'ч</span> | ' : ''}${fuel > 0 ? '<span class="text-accent">⛽ ' + fuel.toFixed(2) + ' л</span> | ' : ''}${machineCost > 0 ? '<span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span> ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
+        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span> | ${tool ? '<span class="text-secondary">' + tool.name + ' ' + w.toolHours + 'ч</span> | ' : ''}${fuel > 0 ? '<span class="text-accent">⛽ ' + fuel.toFixed(2) + ' л</span> | ' : ''}${machineCost > 0 ? '<span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span> ' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${jsAttr(sq.id)}',${w.idx})">✏️</button><button class="del-btn" onclick="App.removeWork('${jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
       });
       worksHtml += '</div>';
     });
@@ -1331,6 +1288,7 @@ function renderEntries(){
   });
   if(!html) html='<div class="empty-state">Нет записей</div>';
   let list=$('entriesList'); if(list) list.innerHTML=html;
+  
   updateKPIs();
   renderRoadsKmSummary();
 }
@@ -1579,7 +1537,7 @@ function renderTimesheet(){
   for(let d=1;d<=daysInMonth;d++) html+=`<th>${d}</th>`;
   html+='<th>Итого</th></tr></thead><tbody>';
   workersList.forEach(dw=>{
-    html+=`<tr><td>${escapeHtml(dw.name)}</td>`;
+    html+=`<tr><td class="text-primary" style="font-weight:600">${escapeHtml(dw.name)}</td>`;
     for(let d=1;d<=daysInMonth;d++){
       let key=dw.name+'|'+d;
       let val=timesheetOverrides[key];
@@ -1687,7 +1645,7 @@ function generateSummaryReport(){
   for(let w in workStats) html+=`<tr><td class="text-info">${escapeHtml(w)}</td><td>${workStats[w].volume.toFixed(2)} ${workStats[w].unit}</td></tr>`;
   html+='</table>';
   html+='<div style="margin-top:12px"><b>👷 По работникам:</b></div><table class="report-table"><tr><th>ФИО</th><th>Дней</th><th>Часов</th></tr>';
-  for(let w in workerStats) html+=`<tr><td>${escapeHtml(w)}</td><td>${workerStats[w].days}</td><td>${workerStats[w].hours.toFixed(1)}</td></tr>`;
+  for(let w in workerStats) html+=`<tr><td class="text-primary">${escapeHtml(w)}</td><td>${workerStats[w].days}</td><td>${workerStats[w].hours.toFixed(1)}</td></tr>`;
   html+='</table></div>';
   $('reportResult').innerHTML=html;
   $('reportExports').style.display='flex';
@@ -1711,7 +1669,7 @@ function generateWorkersReport(){
   if(!Object.keys(workerStats).length){ $('reportResult').innerHTML='<div class="empty-state">Нет данных</div>'; $('reportExports').style.display='none'; return; }
   let html='<div class="card"><div class="card-title">👷 Отчёт по работникам</div>';
   Object.values(workerStats).sort((a,b)=>b.hours-a.hours).forEach(ws=>{
-    html+=`<div class="worker-report-card"><b>${escapeHtml(ws.name)}</b><div class="text-secondary">${ws.days} смен, ${ws.hours.toFixed(1)} ч</div><div style="font-size:.8rem;margin-top:4px">📍 ${Array.from(ws.objects).map(escapeHtml).join(', ')}</div><div style="font-size:.8rem">🔧 ${Array.from(ws.works).map(escapeHtml).join(', ')}</div></div>`;
+    html+=`<div class="worker-report-card"><b class="text-primary">${escapeHtml(ws.name)}</b><div class="text-secondary">${ws.days} смен, ${ws.hours.toFixed(1)} ч</div><div style="font-size:.8rem;margin-top:4px">📍 ${Array.from(ws.objects).map(escapeHtml).join(', ')}</div><div style="font-size:.8rem">🔧 ${Array.from(ws.works).map(escapeHtml).join(', ')}</div></div>`;
   });
   html+='</div>';
   $('reportResult').innerHTML=html;
@@ -1735,7 +1693,7 @@ function generateObjectsReport(){
   if(!Object.keys(objectStats).length){ $('reportResult').innerHTML='<div class="empty-state">Нет данных</div>'; $('reportExports').style.display='none'; return; }
   let html='<div class="card"><div class="card-title">📍 Отчёт по объектам</div><table class="report-table"><tr><th>Объект</th><th>Работ</th><th>Людей</th><th>Объём</th><th>Норма чел-ч</th></tr>';
   Object.values(objectStats).sort((a,b)=>b.volume-a.volume).forEach(os=>{
-    html+=`<tr><td><b>${escapeHtml(os.name)}</b></td><td>${os.works}</td><td>${os.people}</td><td>${os.volume.toFixed(2)}</td><td>${os.hours.toFixed(1)}</td></tr>`;
+    html+=`<td><td class="text-success"><b>${escapeHtml(os.name)}</b></td><td>${os.works}</td><td>${os.people}</td><td>${os.volume.toFixed(2)}</td><td>${os.hours.toFixed(1)}</td></tr>`;
   });
   html+='</table></div>';
   $('reportResult').innerHTML=html;
@@ -1839,46 +1797,39 @@ function generateS29Doc(){
   wb.xlsx.writeBuffer().then(buf=>{ let blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}); let a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='С-29_'+month+'.xlsx'; a.click(); URL.revokeObjectURL(a.href); });
 }
 
-// НОВЫЙ ОТЧЁТ: Стоимость эксплуатации машин и механизмов (по образцу ведомости №426)
 function generateMachinesCost(){
   let from=$('machFrom').value, to=$('machTo').value;
   if(!from||!to){ showToast('Выберите период'); return; }
   let filtered=entries.filter(e=>e.date>=from && e.date<=to);
-  let machineHours={}; // ключ: id инструмента, значение: {name, hours, machineCostPerHour, totalCost, salaryHour, totalSalary}
+  let machineHours={};
   filtered.forEach(e=>{
     e.squads?.forEach(sq=>{
       sq.works?.forEach(w=>{
         let toolId = w.toolId;
         if(!toolId) return;
-        let tool = tools.find(t=>t.id == toolId);
+        let tool = tools.find(t=>t.id==toolId);
         if(!tool) return;
-        let hours = w.toolHours || 0;
+        let hours = w.toolHours||0;
         if(hours<=0) return;
-        if(!machineHours[toolId]) {
-          machineHours[toolId] = {
-            name: tool.name,
-            hours: 0,
-            machineCostPerHour: tool.machineCostPerHour || 0,
-            salaryHour: tool.salaryPerHour || 0
-          };
+        if(!machineHours[toolId]){
+          machineHours[toolId]={name:tool.name, hours:0, machineCostPerHour:tool.machineCostPerHour||0, salaryPerHour:tool.salaryPerHour||0};
         }
         machineHours[toolId].hours += hours;
       });
     });
   });
   let machinesArray = Object.values(machineHours);
-  if(machinesArray.length===0){ $('machinesResult').innerHTML='<div class="empty-state">За выбранный период нет данных по работе машин/инструментов</div>'; return; }
-  let totalCost = 0, totalSalary = 0;
-  let html=`<table class="report-table"><thead><tr><th>№ п/п</th><th>Наименование машин и механизмов</th><th>Количество (маш.-ч)</th><th>Стоимость за 1 маш.-ч, руб.</th><th>Всего, руб.</th></tr></thead><tbody>`;
+  if(machinesArray.length===0){ $('machinesResult').innerHTML='<div class="empty-state">Нет данных за период</div>'; return; }
+  let totalCost=0, totalSalary=0;
+  let html=`<table class="report-table"><thead><tr><th>№</th><th>Наименование машин и механизмов</th><th>Количество (маш.-ч)</th><th>Стоимость за 1 маш.-ч, руб.</th><th>Всего, руб.</th></tr></thead><tbody>`;
   machinesArray.sort((a,b)=>a.name.localeCompare(b.name)).forEach((m,idx)=>{
     let cost = m.machineCostPerHour * m.hours;
-    let salary = m.salaryHour * m.hours;
-    totalCost += cost;
-    totalSalary += salary;
-    html+=`<tr><td>${idx+1}</td><td>${escapeHtml(m.name)}</td><td>${m.hours.toFixed(2)}</td><td>${m.machineCostPerHour.toFixed(2)}</td><td>${cost.toFixed(2)}</td></tr>`;
+    let salary = (m.salaryPerHour||0) * m.hours;
+    totalCost+=cost; totalSalary+=salary;
+    html+=`<tr><td>${idx+1}</td><td class="text-info">${escapeHtml(m.name)}</td><td>${m.hours.toFixed(2)}</td><td>${m.machineCostPerHour.toFixed(2)}</td><td>${cost.toFixed(2)}</td></tr>`;
   });
   html+=`<tr style="font-weight:bold;background:var(--bg)"><td colspan="4">Итого</td><td>${totalCost.toFixed(2)}</td></tr>`;
-  html+=`<tr><td colspan="5"><div style="margin-top:8px;font-size:.8rem;color:var(--text-secondary)">* в том числе заработная плата машинистов: <b>${totalSalary.toFixed(2)} руб.</b></div></td></tr>`;
+  html+=`<tr><td colspan="5"><div class="text-secondary" style="margin-top:8px">* в том числе заработная плата машинистов: <b>${totalSalary.toFixed(2)} руб.</b></div></td></tr>`;
   html+=`</tbody></table>`;
   $('machinesResult').innerHTML=html;
 }
@@ -1886,22 +1837,22 @@ function generateMachinesCost(){
 function renderCatalogs(){
   let search=$('catSearch')?.value.trim().toLowerCase()||'';
   let wHtml=workers.filter(w=>!search||w.name.toLowerCase().includes(search)).map((w,i)=>{
-    return `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b><div class="text-secondary" style="font-size:.8rem">${(CATEGORIES[w.category]||CATEGORIES.other).name}${w.grade?', разр.'+w.grade:''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('worker',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker',${i})">🗑️</button></div></div>`;
+    return `<div class="catalog-item"><div><b class="text-primary">${escapeHtml(w.name)}</b><div class="text-secondary" style="font-size:.8rem">${(CATEGORIES[w.category]||CATEGORIES.other).name}${w.grade?', разр.'+w.grade:''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('worker',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('worker',${i})">🗑️</button></div></div>`;
   }).join('')||'<div class="empty-state">Нет работников</div>';
   $('workersCatalogList').innerHTML=wHtml;
   
   let woHtml=works.filter(w=>!search||w.name.toLowerCase().includes(search)).map((w,i)=>{
-    return `<div class="catalog-item"><div><b>${escapeHtml(w.name)}</b><div class="text-secondary" style="font-size:.8rem">${w.unit||'ед.'} | Норма: ${w.laborCost||0} чел-ч | Расценка: ${w.directCost||0} руб.</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('work',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work',${i})">🗑️</button></div></div>`;
+    return `<div class="catalog-item"><div><b class="text-info">${escapeHtml(w.name)}</b><div class="text-secondary" style="font-size:.8rem">${w.unit||'ед.'} | Норма: ${w.laborCost||0} чел-ч | Расценка: ${w.directCost||0} руб.</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('work',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('work',${i})">🗑️</button></div></div>`;
   }).join('')||'<div class="empty-state">Нет видов работ</div>';
   $('worksCatalogList').innerHTML=woHtml;
   
   let tHtml=tools.filter(t=>!search||t.name.toLowerCase().includes(search)).map((t,i)=>{
-    return `<div class="catalog-item"><div><b>${escapeHtml(t.name)}</b><div class="text-secondary" style="font-size:.8rem">Расход: ${t.fuelConsumption||0} л/ч | Стоимость маш.-ч: ${t.machineCostPerHour||0} руб.${t.salaryPerHour?` (з/п: ${t.salaryPerHour} руб/ч)` : ''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('tool',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool',${i})">🗑️</button></div></div>`;
+    return `<div class="catalog-item"><div><b class="text-accent">${escapeHtml(t.name)}</b><div class="text-secondary" style="font-size:.8rem">Расход: ${t.fuelConsumption||0} л/ч | Стоимость маш.-ч: ${t.machineCostPerHour||0} руб.${t.salaryPerHour?` (з/п: ${t.salaryPerHour} руб/ч)` : ''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('tool',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('tool',${i})">🗑️</button></div></div>`;
   }).join('')||'<div class="empty-state">Нет инструментов</div>';
   $('toolsCatalogList').innerHTML=tHtml;
   
   let rHtml=roads.filter(r=>!search||r.name.toLowerCase().includes(search)).map((r,i)=>{
-    return `<div class="catalog-item"><div><b>${escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${r.length?r.length+' км':''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${i})">🗑️</button></div></div>`;
+    return `<div class="catalog-item"><div><b class="text-success">${escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${r.length?r.length+' км':''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${i})">🗑️</button></div></div>`;
   }).join('')||'<div class="empty-state">Нет дорог</div>';
   $('roadsCatalogList').innerHTML=rHtml;
   
@@ -2044,13 +1995,13 @@ function setTaskFilter(type,btn){
 }
 
 function renderStock(){
-  let oHtml=stockOrder.map((s,i)=>`<div class="tmc-row"><div><b>${escapeHtml(s.name)}</b><div class="text-secondary" style="font-size:.8rem">${s.unit||''}</div></div><div style="display:flex;align-items:center;gap:8px"><b>${s.qty.toFixed(2)}</b><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockQty('order',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStock('order',${i})">🗑️</button></div></div></div>`).join('')||'<div class="empty-state">Склад пуст</div>';
+  let oHtml=stockOrder.map((s,i)=>`<div class="tmc-row"><div><b class="text-primary">${escapeHtml(s.name)}</b><div class="text-secondary" style="font-size:.8rem">${s.unit||''}</div></div><div style="display:flex;align-items:center;gap:8px"><b>${s.qty.toFixed(2)}</b><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockQty('order',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStock('order',${i})">🗑️</button></div></div></div>`).join('')||'<div class="empty-state">Склад пуст</div>';
   $('orderStockList').innerHTML=oHtml;
   
-  let mHtml=stockManual.map((s,i)=>`<div class="tmc-row"><div><b>${escapeHtml(s.name)}</b><div class="text-secondary" style="font-size:.8rem">${s.unit||''} | ${s.qty.toFixed(2)} ${s.unit||''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockQty('manual',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStock('manual',${i})">🗑️</button></div></div>`).join('')||'<div class="empty-state">Склад пуст</div>';
+  let mHtml=stockManual.map((s,i)=>`<div class="tmc-row"><div><b class="text-primary">${escapeHtml(s.name)}</b><div class="text-secondary" style="font-size:.8rem">${s.unit||''} | ${s.qty.toFixed(2)} ${s.unit||''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockQty('manual',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStock('manual',${i})">🗑️</button></div></div>`).join('')||'<div class="empty-state">Склад пуст</div>';
   $('manualStockList').innerHTML=mHtml;
   
-  let hHtml=load(STORAGE_KEYS.stockManual+'_history',[]).map(h=>`<div style="font-size:.8rem;padding:4px 0;border-bottom:1px dashed var(--border)">${formatDate(h.date)} — <b>${escapeHtml(h.name)}</b>: ${h.qty>0?'+':''}${h.qty} ${h.unit||''} <span class="text-secondary">${h.note||''}</span></div>`).join('')||'<div class="empty-state">Нет операций</div>';
+  let hHtml=load(STORAGE_KEYS.stockManual+'_history',[]).map(h=>`<div style="font-size:.8rem;padding:4px 0;border-bottom:1px dashed var(--border)">${formatDate(h.date)} — <b class="text-info">${escapeHtml(h.name)}</b>: ${h.qty>0?'+':''}${h.qty} ${h.unit||''} <span class="text-secondary">${h.note||''}</span></div>`).join('')||'<div class="empty-state">Нет операций</div>';
   $('manualStockHistory').innerHTML=hHtml;
 }
 
@@ -2167,68 +2118,7 @@ function exportNormsTemplate(){
   downloadFile(JSON.stringify(template,null,2),'norms_template.json','application/json');
 }
 
-// Инициализация начальных данных (только если хранилище пустое) с актуальными расценками
-function initDefaultData(){
-  if(works.length===0){
-    works = [
-      { id: 100, name: "Срезание кустарника кусторезом со сбором", unit: "1000 м²", laborCost: 18.2, directCost: 280.18, toolCost: 0 },
-      { id: 101, name: "Срезание кустарника и деревьев Ø до 120 мм со сбором", unit: "1000 м²", laborCost: 21.6, directCost: 334.06, toolCost: 0 },
-      { id: 102, name: "Обрезка крон деревьев Ø до 100 мм", unit: "крона", laborCost: 0.23, directCost: 4.02, toolCost: 0 },
-      { id: 103, name: "Обрезка крон деревьев Ø 100-150 мм", unit: "крона", laborCost: 0.39, directCost: 6.81, toolCost: 0 },
-      { id: 104, name: "Обрезка крон деревьев Ø 150-200 мм", unit: "крона", laborCost: 0.50, directCost: 8.74, toolCost: 0 },
-      { id: 105, name: "Обрезка крон деревьев Ø 200-250 мм", unit: "крона", laborCost: 0.71, directCost: 12.41, toolCost: 0 },
-      { id: 106, name: "Обрезка крон деревьев Ø 250-400 мм", unit: "крона", laborCost: 0.95, directCost: 16.60, toolCost: 0 },
-      { id: 107, name: "Валка и разделка деревьев Ø до 20 см", unit: "10 деревьев", laborCost: 6.6, directCost: 84.97, toolCost: 0 },
-      { id: 108, name: "Валка и разделка деревьев Ø 30-40 см", unit: "10 деревьев", laborCost: 12.93, directCost: 166.46, toolCost: 0 },
-      { id: 109, name: "Разделка упавших деревьев Ø до 20 см", unit: "10 деревьев", laborCost: 5.94, directCost: 76.47, toolCost: 0 },
-      { id: 110, name: "Сжигание порубочных остатков", unit: "10 плот. м³", laborCost: 0, directCost: 4.88, toolCost: 0 },
-      { id: 111, name: "Уборка мусора с дороги вручную", unit: "км", laborCost: 2.1, directCost: 26.29, toolCost: 0 },
-      { id: 112, name: "Перевозка грузов трактором с прицепом", unit: "т", laborCost: 0, directCost: 58.49, toolCost: 0 }
-    ];
-    save(STORAGE_KEYS.works,works);
-  }
-  if(tools.length===0){
-    tools = [
-      { id: 1, name: "Кусторез Husqvarna 343R", fuelConsumption: 0.8, machineCostPerHour: 7.27, salaryPerHour: 0 },
-      { id: 2, name: "Бензопила Husqvarna", fuelConsumption: 0.6, machineCostPerHour: 3.94, salaryPerHour: 0 },
-      { id: 3, name: "Трактор колесный 96 кВт", fuelConsumption: 5.5, machineCostPerHour: 58.49, salaryPerHour: 18.67 },
-      { id: 4, name: "Автомобиль-самосвал 10 т", fuelConsumption: 8.0, machineCostPerHour: 37.97, salaryPerHour: 19.91 }
-    ];
-    save(STORAGE_KEYS.tools,tools);
-  }
-  if(roads.length===0){
-    roads = [
-      { id: 1, name: "а/д ПУ-3", length: 45.2 },
-      { id: 2, name: "Н-6002", length: 32.0 },
-      { id: 3, name: "Н-6270", length: 28.5 },
-      { id: 4, name: "Н-6380", length: 15.0 }
-    ];
-    save(STORAGE_KEYS.roads,roads);
-  }
-  if(tmc.length===0){
-    tmc = [
-      { id: 1, name: "Бензин АИ-92", unit: "л", price: 55.0 },
-      { id: 2, name: "Дизельное топливо", unit: "л", price: 58.0 },
-      { id: 3, name: "Моторное масло 2Т", unit: "л", price: 450.0 }
-    ];
-    save(STORAGE_KEYS.tmc,tmc);
-  }
-  if(stockOrder.length===0){
-    stockOrder = tmc.map(t=>({...t, qty: 100}));
-    save(STORAGE_KEYS.stockOrder,stockOrder);
-  }
-  if(workers.length===0){
-    workers = [
-      { name: "Иванов А.П.", category: "road", grade: 5 },
-      { name: "Петров В.С.", category: "road", grade: 4 },
-      { name: "Сидоров К.М.", category: "tractor", grade: 6 }
-    ];
-    save(STORAGE_KEYS.workers,workers);
-  }
-}
-
 function init(){
-  checkStorage();
   loadAll();
   initDefaultData();
   applyTheme();
@@ -2251,37 +2141,6 @@ function init(){
   renderCalendar();
   renderRoadSelector();
   if(!loadDraft()) addSquad();
-
-  if(!storageAvailable){
-    setTimeout(()=>showToast('⚠️ Локальное хранилище недоступно! Данные не будут сохраняться между сессиями. Используйте Экспорт.'), 1500);
-  }
-
-  // Автосохранение черновика каждые 10 секунд
-  setInterval(function(){
-    if(formSquads.length > 0 && editingEntryIndex < 0){
-      saveDraft();
-    }
-  }, 10000);
-
-  // Форсированное сохранение при закрытии/обновлении вкладки
-  window.addEventListener('beforeunload', function(){
-    if(formSquads.length > 0 && editingEntryIndex < 0){
-      saveDraft();
-    }
-    save(STORAGE_KEYS.entries, entries);
-    save(STORAGE_KEYS.workers, workers);
-    save(STORAGE_KEYS.works, works);
-    save(STORAGE_KEYS.tools, tools);
-    save(STORAGE_KEYS.tmc, tmc);
-    save(STORAGE_KEYS.tasks, tasks);
-    save(STORAGE_KEYS.settings, settings);
-    save(STORAGE_KEYS.roads, roads);
-    save(STORAGE_KEYS.stockOrder, stockOrder);
-    save(STORAGE_KEYS.stockManual, stockManual);
-    save(STORAGE_KEYS.templates, templates);
-    save(STORAGE_KEYS.tsOverrides, timesheetOverrides);
-    save(STORAGE_KEYS.tsLetters, timesheetLetters);
-  });
 }
 
 return {
