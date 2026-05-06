@@ -219,21 +219,86 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   .week-day-card{min-width:60px}
 }
 
-/* FIX: Тёмная тема для важных задач */
-.dark-mode .task-item.important{background:rgba(198,40,40,.22);color:var(--text)}
-/* FIX: Тёмная тема для задач в календаре */
+/* FIX: Тёмная тема */
+.dark-mode .task-item.important{background:rgba(198,40,40,.22);color:#fff}
+.dark-mode .task-item{background:#1e1e1e;border-color:#333}
 .dark-mode .calendar-day.has-task{background:#e65100;color:#fff}
-/* FIX: Тёмная тема для недельного вида */
 .dark-mode .week-day-card.has-task{background:#e65100;color:#fff}
 .dark-mode .week-day-card.has-entry{background:#1565c0;color:#fff}
 .dark-mode .week-day-card.important{background:#c62828;color:#fff}
-/* FIX: Тёмная тема для истории км */
-.dark-mode .km-history-item.multi{background:rgba(21,101,192,.22)}
-/* FIX: Тёмная тема для тегов объектов */
-.dark-mode .object-tag{background:rgba(46,125,50,.25);color:#81c784;border-color:#2e7d32}
-/* FIX: Тёмная тема для людей */
+.dark-mode .object-tag{background:rgba(46,125,50,.25);color:#a5d6a7;border-color:#2e7d32}
 .dark-mode .people-tag{background:rgba(21,101,192,.25);color:#90caf9}
 .dark-mode .people-tag.support{background:rgba(255,111,0,.25);color:#ffcc80}
+.dark-mode .km-history-item.multi{background:rgba(21,101,192,.22)}
+.dark-mode .preview-item{background:rgba(21,101,192,.15)}
+.dark-mode .road-block{background:#1a1a1a;border-color:#333}
+.dark-mode .plan-box{background:#1a1a1a;border-color:#333}
+.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
+.dark-mode .timesheet-table td:first-child{background:#1e1e1e}
+.dark-mode .norm-badge.ok{background:rgba(46,125,50,.25);color:#a5d6a7}
+.dark-mode .norm-badge.warn{background:rgba(255,111,0,.25);color:#ffcc80}
+.dark-mode .norm-badge.bad{background:rgba(198,40,40,.25);color:#ef9a9a}
+.dark-mode .squad-card{background:#1e1e1e;border-color:var(--primary)}
+.dark-mode .month-group{background:#1e1e1e;border-color:#333}
+.dark-mode .entry-item{background:#1e1e1e;border-color:#333}
+.dark-mode .entry-meta-line span{background:#2a2a2a}
+.dark-mode .worker-report-card{background:#1e1e1e}
+.dark-mode .catalog-item{border-color:#333}
+.dark-mode .catalog-actions{background:#1e1e1e;border-color:#333}
+.dark-mode .tmc-row{border-color:#333}
+.dark-mode .stock-panel .card{background:#1e1e1e}
+.dark-mode .subtab{background:#1e1e1e;border-color:#333;color:var(--text)}
+.dark-mode .filter-chip{background:#1e1e1e;border-color:#444}
+.dark-mode .search-box{background:#1e1e1e;border-color:#444}
+.dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:#1e1e1e;border-color:#444}
+.dark-mode .btn-secondary{background:#2a2a2a;border-color:#444}
+.dark-mode .close-modal{background:#2a2a2a}
+.dark-mode .empty-state{color:#888}
+.dark-mode .hint{color:#aaa}
+.dark-mode .text-secondary{color:#aaa}
+
+.fab-top{position:fixed;bottom:100px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:150;cursor:pointer;font-size:1.3rem}
+.fab-top.show{display:flex}
+
+.ptr-indicator{position:fixed;top:0;left:0;right:0;height:60px;background:var(--primary);color:#fff;display:none;align-items:center;justify-content:center;z-index:250;font-size:.9rem;font-weight:600;transform:translateY(-100%);transition:transform .2s}
+.ptr-indicator.show{display:flex;transform:translateY(0)}
+
+.cal-badge{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:.55rem;padding:1px 4px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;min-width:14px}
+.dark-mode .cal-badge{background:#ff5252}
+
+.nav-btn{position:relative;transition:all .2s}
+.nav-btn::after{content:"";position:absolute;bottom:0;left:25%;right:25%;height:3px;background:var(--primary);border-radius:3px 3px 0 0;transform:scaleX(0);transition:transform .2s}
+.nav-btn.active::after{transform:scaleX(1)}
+
+.page{animation:fadeIn .35s cubic-bezier(.4,0,.2,1)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal{transform:scale(.95);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.modal-overlay.active .modal{transform:scale(1);opacity:1}
+
+@media(max-width:380px){
+  .app-header h1{font-size:1rem}
+  .kpi-item{padding:8px 4px}
+  .kpi-value{font-size:1.1rem}
+  .nav-btn{font-size:.6rem}
+  .nav-btn svg{width:20px;height:20px}
+}
+
+.timesheet-wrap{scrollbar-width:thin;scrollbar-color:var(--primary) transparent}
+.timesheet-wrap::-webkit-scrollbar{height:6px}
+.timesheet-wrap::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
+
+/* FIX: Недельный вид — текст на персиковых карточках */
+.week-day-card.has-task .week-day-info{color:var(--text);font-weight:500}
+.dark-mode .week-day-card.has-task .week-day-info{color:#fff}
+.week-day-card.has-task .week-day-name{color:var(--text);opacity:.8}
+.dark-mode .week-day-card.has-task .week-day-name{color:#fff;opacity:.9}
+.week-day-card.has-task .week-day-num{color:var(--text)}
+.dark-mode .week-day-card.has-task .week-day-num{color:#fff}
+
+.timesheet-table tfoot td{background:var(--primary);color:#fff;font-weight:700;border-color:rgba(255,255,255,.2)}
+.dark-mode .timesheet-table tfoot td{background:#1565c0}
+.timesheet-table tfoot td:first-child{background:var(--primary)!important}
+.dark-mode .timesheet-table tfoot td:first-child{background:#1565c0!important}
 </style>
 <base target="_blank">
 <base target="_blank">
@@ -241,6 +306,8 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <base target="_blank">
 </head>
 <body>
+<button class="fab-top" id="fabTop">↑</button>
+<div class="ptr-indicator" id="ptrIndicator">⬇️ Отпустите для обновления</div>
 
 <div class="offline-badge" id="offlineBadge">📴 Офлайн-режим</div>
 <div class="save-indicator" id="saveIndicator">💾 Сохранено</div>
@@ -278,7 +345,10 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     </div>
   </div>
 
-  <input type="text" class="search-box" id="journalSearch" placeholder="🔍 Поиск: объект, работник, дата..." oninput="App.renderEntries()">
+  <div style="position:relative;margin-bottom:12px">
+  <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;opacity:.6;pointer-events:none">🔍</span>
+  <input type="text" class="search-box" id="journalSearch" placeholder="Поиск: объект, работник, дата..." oninput="App.renderEntries()" style="padding-left:42px">
+</div>
   <div class="filter-bar">
     <button class="filter-chip active" onclick="App.setFilter('all',this)">Все</button>
     <button class="filter-chip" onclick="App.setFilter('today',this)">Сегодня</button>
@@ -315,7 +385,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <div class="form-group"><label>Погодные условия</label><input type="text" id="inpWeatherCond" placeholder="Ясно, дождь, снег..."></div>
       <div class="form-group"><label>Заметки</label><textarea id="inpNotes" placeholder="Дополнительные заметки..."></textarea></div>
     </div>
-    <button type="submit" class="btn btn-primary" id="btnSubmit" style="margin-bottom:12px">💾 Сохранить запись</button>
+    <button type="submit" class="btn btn-primary" id="btnSubmit" style="margin-bottom:12px;min-height:52px;font-size:1.05rem">💾 Сохранить запись</button>
     <button type="button" class="btn btn-secondary" onclick="App.cancelEdit()" id="btnCancelEdit" style="display:none">❌ Отменить редактирование</button>
     <button type="button" class="btn btn-secondary" onclick="App.clearForm()" id="btnClear" style="margin-top:8px">Очистить форму</button>
   </form>
@@ -554,9 +624,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
     <div id="dayModalContent"></div>
     <div class="row-btns" style="margin-top:16px">
-      <button class="btn btn-primary" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
-      <button class="btn btn-accent" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
-      <button class="btn btn-secondary" onclick="App.closeDayModal()">Закрыть</button>
+      <button class="btn btn-primary" style="min-height:48px;font-size:1.05rem" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
+      <button class="btn btn-accent" style="min-height:48px;font-size:1.05rem" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
+      <button class="btn btn-secondary" style="min-height:48px;font-size:1.05rem" onclick="App.closeDayModal()">Закрыть</button>
     </div>
   </div>
 </div>
@@ -1041,7 +1111,14 @@ function renderMonthView(container){
     if(hasTask && (currentFilter==='plan' || currentFilter==='all')) cls+=' has-task';
     if(currentFilter==='important' && !hasImportant) cls='calendar-day';
     if(currentFilter==='plan' && !hasTask && !dayEntries.some(e=>e.squads?.some(s=>s.planTomorrow))) cls='calendar-day';
-    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
+    let badgeHtml="";
+    let entryCount=dayEntries.length;
+    let taskCount=tasks.filter(t=>t.date===ds && !t.done).length;
+    if(entryCount>0 || taskCount>0){
+      let total=entryCount+taskCount;
+      badgeHtml=`<span class="cal-badge">${total>9?"9+":total}</span>`;
+    }
+    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}${badgeHtml}</div>`;
   }
   html+='</div>';
   container.innerHTML=html;
@@ -1664,7 +1741,14 @@ function renderCalendar(){
     else if(hasImportant) cls+=' important-day';
     else if(dayEntries.length) cls+=' has-entry';
     if(hasTask) cls+=' has-task';
-    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}</div>`;
+    let badgeHtml="";
+    let entryCount=dayEntries.length;
+    let taskCount=tasks.filter(t=>t.date===ds && !t.done).length;
+    if(entryCount>0 || taskCount>0){
+      let total=entryCount+taskCount;
+      badgeHtml=`<span class="cal-badge">${total>9?"9+":total}</span>`;
+    }
+    html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">${d}${badgeHtml}</div>`;
   }
   $('calendarGrid2').innerHTML=html;
 }
@@ -1762,7 +1846,7 @@ function renderTimesheet(){
   
   let html='<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>ФИО</th>';
   for(let d=1;d<=daysInMonth;d++) html+=`<th>${d}</th>`;
-  html+='<th>Итого</th></tr></thead><tbody>';
+  html+='<th>Дни</th><th>Итого</th></tr></thead><tbody>';
   workersList.forEach(dw=>{
     html+=`<tr><td>${escapeHtml(dw.name)}</td>`;
     for(let d=1;d<=daysInMonth;d++){
@@ -1775,9 +1859,23 @@ function renderTimesheet(){
       else if(dw.days[d]) cls+=' text-primary';
       html+=`<td class="${cls}" onclick="App.editTimesheetCell('${jsAttr(dw.name)}',${d},this)">${display!==undefined&&display!==null?display:''}<button class="ts-clear-btn" onclick="event.stopPropagation();App.clearTimesheetCell('${jsAttr(dw.name)}',${d})">×</button></td>`;
     }
-    html+=`<td><b>${dw.total}</b></td></tr>`;
+    let daysWorked=Object.values(dw.days).filter(v=>typeof v==='number' && v>0).length;
+  html+=`<td><b>${daysWorked}</b></td><td><b>${dw.total}</b></td></tr>`;
   });
-  html+='</tbody></table></div>';
+  html+='</tbody>';
+  // Итоговая строка
+  let grandTotal=workersList.reduce((s,w)=>s+w.total,0);
+  let grandDays=workersList.reduce((s,w)=>{
+    return s+Object.values(w.days).filter(v=>typeof v==='number' && v>0).length;
+  },0);
+  html+=`<tfoot><tr style="background:var(--primary);color:#fff;font-weight:700">
+    <td style="text-align:left;padding-left:10px">ВСЕГО</td>`;
+  for(let d=1;d<=daysInMonth;d++){
+    let dayTotal=workersList.reduce((s,w)=>s+(typeof w.days[d]==='number'?w.days[d]:0),0);
+    html+=`<td>${dayTotal>0?dayTotal:''}</td>`;
+  }
+  html+=`<td>${grandDays}</td><td>${grandTotal}</td></tr></tfoot>`;
+  html+='</table></div>';
   $('timesheetResult').innerHTML=html;
   $('tsControls').style.display='flex';
 }
@@ -2477,6 +2575,50 @@ async function init(){
   setTimeout(() => {
     showStorageStatus();
   }, 1000);
+
+  // FAB — показ/скрытие
+  (function(){
+    let fab=document.getElementById("fabTop");
+    if(!fab) return;
+    window.addEventListener("scroll", function(){
+      if(window.scrollY > 400) fab.classList.add("show");
+      else fab.classList.remove("show");
+    }, {passive:true});
+    fab.addEventListener("click", function(){
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+  })();
+
+
+  // Pull-to-refresh для мобильных
+  (function(){
+    let startY=0, isPulling=false;
+    let ptr=document.getElementById("ptrIndicator");
+    if(!ptr) return;
+    document.addEventListener("touchstart", function(e){
+      if(window.scrollY <= 5) { startY=e.touches[0].clientY; isPulling=true; }
+    }, {passive:true});
+    document.addEventListener("touchmove", function(e){
+      if(!isPulling) return;
+      let diff=e.touches[0].clientY - startY;
+      if(diff > 60 && diff < 200){
+        ptr.style.transform = "translateY(" + Math.min(diff-60, 0) + "px)";
+        ptr.classList.add("show");
+      }
+    }, {passive:true});
+    document.addEventListener("touchend", function(e){
+      if(!isPulling) return;
+      let diff=e.changedTouches[0].clientY - startY;
+      ptr.classList.remove("show");
+      ptr.style.transform = "";
+      isPulling=false;
+      if(diff > 120){
+        showToast("🔄 Обновление...");
+        setTimeout(function(){ location.reload(); }, 400);
+      }
+    }, {passive:true});
+  })();
+
 }
 
 return {
