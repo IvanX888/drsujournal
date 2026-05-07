@@ -248,6 +248,11 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .tmc-row{border-color:#333}
 .dark-mode .stock-panel .card{background:#1e1e1e}
 .dark-mode .subtab{background:#1e1e1e;border-color:#333;color:var(--text)}
+
+/* Tactile feedback */
+.nav-btn:active,.filter-chip:active,.subtab:active,.calendar-day:active,.week-day-card:active,.entry-item:active,.month-header:active{transform:scale(0.97);opacity:0.85}
+.nav-btn,.filter-chip,.subtab,.calendar-day,.week-day-card,.entry-item,.month-header{transition:transform .1s,opacity .1s,background .2s,box-shadow .2s}
+.filter-chip,.subtab,.week-day-card{cursor:pointer}
 .dark-mode .filter-chip{background:#1e1e1e;border-color:#444}
 .dark-mode .search-box{background:#1e1e1e;border-color:#444}
 .dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:#1e1e1e;border-color:#444}
@@ -1578,7 +1583,7 @@ function renderEntries(){
         let normBadge=`<span class="norm-badge ${normInfo.statusClass}">${normInfo.statusText} | ${normInfo.pct.toFixed(0)}%</span>`;
         daysHtml+=`<div class="entry-item ${e.important?'important':''}" id="ent_${idx}" onclick="App.toggleEntry(${idx})">
           <div class="entry-header"><div><div class="entry-object">${allObjects.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div><div class="entry-meta-line">${normBadge}<span>${formatDate(e.date)}</span><span>👷 ${allPeople}</span>${e.weather?`<span>🌡️ ${escapeHtml(e.weather)}</span>`:''}</div></div><div class="entry-toggle-icon">▼</div></div>
-          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
+          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
       });
       daysHtml+=`</div>`;
     });
@@ -1766,7 +1771,7 @@ function showDayDetails(date){
       let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
       html+=`<div class="entry-item" style="margin-bottom:8px" onclick="this.classList.toggle('expanded')">
         <div class="entry-header"><div><div class="entry-object">${objs.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div></div><div class="entry-toggle-icon">▼</div></div>
-        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
+        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
       </div>`;
     });
   }
@@ -1881,7 +1886,6 @@ function editTimesheetCell(name,day,td){
   $('tsEditWorker').value=name;
   let d=new Date($('tsMonth').value+'-'+String(day).padStart(2,'0'));
   $('tsEditDate').value=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
-  // Find current value from entries (source of truth)
   let month=$('tsMonth').value;
   let entryHours=0;
   let foundInEntry=false;
@@ -1905,11 +1909,9 @@ function editTimesheetCell(name,day,td){
   else if(overrideVal!==undefined) html+='<br><span class="text-accent">📝 Табель (корр.): <b>'+overrideVal+'</b> ч</span>';
   $('tsEditCurrent').innerHTML=html;
   $('tsEditValue').value=displayVal!==undefined&&displayVal!==null?displayVal:'';
-  // Default mode: if found in entry, suggest sync mode; else tsOnly
   let radios=document.getElementsByName('tsEditMode');
-  radios.forEach(r=>r.checked=(r.value==='tsOnly'));
+  for(let r of radios) r.checked=(r.value==='tsOnly');
   $('tsEditWarn').style.display='none';
-  // Show modal
   modal.classList.add('active');
   setTimeout(()=>$('tsEditValue').focus(),100);
 }
@@ -1926,7 +1928,6 @@ function saveTsEdit(){
   } else {
     let n=parseFloat(v); if(!isNaN(n)){ timesheetOverrides[tsEditCurrentKey]=n; delete timesheetLetters[tsEditCurrentKey]; }
   }
-  // Sync with entries if requested
   if(mode==='tsAndEntry' && !isNaN(parseFloat(v))){
     let newHours=parseFloat(v);
     let month=$('tsMonth').value;
@@ -2636,13 +2637,6 @@ async function init(){
         saveDraft();
       }
       await saveAllData();
-    }
-  });
-
-  // Show/hide warning when mode changes
-  document.addEventListener('change', function(e){
-    if(e.target.name==='tsEditMode'){
-      let warn=$('tsEditWarn'); if(warn) warn.style.display=e.target.value==='tsAndEntry'?'block':'none';
     }
   });
 
