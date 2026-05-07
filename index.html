@@ -248,6 +248,11 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .tmc-row{border-color:#333}
 .dark-mode .stock-panel .card{background:#1e1e1e}
 .dark-mode .subtab{background:#1e1e1e;border-color:#333;color:var(--text)}
+
+/* Tactile feedback */
+.nav-btn:active,.filter-chip:active,.subtab:active,.calendar-day:active,.week-day-card:active,.entry-item:active,.month-header:active{transform:scale(0.97);opacity:0.85}
+.nav-btn,.filter-chip,.subtab,.calendar-day,.week-day-card,.entry-item,.month-header{transition:transform .1s,opacity .1s,background .2s,box-shadow .2s}
+.filter-chip,.subtab,.week-day-card{cursor:pointer}
 .dark-mode .filter-chip{background:#1e1e1e;border-color:#444}
 .dark-mode .search-box{background:#1e1e1e;border-color:#444}
 .dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:#1e1e1e;border-color:#444}
@@ -300,6 +305,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .timesheet-table tfoot td:first-child{background:var(--primary)!important}
 .dark-mode .timesheet-table tfoot td:first-child{background:#1565c0!important}
 </style>
+<base target="_blank">
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
@@ -1061,9 +1067,10 @@ function renderWeekView(container){
     if(hasImportant) cls+=' important';
     else if(dayEntries.length) cls+=' has-entry';
     if(dayTasks.length) cls+=' has-task';
+    let monthLabel = cd.toLocaleDateString('ru-RU',{month:'short'}).replace('.','');
     html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">
       <div class="week-day-name">${dayNames[i]}</div>
-      <div class="week-day-num">${cd.getDate()}</div>
+      <div class="week-day-num">${cd.getDate()}<span style="font-size:.65rem;opacity:.7;display:block;margin-top:-2px">${monthLabel}</span></div>
       <div class="week-day-info">
         ${dayEntries.length?`<span class="text-primary">📋 ${dayEntries.length}</span><br>`:''}
         ${dayTasks.length?`<span class="text-accent">📌 ${dayTasks.length}</span>`:''}
@@ -1576,7 +1583,7 @@ function renderEntries(){
         let normBadge=`<span class="norm-badge ${normInfo.statusClass}">${normInfo.statusText} | ${normInfo.pct.toFixed(0)}%</span>`;
         daysHtml+=`<div class="entry-item ${e.important?'important':''}" id="ent_${idx}" onclick="App.toggleEntry(${idx})">
           <div class="entry-header"><div><div class="entry-object">${allObjects.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div><div class="entry-meta-line">${normBadge}<span>${formatDate(e.date)}</span><span>👷 ${allPeople}</span>${e.weather?`<span>🌡️ ${escapeHtml(e.weather)}</span>`:''}</div></div><div class="entry-toggle-icon">▼</div></div>
-          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
+          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
       });
       daysHtml+=`</div>`;
     });
@@ -1764,7 +1771,7 @@ function showDayDetails(date){
       let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
       html+=`<div class="entry-item" style="margin-bottom:8px" onclick="this.classList.toggle('expanded')">
         <div class="entry-header"><div><div class="entry-object">${objs.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div></div><div class="entry-toggle-icon">▼</div></div>
-        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
+        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
       </div>`;
     });
   }
