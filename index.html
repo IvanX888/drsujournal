@@ -248,11 +248,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .tmc-row{border-color:#333}
 .dark-mode .stock-panel .card{background:#1e1e1e}
 .dark-mode .subtab{background:#1e1e1e;border-color:#333;color:var(--text)}
-
-/* Tactile feedback */
-.nav-btn:active,.filter-chip:active,.subtab:active,.calendar-day:active,.week-day-card:active,.entry-item:active,.month-header:active{transform:scale(0.97);opacity:0.85}
-.nav-btn,.filter-chip,.subtab,.calendar-day,.week-day-card,.entry-item,.month-header{transition:transform .1s,opacity .1s,background .2s,box-shadow .2s}
-.filter-chip,.subtab,.week-day-card{cursor:pointer}
 .dark-mode .filter-chip{background:#1e1e1e;border-color:#444}
 .dark-mode .search-box{background:#1e1e1e;border-color:#444}
 .dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:#1e1e1e;border-color:#444}
@@ -1067,10 +1062,9 @@ function renderWeekView(container){
     if(hasImportant) cls+=' important';
     else if(dayEntries.length) cls+=' has-entry';
     if(dayTasks.length) cls+=' has-task';
-    let monthLabel = cd.toLocaleDateString('ru-RU',{month:'short'}).replace('.','');
     html+=`<div class="${cls}" onclick="App.showDayDetails('${ds}')">
       <div class="week-day-name">${dayNames[i]}</div>
-      <div class="week-day-num">${cd.getDate()}<span style="font-size:.65rem;opacity:.7;display:block;margin-top:-2px">${monthLabel}</span></div>
+      <div class="week-day-num">${cd.getDate()}</div>
       <div class="week-day-info">
         ${dayEntries.length?`<span class="text-primary">📋 ${dayEntries.length}</span><br>`:''}
         ${dayTasks.length?`<span class="text-accent">📌 ${dayTasks.length}</span>`:''}
@@ -1583,7 +1577,7 @@ function renderEntries(){
         let normBadge=`<span class="norm-badge ${normInfo.statusClass}">${normInfo.statusText} | ${normInfo.pct.toFixed(0)}%</span>`;
         daysHtml+=`<div class="entry-item ${e.important?'important':''}" id="ent_${idx}" onclick="App.toggleEntry(${idx})">
           <div class="entry-header"><div><div class="entry-object">${allObjects.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div><div class="entry-meta-line">${normBadge}<span>${formatDate(e.date)}</span><span>👷 ${allPeople}</span>${e.weather?`<span>🌡️ ${escapeHtml(e.weather)}</span>`:''}</div></div><div class="entry-toggle-icon">▼</div></div>
-          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
+          <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-accent btn-small" onclick="event.stopPropagation();App.duplicateEntry(${idx})">📋</button><button class="btn btn-success btn-small" onclick="event.stopPropagation();App.exportEntryExcel(${idx})">📊 Excel</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div></div>`;
       });
       daysHtml+=`</div>`;
     });
@@ -1771,7 +1765,7 @@ function showDayDetails(date){
       let objs=[...new Set(e.squads?.flatMap(s=>s.objects||[])||[])];
       html+=`<div class="entry-item" style="margin-bottom:8px" onclick="this.classList.toggle('expanded')">
         <div class="entry-header"><div><div class="entry-object">${objs.map(escapeHtml).join(', ')}${e.important?' <span style="color:var(--danger)">🔴</span>':''}</div></div><div class="entry-toggle-icon">▼</div></div>
-        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.closeDayModal();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
+        <div class="entry-details">${renderEntryDetails(e)}<div class="row-btns" style="margin-top:8px"><button class="btn btn-edit btn-small" onclick="event.stopPropagation();App.editEntry(${idx})">✏️</button><button class="btn btn-danger btn-small" onclick="event.stopPropagation();App.deleteEntry(${idx})">🗑️</button></div></div>
       </div>`;
     });
   }
@@ -1878,22 +1872,89 @@ function renderTimesheet(){
   $('tsControls').style.display='flex';
 }
 
+let tsEditCurrentName='', tsEditCurrentDay=0, tsEditCurrentKey='';
+
 function editTimesheetCell(name,day,td){
-  let key=name+'|'+day;
-  let current=timesheetOverrides[key]!==undefined?timesheetOverrides[key]:(timesheetLetters[key]||'');
-  let inp=document.createElement('input');
-  inp.className='ts-edit-inp';
-  inp.value=current;
-  inp.onblur=function(){
-    let v=inp.value.trim().toUpperCase();
-    if(v===''||v==='0'){ delete timesheetOverrides[key]; delete timesheetLetters[key]; }
-    else if(LETTER_CODES[v]){ timesheetLetters[key]=v; delete timesheetOverrides[key]; }
-    else{ let n=parseFloat(v); if(!isNaN(n)){ timesheetOverrides[key]=n; delete timesheetLetters[key]; } }
-    saveAllData();
-    renderTimesheet();
-  };
-  inp.onkeydown=function(e){ if(e.key==='Enter'){ inp.blur(); } };
-  td.innerHTML=''; td.appendChild(inp); inp.focus();
+  tsEditCurrentName=name; tsEditCurrentDay=day; tsEditCurrentKey=name+'|'+day;
+  let modal=$('tsEditModal');
+  $('tsEditWorker').value=name;
+  let d=new Date($('tsMonth').value+'-'+String(day).padStart(2,'0'));
+  $('tsEditDate').value=d.toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'});
+  // Find current value from entries (source of truth)
+  let month=$('tsMonth').value;
+  let entryHours=0;
+  let foundInEntry=false;
+  entries.forEach(e=>{
+    if(!e.date.startsWith(month)) return;
+    let dNum=parseInt(e.date.slice(8),10);
+    if(dNum!==day) return;
+    e.squads?.forEach(sq=>{
+      sq.people?.forEach(p=>{
+        if(p.name===name){ entryHours=parseFloat(p.hours)||8; foundInEntry=true; }
+      });
+    });
+  });
+  let overrideVal=timesheetOverrides[tsEditCurrentKey];
+  let letterVal=timesheetLetters[tsEditCurrentKey];
+  let displayVal=letterVal!==undefined?letterVal:(overrideVal!==undefined?overrideVal:(foundInEntry?entryHours:''));
+  let html='';
+  if(foundInEntry) html+='<span class="text-primary">📄 Наряд: <b>'+entryHours+'</b> ч</span>';
+  else html+='<span class="text-secondary">📄 В наряде не найдено</span>';
+  if(letterVal) html+='<br><span class="text-accent">📝 Табель (буква): <b>'+letterVal+'</b> — '+LETTER_CODES[letterVal]+'</span>';
+  else if(overrideVal!==undefined) html+='<br><span class="text-accent">📝 Табель (корр.): <b>'+overrideVal+'</b> ч</span>';
+  $('tsEditCurrent').innerHTML=html;
+  $('tsEditValue').value=displayVal!==undefined&&displayVal!==null?displayVal:'';
+  // Default mode: if found in entry, suggest sync mode; else tsOnly
+  let radios=document.getElementsByName('tsEditMode');
+  radios.forEach(r=>r.checked=(r.value==='tsOnly'));
+  $('tsEditWarn').style.display='none';
+  // Show modal
+  modal.classList.add('active');
+  setTimeout(()=>$('tsEditValue').focus(),100);
+}
+
+function closeTsEditModal(){ $('tsEditModal').classList.remove('active'); tsEditCurrentName=''; tsEditCurrentDay=0; tsEditCurrentKey=''; }
+
+function saveTsEdit(){
+  let v=$('tsEditValue').value.trim().toUpperCase();
+  let mode=document.querySelector('input[name="tsEditMode"]:checked').value;
+  if(v===''||v==='0'){
+    delete timesheetOverrides[tsEditCurrentKey]; delete timesheetLetters[tsEditCurrentKey];
+  } else if(LETTER_CODES[v]){
+    timesheetLetters[tsEditCurrentKey]=v; delete timesheetOverrides[tsEditCurrentKey];
+  } else {
+    let n=parseFloat(v); if(!isNaN(n)){ timesheetOverrides[tsEditCurrentKey]=n; delete timesheetLetters[tsEditCurrentKey]; }
+  }
+  // Sync with entries if requested
+  if(mode==='tsAndEntry' && !isNaN(parseFloat(v))){
+    let newHours=parseFloat(v);
+    let month=$('tsMonth').value;
+    let dateStr=month+'-'+String(tsEditCurrentDay).padStart(2,'0');
+    let updated=false;
+    entries.forEach(e=>{
+      if(e.date!==dateStr) return;
+      e.squads?.forEach(sq=>{
+        sq.people?.forEach(p=>{
+          if(p.name===tsEditCurrentName){ p.hours=newHours; updated=true; }
+        });
+      });
+    });
+    if(updated){ save(STORAGE_KEYS.entries,entries); showToast('✅ Обновлено в табеле и нарядах'); }
+    else { showToast('⚠️ В нарядах за этот день работник не найден. Сохранено только в табеле.'); }
+  } else {
+    showToast('✅ Сохранено в табеле');
+  }
+  saveAllData();
+  closeTsEditModal();
+  renderTimesheet();
+}
+
+function clearTsEditCell(){
+  delete timesheetOverrides[tsEditCurrentKey]; delete timesheetLetters[tsEditCurrentKey];
+  saveAllData();
+  closeTsEditModal();
+  renderTimesheet();
+  showToast('🗑️ Ячейка очищена');
 }
 
 function clearTimesheetCell(name,day){
@@ -2551,6 +2612,14 @@ async function init(){
     }
   }, 5000);
 
+  // Show/hide warning when timesheet edit mode changes
+  document.addEventListener('change', function(e){
+    if(e.target && e.target.name==='tsEditMode'){
+      let warn=document.getElementById('tsEditWarn');
+      if(warn) warn.style.display=e.target.value==='tsAndEntry'?'block':'none';
+    }
+  });
+
   // Форсированное сохранение при закрытии/обновлении вкладки
   window.addEventListener('beforeunload', function(e){
     if(formSquads.length > 0 && editingEntryIndex < 0){
@@ -2566,6 +2635,13 @@ async function init(){
         saveDraft();
       }
       await saveAllData();
+    }
+  });
+
+  // Show/hide warning when mode changes
+  document.addEventListener('change', function(e){
+    if(e.target.name==='tsEditMode'){
+      let warn=$('tsEditWarn'); if(warn) warn.style.display=e.target.value==='tsAndEntry'?'block':'none';
     }
   });
 
@@ -2628,6 +2704,7 @@ return {
   saveEntry, clearForm, cancelEdit, editEntry, deleteEntry, duplicateEntry,
   saveTemplate, loadTemplate,
   renderTimesheet, addTimesheetWorker, exportTimesheetCSV, exportTimesheetExcel, clearTimesheetOverrides, editTimesheetCell, clearTimesheetCell,
+  closeTsEditModal, saveTsEdit, clearTsEditCell,
   generateSummaryReport, generateWorkersReport, generateObjectsReport,
   exportCSV, exportJSON, exportEntryExcel,
   generateOrderDoc, generateTimesheetDoc, generateS29Doc,
@@ -2642,5 +2719,41 @@ return {
 })();
 App.init();
 </script>
+
+<div class="modal-overlay" id="tsEditModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header"><span id="tsEditTitle">📝 Редактирование табеля</span><button class="close-modal" onclick="App.closeTsEditModal()">×</button></div>
+    <div id="tsEditContent">
+      <div class="form-group"><label>Работник</label><input type="text" id="tsEditWorker" readonly style="background:var(--bg)"></div>
+      <div class="form-group"><label>Дата</label><input type="text" id="tsEditDate" readonly style="background:var(--bg)"></div>
+      <div class="form-group"><label>Текущее значение из наряда</label><div id="tsEditCurrent" style="padding:10px;background:var(--bg);border-radius:8px;font-size:.9rem"></div></div>
+      <div class="form-group"><label>Новое значение</label>
+        <input type="text" id="tsEditValue" placeholder="8 или Б, П, АБЗ, ОТП" list="tsHints" onfocus="this.select()">
+        <datalist id="tsHints"><option value="Б"><option value="П"><option value="АБЗ"><option value="ОТП"><option value="У"><option value="В"><option value="8"><option value="7"><option value="6"><option value="4"></datalist>
+        <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">💡 Число — часы, буквы — Б (больничный), П (прогул), АБЗ (командировка), ОТП (отпуск), У (учеба), В (выходной)</div>
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label>Режим сохранения</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 12px;background:var(--bg);border-radius:12px;border:2px solid var(--border);flex:1;min-width:120px">
+            <input type="radio" name="tsEditMode" value="tsOnly" checked style="width:18px;height:18px;accent-color:var(--primary)">
+            <span style="font-size:.85rem;font-weight:500">📋 Только табель</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 12px;background:var(--bg);border-radius:12px;border:2px solid var(--border);flex:1;min-width:120px">
+            <input type="radio" name="tsEditMode" value="tsAndEntry" style="width:18px;height:18px;accent-color:var(--primary)">
+            <span style="font-size:.85rem;font-weight:500">📋➕📄 Табель + наряд</span>
+          </label>
+        </div>
+        <div id="tsEditWarn" style="display:none;margin-top:8px;font-size:.8rem;color:var(--accent);background:#fff3e0;padding:8px;border-radius:8px">⚠️ При выборе «Табель + наряд» часы будут изменены во всех нарядах за этот день, где есть этот работник.</div>
+      </div>
+    </div>
+    <div class="row-btns" style="margin-top:16px">
+      <button class="btn btn-primary" onclick="App.saveTsEdit()">💾 Сохранить</button>
+      <button class="btn btn-secondary" onclick="App.closeTsEditModal()">Отмена</button>
+      <button class="btn btn-danger btn-small" onclick="App.clearTsEditCell()">🗑️ Очистить</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
