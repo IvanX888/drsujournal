@@ -1168,8 +1168,19 @@ function getRoadKmSegments(roadName, filterType){
 
 function renderRoadSelector(){
   let sel=$('roadSelector'); if(!sel) return;
-  let html='<option value="">📍 Выберите дорогу для деталей</option>';
-  roads.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${escapeHtml(r.name)}${r.length?' ('+r.length+' км)':''}</option>`; });
+  let html='<option value="">📍 Выберите дорогу/объект для деталей</option>';
+  let roadItems=roads.filter(r=>!r.type||r.type==='road');
+  let objItems=roads.filter(r=>r.type&&r.type!=='road');
+  if(roadItems.length){
+    html+='<optgroup label="🛣️ Дороги">';
+    roadItems.forEach(r=>{ html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${escapeHtml(r.name)}${r.length?' ('+r.length+' км)':''}</option>`; });
+    html+='</optgroup>';
+  }
+  if(objItems.length){
+    html+='<optgroup label="📍 Объекты / Базы / АБЗ">';
+    objItems.forEach(r=>{ let label={object:'📍',abz:'🏭',base:'🏢'}[r.type]||'📍'; html+=`<option value="${escapeHtml(r.name)}"${r.name===selectedRoadForScale?' selected':''}>${label} ${escapeHtml(r.name)}${r.plan?' ('+escapeHtml(r.plan)+')':''}</option>`; });
+    html+='</optgroup>';
+  }
   sel.innerHTML=html;
   if(selectedRoadForScale) renderRoadKmScale(selectedRoadForScale);
   renderRoadsKmSummary();
@@ -1185,8 +1196,12 @@ function renderRoadsKmSummary(){
   if(!container) return;
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
 
+  // Separate roads (with km) and objects (without km)
+  let roadItems = roads.filter(r=>!r.type||r.type==='road');
+  let objectItems = roads.filter(r=>r.type&&r.type!=='road');
+
   let activeRoads = [];
-  roads.forEach(road=>{
+  roadItems.forEach(road=>{
     let segments=getRoadKmSegments(road.name, currentFilter);
     if(segments.length > 0){
       let totalLength=parseFloat(road.length)||0;
@@ -1205,27 +1220,76 @@ function renderRoadsKmSummary(){
     }
   });
 
-  if(activeRoads.length === 0){
-    container.innerHTML=`<div class="empty-state">Нет данных по километражу за выбранный период<br><small style="color:var(--text-secondary)">(${filterLabel})</small></div>`;
+  let html='';
+
+  // ROADS section
+  if(activeRoads.length > 0){
+    html+=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">🛣️ Дороги | Период: <b>${filterLabel}</b></div>`;
+    activeRoads.forEach(({road, segments, coveredKm, totalLength, pct})=>{
+      let barColor=pct>=90?'var(--success)':(pct>50?'var(--primary)':'var(--accent)');
+      let maxWorks = Math.max(...segments.map(s=>s.workCount), 1);
+      let multiText = maxWorks > 1 ? ` | <span style="color:var(--primary)">🔧 до ${maxWorks} работ</span>` : '';
+      html+=`<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.selectRoadForScale('${jsAttr(road.name)}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:600;font-size:.9rem">${escapeHtml(road.name)}</span>
+          <span style="font-size:.8rem;color:var(--text-secondary)">${coveredKm.toFixed(1)} / ${totalLength} км <b style="color:${barColor}">(${pct.toFixed(0)}%)</b></span>
+        </div>
+        <div class="road-scale-bar" style="height:18px;background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)">
+          <div style="width:${pct}%;height:100%;background:${barColor};border-radius:9px;transition:width .6s ease"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Участков: ${segments.length}${multiText}</div>
+      </div>`;
+    });
+  }
+
+  // OBJECTS section
+  let activeObjects = [];
+  objectItems.forEach(obj=>{
+    let objEntries = [];
+    let filterLabel2 = currentFilter;
+    entries.forEach(e=>{
+      if(currentFilter==='today' && e.date!==todayStr()) return;
+      if(currentFilter==='week'){
+        let d=new Date(); let sd=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()+(d.getDay()===0?-6:1));
+        let ed=new Date(sd); ed.setDate(ed.getDate()+6);
+        let de=new Date(e.date); if(de<sd||de>ed) return;
+      }
+      if(currentFilter==='important' && !e.important) return;
+      e.squads?.forEach(sq=>{
+        if(sq.objects?.includes(obj.name)){
+          sq.works?.forEach(w=>{
+            objEntries.push({date:e.date, work:w.name, volume:w.volume, unit:w.unit});
+          });
+        }
+      });
+    });
+    if(objEntries.length > 0){
+      let totalVolume = objEntries.reduce((s,e)=>s+e.volume,0);
+      activeObjects.push({obj, entries:objEntries, totalVolume});
+    }
+  });
+
+  if(activeObjects.length > 0){
+    html+=`<div style="font-size:.8rem;color:var(--text-secondary);margin:16px 0 10px">📍 Объекты / Базы / АБЗ | Период: <b>${filterLabel}</b></div>`;
+    activeObjects.forEach(({obj, entries:objEntries, totalVolume})=>{
+      let typeLabel={object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type]||'📍 Объект';
+      let planHtml = obj.plan ? `<span style="color:var(--primary)"> | План: ${escapeHtml(obj.plan)}</span>` : '';
+      html+=`<div style="margin-bottom:10px;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-weight:600;font-size:.9rem">${escapeHtml(obj.name)} <span style="font-size:.75rem;color:var(--text-secondary)">${typeLabel}${planHtml}</span></span>
+          <span style="font-size:.8rem;color:var(--text-secondary)">Работ: ${objEntries.length}</span>
+        </div>
+        <div style="font-size:.8rem;color:var(--text-secondary)">Общий объём: <b class="text-primary">${totalVolume.toFixed(2)}</b> ед.</div>
+        <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">${objEntries.slice(0,3).map(e=>`${formatDate(e.date)}: ${escapeHtml(e.work)} ${e.volume}${e.unit||''}`).join(' | ')}${objEntries.length>3?'...':''}</div>
+      </div>`;
+    });
+  }
+
+  if(activeRoads.length === 0 && activeObjects.length === 0){
+    container.innerHTML=`<div class="empty-state">Нет данных за выбранный период<br><small style="color:var(--text-secondary)">(${filterLabel})</small></div>`;
     return;
   }
 
-  let html=`<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">Период: <b>${filterLabel}</b> | Дорог: ${activeRoads.length}</div>`;
-  activeRoads.forEach(({road, segments, coveredKm, totalLength, pct})=>{
-    let barColor=pct>=90?'var(--success)':(pct>50?'var(--primary)':'var(--accent)');
-    let maxWorks = Math.max(...segments.map(s=>s.workCount), 1);
-    let multiText = maxWorks > 1 ? ` | <span style="color:var(--primary)">🔧 до ${maxWorks} работ на участке</span>` : '';
-    html+=`<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.selectRoadForScale('${jsAttr(road.name)}')">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-weight:600;font-size:.9rem">${escapeHtml(road.name)}</span>
-        <span style="font-size:.8rem;color:var(--text-secondary)">${coveredKm.toFixed(1)} / ${totalLength} км <b style="color:${barColor}">(${pct.toFixed(0)}%)</b></span>
-      </div>
-      <div class="road-scale-bar" style="height:18px;background:var(--bg);border-radius:9px;overflow:hidden;border:1px solid var(--border)">
-        <div style="width:${pct}%;height:100%;background:${barColor};border-radius:9px;transition:width .6s ease"></div>
-      </div>
-      <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Участков: ${segments.length}${multiText}</div>
-    </div>`;
-  });
   container.innerHTML=html;
 }
 
@@ -1234,6 +1298,42 @@ function renderRoadKmScale(roadName){
   let historyContainer=$('roadKmHistory');
   if(!container || !roadName){ if(container) container.innerHTML=''; if(historyContainer) historyContainer.innerHTML=''; return; }
   let road=roads.find(r=>r.name===roadName); if(!road) return;
+  // If object (not road), show object summary instead of km scale
+  if(road.type && road.type!=='road'){
+    let typeLabel={object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[road.type]||'📍 Объект';
+    let objEntries=[];
+    entries.forEach(e=>{
+      e.squads?.forEach(sq=>{
+        if(sq.objects?.includes(roadName)){
+          sq.works?.forEach(w=>{ objEntries.push({date:e.date, work:w.name, volume:w.volume, unit:w.unit, people:sq.people?.length||0}); });
+        }
+      });
+    });
+    let html=`<div class="km-scale-container">
+      <div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${typeLabel}${road.plan?' | План: '+escapeHtml(road.plan):''}</span></div>
+      <div style="font-size:.9rem;margin:8px 0">Всего записей: <b>${objEntries.length}</b></div>`;
+    if(objEntries.length===0){
+      html+=`<div class="empty-state">Нет данных по объекту</div>`;
+    } else {
+      let workSummary={};
+      objEntries.forEach(e=>{
+        if(!workSummary[e.work]) workSummary[e.work]={total:0,unit:e.unit,count:0};
+        workSummary[e.work].total+=e.volume; workSummary[e.work].count++;
+      });
+      html+=`<div style="margin-top:8px"><b>Виды работ:</b></div>`;
+      for(let w in workSummary){
+        html+=`<div style="margin:4px 0;padding:6px;background:var(--bg);border-radius:8px"><span class="text-info">${escapeHtml(w)}</span> — <b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit||'ед.'} <span style="font-size:.75rem;color:var(--text-secondary)">(${workSummary[w].count} раз)</span></div>`;
+      }
+      html+=`<div style="margin-top:12px;font-size:.8rem;color:var(--text-secondary)">История:</div>`;
+      objEntries.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10).forEach(e=>{
+        html+=`<div style="font-size:.8rem;padding:4px 0;border-bottom:1px dashed var(--border)">${formatDate(e.date)} — ${escapeHtml(e.work)} <b>${e.volume}</b> ${e.unit||''} 👷${e.people}</div>`;
+      });
+    }
+    html+=`</div>`;
+    container.innerHTML=html;
+    if(historyContainer) historyContainer.innerHTML='';
+    return;
+  }
   let segments=getRoadKmSegments(roadName, currentFilter);
   let totalLength=parseFloat(road.length)||0;
   let coveredKm=0;
@@ -1254,37 +1354,26 @@ function renderRoadKmScale(roadName){
   }
   let pct=totalLength?Math.min(100,(coveredKm/totalLength)*100):0;
   let filterLabel={all:'Все записи',today:'Сегодня',week:'Неделя',important:'Важные',plan:'С задачами'}[currentFilter]||'';
-  let html=`<div class="km-scale-container">`;
-  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Выполнено: <b class="text-success">${coveredKm.toFixed(1)}</b> из ${totalLength} км</span></div>`;
-  // Calculate norm completion per km - MAX 10000 m2 per km (5000 per side)
+
+  // Calculate norm completion by km and by work type
   let normByKm = {};
   segments.forEach(s => {
     let kmKey = Math.floor(s.kmFrom);
-    if (!normByKm[kmKey]) normByKm[kmKey] = { totalM2: 0, byNorm: {} };
+    if (!normByKm[kmKey]) normByKm[kmKey] = { totalM2: 0, byNorm: {}, byWork: {} };
     let actualM2 = (s.volume || 0) * (s.unit === '1000 м²' ? 1000 : 1);
     normByKm[kmKey].totalM2 += actualM2;
     let normId = s.workName + '|' + (s.unit || '');
     if (!normByKm[kmKey].byNorm[normId]) normByKm[kmKey].byNorm[normId] = 0;
     normByKm[kmKey].byNorm[normId] += actualM2;
+    // Also group by work name for display
+    if (!normByKm[kmKey].byWork[s.workName]) normByKm[kmKey].byWork[s.workName] = 0;
+    normByKm[kmKey].byWork[s.workName] += actualM2;
   });
-  let normHtml = '<div style="margin-top:12px;font-size:.85rem;border-top:1px solid var(--border);padding-top:8px;">';
-  normHtml += '<div style="font-weight:600;color:var(--primary);margin-bottom:6px">📊 Выполнение нормы по км (макс. 10 000 м²/км):</div>';
-  for (let km in normByKm) {
-    let n = normByKm[km];
-    let pct = Math.min(100, (n.totalM2 / 10000) * 100);
-    let status = pct >= 100 ? '<span style="color:var(--success)">✅ Норма достигнута</span>' : `<span style="color:var(--accent)">⚠️ ${pct.toFixed(0)}%</span>`;
-    normHtml += `<div style="margin-bottom:6px;padding:6px;background:var(--bg);border-radius:8px">`;
-    normHtml += `<b>км ${km}:</b> <b>${(n.totalM2/1000).toFixed(1)} тыс.м²</b> / 10 тыс.м² макс — ${status}<br>`;
-    normHtml += `<span style="font-size:.75rem;color:var(--text-secondary)">`;
-    for (let normId in n.byNorm) {
-      let parts = normId.split('|');
-      normHtml += `• ${parts[0]}: ${(n.byNorm[normId]/1000).toFixed(1)} тыс.м²<br>`;
-    }
-    normHtml += `</span></div>`;
-  }
-  normHtml += '<div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">💡 10 000 м² = 1000м × 5м × 2 стороны. По одной норме повторно — минимум через 3 месяца.</div>';
-  normHtml += '</div>';
-  html += normHtml;
+
+  let html=`<div class="km-scale-container">`;
+  html+=`<div class="road-scale-title"><span>${escapeHtml(roadName)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${filterLabel} | Покрыто: <b class="text-success">${coveredKm.toFixed(1)}</b> из ${totalLength} км</span></div>`;
+
+  // LINEAR km scale
   html+=`<div class="km-scale-track">`;
   if(totalLength>0){
     uniqueRanges.forEach((range,i)=>{
@@ -1298,13 +1387,77 @@ function renderRoadKmScale(roadName){
     });
   }
   html+=`</div><div class="km-scale-marks"><span>0 км</span><span>${(totalLength/2).toFixed(1)} км</span><span>${totalLength} км</span></div>`;
-  html+=`<div class="km-legend"><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--success),var(--primary))"></div>Один вид работ</div><div class="km-legend-item"><div class="km-legend-color" style="background:linear-gradient(90deg,var(--primary),var(--accent))"></div>Несколько работ (нормально)</div></div>`;
-  html+=`<div style="margin-top:12px;font-size:1rem;font-weight:700;color:var(--primary)">Выполнено: <span class="text-success">${pct.toFixed(1)}%</span> (${coveredKm.toFixed(1)} км)</div></div>`;
+  html+=`<div style="margin-top:8px;font-size:1rem;font-weight:700;color:var(--primary)">Покрытие дороги: <span class="text-success">${pct.toFixed(1)}%</span> (${coveredKm.toFixed(1)} км)</div>`;
+
+  // NORM completion section
+  html+=`<div style="margin-top:16px;border-top:2px solid var(--border);padding-top:12px">`;
+  html+=`<div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📊 Выполнение нормы по км (макс. 10 000 м²/км)</div>`;
+
+  // Color legend for work types
+  let workColors = ['#2e7d32','#1565c0','#ff6f00','#6a1b9a','#c62828','#00695c','#0277bd'];
+  let workTypeList = [...new Set(segments.map(s=>s.workName))];
+  if(workTypeList.length > 1){
+    html+=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;font-size:.75rem">`;
+    workTypeList.forEach((w,i)=>{
+      let color = workColors[i % workColors.length];
+      html+=`<div style="display:flex;align-items:center;gap:4px"><div style="width:12px;height:12px;background:${color};border-radius:3px"></div>${escapeHtml(w)}</div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // Per-km norm bars
+  let sortedKm = Object.keys(normByKm).map(Number).sort((a,b)=>a-b);
+  sortedKm.forEach(km=>{
+    let n = normByKm[km];
+    let totalPct = Math.min(100, (n.totalM2 / 10000) * 100);
+    let barColor = totalPct >= 100 ? 'var(--success)' : (totalPct > 50 ? 'var(--primary)' : 'var(--accent)');
+    let status = totalPct >= 100 ? '✅ Норма достигнута' : `⚠️ ${totalPct.toFixed(0)}%`;
+
+    html+=`<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">`;
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">`;
+    html+=`<span style="font-weight:700;font-size:.9rem">км ${km}</span>`;
+    html+=`<span style="font-size:.8rem">${(n.totalM2/1000).toFixed(1)} тыс.м² / 10 тыс.м² — <b style="color:${barColor}">${status}</b></span>`;
+    html+=`</div>`;
+
+    // Stacked bar for work types on this km
+    html+=`<div style="position:relative;height:24px;background:var(--card);border-radius:12px;overflow:hidden;border:1px solid var(--border)">`;
+    let currentLeft = 0;
+    workTypeList.forEach((w,wi)=>{
+      let m2 = n.byWork[w] || 0;
+      if(m2 > 0){
+        let width = Math.min(100 - currentLeft, (m2 / 10000) * 100);
+        let color = workColors[wi % workColors.length];
+        html+=`<div style="position:absolute;left:${currentLeft}%;width:${width}%;height:100%;background:${color};opacity:.8" title="${escapeHtml(w)}: ${(m2/1000).toFixed(1)} тыс.м²"></div>`;
+        currentLeft += width;
+      }
+    });
+    // Overlay percentage
+    html+=`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)">${totalPct.toFixed(0)}%</div>`;
+    html+=`</div>`;
+
+    // Details per work type
+    html+=`<div style="margin-top:6px;font-size:.75rem;color:var(--text-secondary)">`;
+    workTypeList.forEach((w,wi)=>{
+      let m2 = n.byWork[w] || 0;
+      if(m2 > 0){
+        let wpct = (m2 / 10000) * 100;
+        let color = workColors[wi % workColors.length];
+        html+=`<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span><span style="display:inline-block;width:8px;height:8px;background:${color};border-radius:2px;margin-right:4px"></span>${escapeHtml(w)}</span><span>${(m2/1000).toFixed(1)} тыс.м² (${wpct.toFixed(0)}%)</span></div>`;
+      }
+    });
+    html+=`</div>`;
+    html+=`</div>`;
+  });
+
+  html+=`<div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">💡 10 000 м² = 1000м × 5м × 2 стороны. По одной норме повторно — минимум через 3 месяца.</div>`;
+  html+=`</div></div>`;
   container.innerHTML=html;
+
+  // History - simplified, just list of works by date
   if(historyContainer){
     if(segments.length===0) historyContainer.innerHTML='<div class="empty-state">Нет данных по километражу за выбранный период</div>';
     else {
-      let hHtml='<div class="card-title" style="margin-top:16px">📜 История по участкам</div>';
+      let hHtml='<div class="card-title" style="margin-top:16px">📜 История работ по участкам</div>';
       let rangeGroups={};
       segments.forEach(s=>{
         let key=`${s.kmFrom}-${s.kmTo}`;
@@ -1320,7 +1473,8 @@ function renderRoadKmScale(roadName){
             <span style="font-size:.75rem;color:var(--text-secondary)">${workCount} работ</span>
           </div>`;
         rg.works.forEach(s=>{
-          hHtml+=`<div style="margin-top:2px"><span class="text-info">${escapeHtml(s.workName)}</span> — <b>${s.volume} ${s.unit||''}</b> <span style="font-size:.75rem;color:var(--text-secondary)">${formatDate(s.entryDate)}</span></div>`;
+          let m2 = (s.volume || 0) * (s.unit === '1000 м²' ? 1000 : 1);
+          hHtml+=`<div style="margin-top:2px"><span class="text-info">${escapeHtml(s.workName)}</span> — <b>${s.volume} ${s.unit||''}</b> ${m2>0?'('+((m2/1000).toFixed(1))+' тыс.м²)':''} <span style="font-size:.75rem;color:var(--text-secondary)">${formatDate(s.entryDate)}</span></div>`;
         });
         hHtml+=`</div>`;
       });
@@ -2265,8 +2419,10 @@ function renderCatalogs(){
   $('toolsCatalogList').innerHTML=tHtml;
   
   let rHtml=roads.filter(r=>!search||r.name.toLowerCase().includes(search)).map((r,i)=>{
-    return `<div class="catalog-item"><div><b>${escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${r.length?r.length+' км':''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${i})">🗑️</button></div></div>`;
-  }).join('')||'<div class="empty-state">Нет дорог</div>';
+    let typeLabel={road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[r.type]||'📍 Объект';
+    let typeInfo=r.type==='road'?(r.length?r.length+' км':'') : (r.plan?'План: '+escapeHtml(r.plan):'');
+    return `<div class="catalog-item"><div><b>${escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${typeLabel}${typeInfo?' | '+typeInfo:''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${i})">🗑️</button></div></div>`;
+  }).join('')||'<div class="empty-state">Нет дорог/объектов</div>';
   $('roadsCatalogList').innerHTML=rHtml;
   
   let dl=$('roadsList'); if(dl){
@@ -2282,7 +2438,7 @@ function addCatalogItem(type){
   if(type==='worker') html='<div class="form-group"><label>ФИО</label><input type="text" id="catInp1" placeholder="Иванов И.И."></div><div class="form-group"><label>Категория</label><select id="catInp2">'+Object.keys(CATEGORIES).map(k=>`<option value="${k}">${CATEGORIES[k].name}</option>`).join('')+'</select></div><div class="form-group"><label>Разряд</label><input type="number" id="catInp3" placeholder="3"></div>';
   else if(type==='work') html='<div class="form-group"><label>Название</label><input type="text" id="catInp1" placeholder="Например: Укладка асфальта"></div><div class="form-group"><label>Единица измерения</label><input type="text" id="catInp2" placeholder="м2, м3, т..."></div><div class="form-group"><label>Трудоёмкость (чел-ч на единицу)</label><input type="number" id="catInp3" step="0.01" placeholder="0"></div><div class="form-group"><label>Прямая расценка (руб. на единицу)</label><input type="number" id="catInp4" step="0.01" placeholder="0"></div><div class="form-group"><label>Расходы на инструмент (руб. на единицу)</label><input type="number" id="catInp5" step="0.01" placeholder="0"></div>';
   else if(type==='tool') html='<div class="form-group"><label>Название</label><input type="text" id="catInp1" placeholder="Например: Каток ДУ-47"></div><div class="form-group"><label>Расход топлива (л/час)</label><input type="number" id="catInp2" step="0.1" placeholder="0"></div><div class="form-group"><label>Стоимость 1 машино-часа (руб.)</label><input type="number" id="catInp3" step="0.01" placeholder="0"></div><div class="form-group"><label>Зарплата машиниста (руб/ч)</label><input type="number" id="catInp4" step="0.01" placeholder="0"></div>';
-  else if(type==='road') html='<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div><div class="form-group"><label>Протяжённость (км)</label><input type="number" id="catInp2" step="0.1" placeholder="0"></div>';
+  else if(type==='road') html='<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div><div class="form-group"><label>Тип</label><select id="catInp2"><option value="road">🛣️ Дорога (есть км)</option><option value="object">📍 Объект (без км)</option><option value="abz">🏭 АБЗ</option><option value="base">🏢 База</option></select></div><div class="form-group"><label>Протяжённость (км) — только для дорог</label><input type="number" id="catInp3" step="0.1" placeholder="0"></div><div class="form-group"><label>План работы (объём/норма) — для объектов</label><input type="text" id="catInp4" placeholder="Например: 10 вагонов, 50 тонн"></div>';
   $('catalogForm').innerHTML=html;
   $('catalogModal').classList.add('active');
 }
@@ -2297,10 +2453,9 @@ function editCatalogItem(type, idx){
   if(!item) return;
   addCatalogItem(type);
   if($('catInp1')) $('catInp1').value=item.name||'';
-  if($('catInp2')) $('catInp2').value=item.category||item.unit||item.fuelConsumption||item.length||'';
-  if($('catInp3')) $('catInp3').value=item.grade||item.laborCost||item.machineCostPerHour||'';
-  if($('catInp4')) $('catInp4').value=item.directCost||item.salaryPerHour||'';
-  if($('catInp5')) $('catInp5').value=item.toolCost||'';
+  if($('catInp2')) $('catInp2').value=item.type||'road';
+  if($('catInp3')) $('catInp3').value=item.length||'';
+  if($('catInp4')) $('catInp4').value=item.plan||'';
 }
 
 function saveCatalogItem(){
@@ -2317,8 +2472,10 @@ function saveCatalogItem(){
     let fuel=parseFloat($('catInp2').value)||0; let machine=parseFloat($('catInp3').value)||0; let salary=parseFloat($('catInp4').value)||0;
     item={id:Date.now(),name,fuelConsumption:fuel,machineCostPerHour:machine,salaryPerHour:salary};
   }else if(catalogType==='road'){
-    let len=parseFloat($('catInp2').value)||0;
-    item={id:Date.now(),name,length:len};
+    let roadType=$('catInp2').value||'road';
+    let len=parseFloat($('catInp3').value)||0;
+    let plan=$('catInp4').value.trim();
+    item={id:Date.now(),name,length:len,type:roadType,plan:plan};
   }
   if(catalogEditingId!==null){
     if(catalogType==='worker') workers[catalogEditingId]=item;
