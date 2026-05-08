@@ -1495,6 +1495,42 @@ function generateRoadKmReport(){
   let container=$('roadReportResult');
   if(!roadName || !container){ if(container) container.innerHTML=''; return; }
   let road=roads.find(r=>r.name===roadName);
+  if(!road) return;
+  // If object (not road), show object report instead
+  if(road.type && road.type!=='road'){
+    let typeLabel={object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[road.type]||'📍 Объект';
+    let objEntries=[];
+    entries.forEach(e=>{
+      e.squads?.forEach(sq=>{
+        if(sq.objects?.includes(roadName)){
+          sq.works?.forEach(w=>{ objEntries.push({date:e.date, work:w.name, volume:w.volume, unit:w.unit, people:sq.people?.length||0}); });
+        }
+      });
+    });
+    let html=`<div class="card"><div class="card-title">${typeLabel} ${escapeHtml(roadName)}</div>`;
+    html+=`<div style="font-size:.9rem;margin:8px 0">Всего записей: <b>${objEntries.length}</b></div>`;
+    if(objEntries.length===0){
+      html+=`<div class="empty-state">Нет данных по объекту</div>`;
+    } else {
+      let workSummary={};
+      objEntries.forEach(e=>{
+        if(!workSummary[e.work]) workSummary[e.work]={total:0,unit:e.unit,count:0};
+        workSummary[e.work].total+=e.volume; workSummary[e.work].count++;
+      });
+      html+=`<div style="margin-top:8px"><b>Виды работ:</b></div>`;
+      for(let w in workSummary){
+        html+=`<div style="margin:4px 0;padding:6px;background:var(--bg);border-radius:8px"><span class="text-info">${escapeHtml(w)}</span> — <b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit||'ед.'} <span style="font-size:.75rem;color:var(--text-secondary)">(${workSummary[w].count} раз)</span></div>`;
+      }
+      html+=`<table class="report-table" style="margin-top:12px"><tr><th>Дата</th><th>Вид работы</th><th>Объём</th><th>Людей</th></tr>`;
+      objEntries.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(e=>{
+        html+=`<tr><td>${formatDate(e.date)}</td><td class="text-info">${escapeHtml(e.work)}</td><td><b>${e.volume}</b> ${e.unit||''}</td><td>${e.people}</td></tr>`;
+      });
+      html+=`</table>`;
+    }
+    html+=`</div>`;
+    container.innerHTML=html;
+    return;
+  }
   let segments=getRoadKmSegments(roadName, 'all');
   let totalLength=parseFloat(road?.length)||0;
   let coveredKm=0;
@@ -1664,16 +1700,25 @@ function openSWorksModal(squadId){
   currentSquadId=squadId; let sq=formSquads.find(s=>s.id===squadId); if(!sq) return; 
   let modal=$('sWorksModal'); let list=$('sWorksList'); 
   let squadObjects = sq.objects || [];
+  // Check if any object is a road (has km)
+  let hasRoad = squadObjects.some(o=>{
+    let r=roads.find(x=>x.name===o);
+    return !r || !r.type || r.type==='road';
+  });
+  let kmHint = hasRoad ? '' : '<div style="color:var(--text-secondary);font-size:.75rem;margin-bottom:4px">💡 км не требуются для объектов без километража</div>';
+  let kmInputs = hasRoad ? 
+    '<div class="km-inputs"><div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div><div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div></div>' :
+    '<div class="km-inputs" style="display:none"><div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div><div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div></div>';
   let objectsSelectHtml = squadObjects.length > 0 
     ? `<select class="work-road-select"><option value="">📍 Выберите объект/дорогу</option>` + squadObjects.map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join('') + `</select>`
     : `<div style="color:var(--danger);font-size:.75rem;margin-bottom:4px">⚠️ Сначала добавьте объекты в наряд!</div>`;
   let filtered=works.slice(); 
   list.innerHTML=filtered.map(w=>{
     return '<div class="work-item"><label><input type="checkbox" class="work-cb" data-id="'+w.id+'" data-name="'+escapeHtml(w.name)+'" data-unit="'+escapeHtml(w.unit||'')+'" data-labor="'+(w.laborCost||0)+'" data-direct="'+(w.directCost||0)+'" data-toolcost="'+(w.toolCost||0)+'"> <strong class="text-info">'+escapeHtml(w.name)+'</strong> <small class="text-secondary">('+(w.unit||'ед.')+')</small></label>'+
-    '<div style="margin-left:24px; margin-top:5px;">'+objectsSelectHtml+
+    '<div style="margin-left:24px; margin-top:5px;">'+kmHint+objectsSelectHtml+
     '<label style="display:inline-block;margin-top:6px;margin-right:8px">Объём: <input type="number" class="work-volume" value="1" step="0.01" style="width:80px;"></label> '+
     '<label style="display:inline-block;margin-top:6px">Часы инструмента: <input type="number" class="work-hours" value="0" step="0.5" style="width:80px;"></label>'+
-    '<div class="km-inputs"><div><label>От км</label><input type="number" class="work-km-from" step="0.1" placeholder="0" style="width:100%"></div><div><label>До км</label><input type="number" class="work-km-to" step="0.1" placeholder="0" style="width:100%"></div></div>'+
+    kmInputs+
     '</div></div>';
   }).join(''); 
   modal.classList.add('active'); 
@@ -1877,7 +1922,8 @@ function renderEntryDetails(e){
           let tool=tools.find(t=>t.id===w.toolId);
           let machineCost=tool?(tool.machineCostPerHour||0)*(w.toolHours||0):0;
           let workerCost=((w.directCost||0)-(w.toolCost||0))*w.volume;
-          let kmInfo2 = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ' | 🛣️ <span class="text-info">'+w.kmFrom+'–'+w.kmTo+' км</span>' : '';
+          let isRoad = roads.find(r=>r.name===road && (!r.type||r.type==='road'));
+          let kmInfo2 = (isRoad && w.kmFrom !== undefined && w.kmTo !== undefined) ? ' | 🛣️ <span class="text-info">'+w.kmFrom+'–'+w.kmTo+' км</span>' : '';
           let toolHtml = '';
           if(tool){
             toolHtml = `<br>&nbsp;&nbsp;Инструмент: <span class="text-secondary">${escapeHtml(tool.name)} ${w.toolHours||0}ч${w.fuelLiters?` | ⛽ <span class="text-accent">${w.fuelLiters.toFixed(2)} л</span>`:''}${machineCost?` | 🛠️ <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>`:''}</span>`;
