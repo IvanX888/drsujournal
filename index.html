@@ -986,6 +986,11 @@ async function init() {
     window.addEventListener('scroll', () => fab.classList.toggle('show', window.scrollY > 300));
     fab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
+
+  // Рендерим табель если это текущая страница
+  if (document.getElementById('pageTimesheet')?.classList.contains('active')) {
+    renderTimesheet();
+  }
 }
 
 
@@ -1071,7 +1076,13 @@ function initDefaultData() {
   }
 
   // --- Навигация ---
-  function showPage(id) { UI.showPage(id); }
+  function showPage(id) {
+  UI.showPage(id);
+  if (id === 'pageTimesheet') {
+    // Перерендерим табель при переходе на вкладку
+    setTimeout(() => renderTimesheet(), 50);
+  }
+}
   function showSubtab(id, btn) { UI.showSubtab(id, btn); }
   function showCatalog(id, btn) { UI.showCatalog(id, btn); }
   function showStockTab(id, btn) { UI.showStockTab(id, btn); }
