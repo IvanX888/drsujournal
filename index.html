@@ -2742,6 +2742,7 @@ function initDefaultData() {
   function editTimesheetCell(name, day, td) {
     tsEditCurrentName = name;
     tsEditCurrentDay = day;
+    const month = Utils.$('tsMonth').value || Utils.todayStr().slice(0, 7);
     tsEditCurrentKey = month + '|' + name + '|' + day;
     const modal = Utils.$('tsEditModal');
     Utils.$('tsEditWorker').value = name;
@@ -2749,7 +2750,6 @@ function initDefaultData() {
     const d = new Date(Utils.$('tsMonth').value + '-' + String(day).padStart(2, '0'));
     Utils.$('tsEditDate').value = d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' });
 
-    const month = Utils.$('tsMonth').value;
     const entries = State.get('entries');
     let entryHours = 0, foundInEntry = false;
 
