@@ -2643,12 +2643,18 @@ function initDefaultData() {
     const timesheetOverrides = State.get('timesheetOverrides');
     const timesheetLetters = State.get('timesheetLetters');
 
+    console.log('[Табель] Месяц:', month, 'Категория:', cat, 'Дней:', daysInMonth, 'Записей:', entries.length);
+
     const dayWorkers = {};
+    let matchedEntries = 0;
     entries.forEach(e => {
-      if (!e.date.startsWith(month)) return;
-      e.squads?.forEach(sq => {
+      if (!e.date || !e.date.startsWith(month)) return;
+      matchedEntries++;
+      e.squads?.forEach((sq, si) => {
         const catOk = (cat === 'all' || sq.category === cat);
         if (!catOk) return;
+        const peopleCount = sq.people?.length || 0;
+        console.log('[Табель] Запись', e.date, 'наряд', si, 'людей:', peopleCount);
         sq.people?.forEach(p => {
           if (!dayWorkers[p.name]) dayWorkers[p.name] = { name: p.name, days: {}, total: 0 };
           const d = parseInt(e.date.slice(8), 10);
@@ -2657,9 +2663,14 @@ function initDefaultData() {
         });
       });
     });
+    console.log('[Табель] Совпало записей:', matchedEntries, 'Работников:', Object.keys(dayWorkers).length);
 
+    // timesheetOverrides теперь учитывают месяц: ключ = "month|name|day"
     Object.keys(timesheetOverrides).forEach(key => {
-      const [name, dstr] = key.split('|');
+      if (!key.startsWith(month + '|')) return;
+      const parts = key.split('|');
+      const name = parts[1];
+      const dstr = parts[2];
       if (!dayWorkers[name]) dayWorkers[name] = { name: name, days: {}, total: 0 };
       const d = parseInt(dstr, 10);
       const val = timesheetOverrides[key];
@@ -2720,7 +2731,7 @@ function initDefaultData() {
   function editTimesheetCell(name, day, td) {
     tsEditCurrentName = name;
     tsEditCurrentDay = day;
-    tsEditCurrentKey = name + '|' + day;
+    tsEditCurrentKey = month + '|' + name + '|' + day;
     const modal = Utils.$('tsEditModal');
     Utils.$('tsEditWorker').value = name;
 
@@ -2828,7 +2839,8 @@ function initDefaultData() {
   }
 
   async function clearTimesheetCell(name, day) {
-    const key = name + '|' + day;
+    const month = Utils.$('tsMonth').value || Utils.todayStr().slice(0, 7);
+    const key = month + '|' + name + '|' + day;
     const timesheetOverrides = State.get('timesheetOverrides');
     const timesheetLetters = State.get('timesheetLetters');
     delete timesheetOverrides[key];
@@ -2846,7 +2858,8 @@ function initDefaultData() {
     if (isNaN(day) || day < 1 || day > 31) return;
     const hours = parseFloat(prompt('Часы:'));
     if (isNaN(hours)) return;
-    const key = trimmed + '|' + day;
+    const month = Utils.$('tsMonth').value || Utils.todayStr().slice(0, 7);
+    const key = month + '|' + trimmed + '|' + day;
     State.get('timesheetOverrides')[key] = hours;
     Storage.saveAll(State.getAllForSave());
     renderTimesheet();
