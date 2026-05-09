@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1565c0">
+<meta name="theme-color" content="#e65100">
 <title>Журнал производства работ — ДРСУ v17.0 (Рефакторинг)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
-:root{--primary:#1565c0;--primary-light:#1976d2;--primary-dark:#0d47a1;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
+:root{--primary:#e65100;--primary-light:#ff8f00;--primary-dark:#bf360c;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
 @media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}}
 .dark-mode{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
@@ -98,7 +98,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .calendar-day{padding:8px;border-radius:10px;position:relative;cursor:pointer;min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg)}
 .calendar-day.header{color:var(--text-secondary);font-weight:600;font-size:.75rem;cursor:default;background:transparent}
 .calendar-day.has-entry{background:#e3f2fd;color:var(--primary);font-weight:700}
-.dark-mode .calendar-day.has-entry{background:#1565c0;color:#fff}
+.dark-mode .calendar-day.has-entry{background:#e65100;color:#fff}
 .calendar-day.has-task{background:#fff3e0;color:var(--accent);font-weight:700}
 .calendar-day.today{background:var(--primary);color:#fff}
 .calendar-day.important-day{background:#ffebee;color:var(--danger);font-weight:700;border:2px solid var(--danger)}
@@ -108,7 +108,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .timesheet-table{border-collapse:collapse;font-size:.72rem;min-width:100%}
 .timesheet-table th,.timesheet-table td{border:1px solid var(--border);padding:8px 3px;text-align:center;min-width:40px;color:var(--text);font-size:.8rem}
 .timesheet-table th{background:#e3f2fd;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:3}
-.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
+.dark-mode .timesheet-table th{background:#e65100;color:#fff}
 .timesheet-table td:first-child,.timesheet-table th:first-child{position:sticky;left:0;background:var(--card);z-index:4;min-width:140px;text-align:left;padding-left:10px;font-weight:500;border-right:2px solid var(--border)}
 .ts-cell-editable{cursor:pointer;background:rgba(21,101,192,.1);position:relative;font-weight:600}
 .ts-cell-editable:hover{background:rgba(21,101,192,.2)}
@@ -134,7 +134,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .road-block{background:var(--bg);border-radius:12px;padding:12px;margin:8px 0;border:1px solid var(--border)}
 .road-title{font-weight:700;color:var(--primary);margin-bottom:8px;font-size:.9rem}
 .preview-item{display:flex;align-items:center;gap:8px;padding:10px;background:#e3f2fd;border-radius:10px;margin-bottom:6px}
-.dark-mode .preview-item{background:#1565c033}
+.dark-mode .preview-item{background:#e6510033}
 .preview-item-name{flex:1;font-weight:500;font-size:.9rem}
 .preview-item .del-btn{background:none;border:none;color:var(--danger);font-size:1.1rem;cursor:pointer;padding:0 4px}
 .task-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border-radius:12px;margin-bottom:8px;border-left:4px solid var(--border)}
@@ -225,7 +225,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .task-item{background:#1e1e1e;border-color:#333}
 .dark-mode .calendar-day.has-task{background:#e65100;color:#fff}
 .dark-mode .week-day-card.has-task{background:#e65100;color:#fff}
-.dark-mode .week-day-card.has-entry{background:#1565c0;color:#fff}
+.dark-mode .week-day-card.has-entry{background:#e65100;color:#fff}
 .dark-mode .week-day-card.important{background:#c62828;color:#fff}
 .dark-mode .object-tag{background:rgba(46,125,50,.25);color:#a5d6a7;border-color:#2e7d32}
 .dark-mode .people-tag{background:rgba(21,101,192,.25);color:#90caf9}
@@ -234,7 +234,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .preview-item{background:rgba(21,101,192,.15)}
 .dark-mode .road-block{background:#1a1a1a;border-color:#333}
 .dark-mode .plan-box{background:#1a1a1a;border-color:#333}
-.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
+.dark-mode .timesheet-table th{background:#e65100;color:#fff}
 .dark-mode .timesheet-table td:first-child{background:#1e1e1e}
 .dark-mode .norm-badge.ok{background:rgba(46,125,50,.25);color:#a5d6a7}
 .dark-mode .norm-badge.warn{background:rgba(255,111,0,.25);color:#ffcc80}
@@ -302,10 +302,23 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .dark-mode .week-day-card.has-task .week-day-num{color:#fff}
 
 .timesheet-table tfoot td{background:var(--primary);color:#fff;font-weight:700;border-color:rgba(255,255,255,.2)}
-.dark-mode .timesheet-table tfoot td{background:#1565c0}
+.dark-mode .timesheet-table tfoot td{background:#e65100}
 .timesheet-table tfoot td:first-child{background:var(--primary)!important}
-.dark-mode .timesheet-table tfoot td:first-child{background:#1565c0!important}
+.dark-mode .timesheet-table tfoot td:first-child{background:#e65100!important}
+
+.modal-footer{position:sticky;bottom:0;background:var(--card);padding:12px 0 4px;margin:0 -20px -20px;border-top:2px solid var(--border);display:flex;gap:8px;z-index:5;backdrop-filter:blur(8px)}
+.modal-footer .btn{flex:1;margin:0 20px}
+.modal-footer .btn:first-child{margin-left:20px}
+.modal-footer .btn:last-child{margin-right:20px}
+.modal-footer .btn-small{flex:0 0 auto}
+
+
+.modal-fab{position:sticky;bottom:72px;align-self:flex-end;margin-left:auto;margin-right:8px;width:44px;height:44px;border-radius:50%;background:var(--primary);color:#fff;border:none;box-shadow:0 3px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:4;font-size:1.2rem;transition:transform .15s}
+.modal-fab:active{transform:scale(.9)}
+
 </style>
+<base target="_blank">
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -599,7 +612,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-header"><span>👷 Выбрать работников</span><button class="close-modal" onclick="App.closeSwModal()">×</button></div>
     <div style="margin-bottom:10px"><label class="checkbox-row" style="border:none;padding:4px 0;"><input type="checkbox" id="swSelectAll" onchange="App.selectAllWorkers(this.checked)"> Выбрать всех</label></div>
     <div id="swList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -608,7 +621,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
     <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.</b></div>
     <div id="sWorksList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -616,7 +629,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal">
     <div class="modal-header"><span>📦 Расход ТМЦ в наряде</span><button class="close-modal" onclick="App.closeSTmcModal()">×</button></div>
     <div id="sTmcList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
+    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -624,7 +637,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal" style="max-height:90vh">
     <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
     <div id="dayModalContent"></div>
-    <div class="row-btns" style="margin-top:16px">
+    <div class="modal-footer">
       <button class="btn btn-primary" style="min-height:48px;font-size:1.05rem" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
       <button class="btn btn-accent" style="min-height:48px;font-size:1.05rem" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
       <button class="btn btn-secondary" style="min-height:48px;font-size:1.05rem" onclick="App.closeDayModal()">Закрыть</button>
@@ -636,7 +649,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal">
     <div class="modal-header"><span id="catalogModalTitle">Добавить</span><button class="close-modal" onclick="App.closeCatalogModal()">×</button></div>
     <div id="catalogForm"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
+    <div class="modal-footer"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -644,7 +657,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal" style="max-width:400px">
     <div class="modal-header"><span>✏️ Редактировать работу</span><button class="close-modal" onclick="App.closeWorkEditModal()">×</button></div>
     <div id="workEditForm"></div>
-    <div class="row-btns" style="margin-top:16px">
+    <div class="modal-footer">
       <button class="btn btn-primary" onclick="App.saveWorkEdit()">💾 Сохранить</button>
       <button class="btn btn-secondary" onclick="App.closeWorkEditModal()">Отмена</button>
     </div>
@@ -665,1218 +678,228 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <datalist id="roadsList"></datalist>
 
 <script>
+
+window.App = (function(){
+
 // ============================================
-// МОДУЛЬ: Конфигурация и константы
+// ВСПОМОГАТЕЛЬНЫЕ МОДУЛИ (восстановлены)
 // ============================================
-const CONFIG = {
-  PREFIX: 'drsu_v17_',
-  VERSION: '17.0',
-  DEBOUNCE_DELAY: 300,
-  AUTO_SAVE_INTERVAL: 5000
-};
-
-const Вот **полностью исправленный и рефакторенный код** с устранением всех критических ошибок:
-
----
-
-## Ключевые исправления
-
-| Проблема | Решение |
-|----------|---------|
-| `changeMonth` перезаписан | Разделены на `changeDynamicMonth` / `changeStaticMonth` |
-| `saveAllData` последовательный | `Promise.all` + атомарные транзакции |
-| IndexedDB fire-and-forget | `await` + корректная обработка ошибок |
-| ТМЦ рассинхронизация | Транзакционные операции с откатом |
-| `editWorkVolume` цепочка prompt | Единая модальная форма редактирования |
-| CSV `\r\n` | `split(/\r?\n/)` |
-| XSS в onclick | `jsAttr` экранирует все символы |
-| Дублирование календарей | Единая функция `renderCalendarGrid` |
-| 2000+ строк спагетти-кода | Модульная архитектура: State, Storage, UI, Reports |
-
----
-
-## Полный исправленный код
-
-Сохраните как `drsu_v17_fixed.html`:
-
-```html
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1565c0">
-<title>Журнал производства работ — ДРСУ v17.0 (Рефакторинг)</title>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<style>
-:root{--primary:#1565c0;--primary-light:#1976d2;--primary-dark:#0d47a1;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
-@media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}}
-.dark-mode{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;overflow-x:hidden;transition:background .3s,color .3s}
-.app-header{background:linear-gradient(135deg,var(--primary) 0%,var(--primary-light) 100%);color:#fff;padding:16px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center}
-.app-header h1{font-size:1.1rem;font-weight:600}
-.app-header .date-today{font-size:.8rem;opacity:.9}
-#netStatus{font-size:.7rem;padding:2px 8px;border-radius:12px;background:rgba(255,255,255,.2)}
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);display:flex;justify-content:space-around;padding:8px 0;box-shadow:0 -2px 10px rgba(0,0,0,.15);z-index:100;border-top:1px solid var(--border);transition:background .3s}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--text-secondary);font-size:.65rem;padding:4px;cursor:pointer;transition:color .2s}
-.nav-btn.active{color:var(--primary)}
-.nav-btn svg{width:22px;height:22px}
-.page{display:none;padding:16px;animation:fadeIn .3s}
-.page.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--border);transition:background .3s}
-.card-title{font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.form-group{margin-bottom:14px}
-.form-group label{display:block;font-size:.8rem;font-weight:500;color:var(--text-secondary);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
-.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--card);color:var(--text);transition:border-color .2s,box-shadow .2s}
-.form-group input:focus,.form-group textarea:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(21,101,192,.15)}
-.form-group textarea{min-height:80px;resize:vertical}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:12px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform .1s,opacity .2s,background .2s;width:100%;touch-action:manipulation}
-.btn:active{transform:scale(.98)}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-accent{background:var(--accent);color:#fff}
-.btn-success{background:var(--success);color:#fff}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-edit{background:var(--edit);color:#fff}
-.btn-info{background:var(--info);color:#fff}
-.btn-secondary{background:var(--bg);color:var(--text);border:1.5px solid var(--border)}
-.btn-small{padding:8px 14px;font-size:.85rem;width:auto}
-.row-btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.row-btns .btn{flex:1;min-width:100px}
-.entry-item{background:var(--card);border-radius:var(--radius);margin-bottom:8px;border-left:4px solid var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08);transition:box-shadow .2s;cursor:pointer}
-.entry-item.important{border-left-color:var(--danger)}
-.entry-item.expanded{box-shadow:var(--shadow)}
-.entry-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:12px}
-.entry-object{font-weight:700;font-size:1rem;color:var(--text);word-break:break-word}
-.entry-date{font-size:.8rem;color:var(--text-secondary);background:var(--bg);padding:2px 8px;border-radius:20px;white-space:nowrap}
-.entry-meta-line{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;font-size:.8rem;color:var(--text-secondary)}
-.entry-meta-line span{background:var(--bg);padding:3px 10px;border-radius:20px}
-.entry-toggle-icon{font-size:1.2rem;color:var(--primary);transition:transform .3s;flex-shrink:0;margin-top:2px}
-.entry-item.expanded .entry-toggle-icon{transform:rotate(180deg)}
-.entry-details{display:none;padding:0 12px 12px;border-top:1px dashed var(--border)}
-.entry-item.expanded .entry-details{display:block}
-.norm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.78rem;font-weight:600;white-space:nowrap}
-.norm-badge.ok{background:#e8f5e9;color:var(--success)}
-.norm-badge.warn{background:#fff3e0;color:var(--accent)}
-.norm-badge.bad{background:#ffebee;color:var(--danger)}
-.month-group{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
-.month-header{background:var(--primary);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;font-size:1rem}
-.month-header .month-delete{background:rgba(255,255,255,0.2);border:none;color:#fff;padding:4px 10px;border-radius:20px;font-size:.8rem;cursor:pointer;margin-left:12px}
-.month-header .month-delete:hover{background:var(--danger)}
-.month-content{display:none;padding:12px}
-.month-group.expanded .month-content{display:block}
-.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.kpi-item{background:var(--card);border-radius:12px;padding:10px 8px;text-align:center;border:1px solid var(--border)}
-.kpi-item .kpi-value{font-size:1.3rem;font-weight:700;color:var(--primary)}
-.kpi-item .kpi-list{font-size:.75rem;color:var(--text-secondary);text-align:left;max-height:60px;overflow-y:auto;margin-top:4px}
-.road-scale-container{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
-.road-scale-title{font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:12px}
-.road-scale-bar{position:relative;height:32px;background:var(--bg);border-radius:16px;overflow:hidden;margin-bottom:8px;border:1px solid var(--border)}
-.road-scale-fill{position:absolute;left:0;top:0;height:100%;border-radius:16px;background:linear-gradient(90deg,var(--success) 0%,var(--primary) 100%);transition:width .6s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}
-.road-scale-fill span{color:#fff;font-size:.75rem;font-weight:700}
-.road-scale-labels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text-secondary);margin-bottom:12px}
-.road-scale-segments{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
-.road-segment{padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:500;background:var(--bg);border:1px solid var(--border)}
-.road-segment.done{background:#e8f5e9;color:var(--success);border-color:var(--success)}
-.people-tag{padding:3px 8px;border-radius:20px;font-size:.8rem;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin:2px;background:#e3f2fd;color:var(--primary-dark)}
-.people-tag.support{background:#fff3e0;color:var(--accent)}
-.people-tag input.hours-inp{width:42px;padding:2px 4px;border:1px solid var(--border);border-radius:6px;font-size:.75rem;text-align:center;background:var(--card);color:var(--text);margin-left:4px}
-.filter-bar{display:flex;gap:8px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}
-.filter-chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:.85rem;white-space:nowrap;cursor:pointer;flex-shrink:0;color:var(--text)}
-.filter-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.empty-state{text-align:center;padding:40px 20px;color:var(--text-secondary)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.modal-overlay.active{display:flex}
-.modal{background:var(--card);border-radius:20px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;animation:modalIn .3s;box-shadow:var(--shadow)}
-@keyframes modalIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:700;font-size:1.1rem;color:var(--primary)}
-.close-modal{background:var(--bg);border:none;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
-.report-table{width:100%;border-collapse:collapse;font-size:.9rem}
-.report-table th,.report-table td{padding:10px;text-align:left;border-bottom:1px solid var(--border)}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:.85rem}
-.calendar-day{padding:8px;border-radius:10px;position:relative;cursor:pointer;min-height:40px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg)}
-.calendar-day.header{color:var(--text-secondary);font-weight:600;font-size:.75rem;cursor:default;background:transparent}
-.calendar-day.has-entry{background:#e3f2fd;color:var(--primary);font-weight:700}
-.dark-mode .calendar-day.has-entry{background:#1565c0;color:#fff}
-.calendar-day.has-task{background:#fff3e0;color:var(--accent);font-weight:700}
-.calendar-day.today{background:var(--primary);color:#fff}
-.calendar-day.important-day{background:#ffebee;color:var(--danger);font-weight:700;border:2px solid var(--danger)}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(100px);background:#323232;color:#fff;padding:12px 24px;border-radius:24px;font-size:.9rem;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.timesheet-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
-.timesheet-table{border-collapse:collapse;font-size:.72rem;min-width:100%}
-.timesheet-table th,.timesheet-table td{border:1px solid var(--border);padding:8px 3px;text-align:center;min-width:40px;color:var(--text);font-size:.8rem}
-.timesheet-table th{background:#e3f2fd;font-weight:600;color:var(--text-secondary);position:sticky;top:0;z-index:3}
-.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
-.timesheet-table td:first-child,.timesheet-table th:first-child{position:sticky;left:0;background:var(--card);z-index:4;min-width:140px;text-align:left;padding-left:10px;font-weight:500;border-right:2px solid var(--border)}
-.ts-cell-editable{cursor:pointer;background:rgba(21,101,192,.1);position:relative;font-weight:600}
-.ts-cell-editable:hover{background:rgba(21,101,192,.2)}
-.ts-cell-editable:active{background:rgba(21,101,192,.3)}
-.ts-edit-inp{width:100%;border:none;background:transparent;text-align:center;font-weight:700;color:var(--primary);font-size:.75rem;padding:0}
-.ts-clear-btn{display:none}
-.subtabs{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
-.subtab{padding:10px 18px;border-radius:24px;border:1.5px solid var(--border);background:var(--card);font-size:.9rem;font-weight:500;cursor:pointer;white-space:nowrap;color:var(--text)}
-.subtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.subpanel{display:none}
-.subpanel.active{display:block}
-.catalog-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
-.catalog-actions{position:sticky;top:0;z-index:10;background:var(--card);padding:12px 0 8px;border-bottom:2px solid var(--border);margin-bottom:8px}
-.squad-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:2px solid var(--primary);box-shadow:var(--shadow)}
-.squad-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:2px solid var(--border)}
-.squad-title{font-size:1.1rem;font-weight:700;color:var(--primary)}
-.squad-category{font-size:.8rem;background:var(--primary);color:#fff;padding:4px 12px;border-radius:20px}
-.object-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.object-tag{background:#e8f5e9;color:var(--success);padding:4px 12px;border-radius:20px;font-size:.85rem;font-weight:500;display:flex;align-items:center;gap:6px;border:1px solid var(--success)}
-.object-tag .del-tag{background:rgba(0,0,0,.15);border:none;width:18px;height:18px;border-radius:50%;color:#fff;font-size:.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.plan-box{background:var(--bg);border-radius:12px;padding:12px;margin-top:12px;font-size:.85rem;border:1px solid var(--border)}
-.plan-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border)}
-.road-block{background:var(--bg);border-radius:12px;padding:12px;margin:8px 0;border:1px solid var(--border)}
-.road-title{font-weight:700;color:var(--primary);margin-bottom:8px;font-size:.9rem}
-.preview-item{display:flex;align-items:center;gap:8px;padding:10px;background:#e3f2fd;border-radius:10px;margin-bottom:6px}
-.dark-mode .preview-item{background:#1565c033}
-.preview-item-name{flex:1;font-weight:500;font-size:.9rem}
-.preview-item .del-btn{background:none;border:none;color:var(--danger);font-size:1.1rem;cursor:pointer;padding:0 4px}
-.task-item{display:flex;align-items:center;gap:10px;padding:12px;background:var(--card);border-radius:12px;margin-bottom:8px;border-left:4px solid var(--border)}
-.task-item.important{border-left-color:var(--danger);background:#fff5f5}
-.task-item.done{opacity:.7}
-.task-check{width:22px;height:22px;accent-color:var(--success)}
-.worker-report-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:4px solid var(--primary)}
-.edit-badge{background:var(--edit);color:#fff;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:12px}
-.draft-badge{background:var(--warning);color:#000;padding:4px 12px;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:12px;display:inline-flex;align-items:center;gap:6px}
-.squad-dup-btn{margin-left:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.8rem;cursor:pointer;color:var(--text);font-weight:500}
-.sw-item{display:block;margin:8px 0;padding:8px 0;border-bottom:1px solid var(--border)}
-.sw-item:last-child{border-bottom:none}
-.work-item{margin-bottom:15px;padding-bottom:10px;border-bottom:1px solid var(--border)}
-.work-item:last-child{border-bottom:none}
-.work-item input[type="number"]{width:80px;padding:4px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)}
-.work-road-select{width:100%;margin-top:6px;padding:6px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem}
-.km-inputs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.km-inputs label{font-size:.75rem;color:var(--text-secondary)}
-.km-range-badge{background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px}
-.km-warning{background:#fff3e0;border:1px solid var(--accent);border-radius:8px;padding:8px;margin-top:8px;font-size:.85rem;color:var(--accent)}
-.km-scale-container{margin-top:16px}
-.km-scale-track{position:relative;height:48px;background:var(--bg);border-radius:24px;overflow:hidden;border:1px solid var(--border);margin-bottom:8px}
-.km-scale-done{position:absolute;top:0;height:100%;background:linear-gradient(90deg,var(--success),var(--primary));border-radius:24px;transition:all .3s;opacity:.7}
-.km-scale-done:hover{opacity:1}
-.km-scale-done.multi{background:linear-gradient(90deg,var(--primary),var(--accent));opacity:.85}
-.km-scale-label{position:absolute;top:50%;transform:translateY(-50%);font-size:.7rem;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);white-space:nowrap}
-.km-scale-marks{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-secondary);margin-top:4px}
-.km-history-item{background:var(--bg);border-radius:8px;padding:8px;margin-bottom:6px;font-size:.85rem;border-left:3px solid var(--primary)}
-.km-history-item.multi{border-left-color:var(--primary);background:#e3f2fd}
-.km-legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;font-size:.75rem}
-.km-legend-item{display:flex;align-items:center;gap:4px}
-.km-legend-color{width:12px;height:12px;border-radius:3px}
-.search-box{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:1rem;background:var(--card);color:var(--text);margin-bottom:12px}
-.road-selector{margin-bottom:12px}
-.road-selector select{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:1rem}
-.hint{font-size:.85rem;color:var(--text-secondary);margin-bottom:12px;line-height:1.4}
-.week-view{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:12px}
-.week-day-card{background:var(--card);border-radius:12px;padding:10px 6px;text-align:center;border:1px solid var(--border);min-height:80px}
-.week-day-card.today{background:var(--primary);color:#fff}
-.week-day-card.has-entry{border-color:var(--primary);background:#e3f2fd}
-.week-day-card.has-task{border-color:var(--accent);background:#fff3e0}
-.week-day-card.important{border-color:var(--danger);background:#ffebee}
-.week-day-name{font-size:.7rem;text-transform:uppercase;opacity:.7;margin-bottom:4px}
-.week-day-num{font-size:1.2rem;font-weight:700;margin-bottom:4px}
-.week-day-info{font-size:.65rem;line-height:1.3}
-.day-view-card{background:var(--card);border-radius:var(--radius);padding:20px;text-align:center;border:2px solid var(--primary);margin-bottom:12px}
-.day-view-date{font-size:1.5rem;font-weight:700;color:var(--primary);margin-bottom:8px}
-.day-view-tasks{text-align:left;margin-top:12px}
-.tmc-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
-.tmc-row:last-child{border-bottom:none}
-.stock-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
-.offline-badge{position:fixed;top:70px;right:16px;background:var(--danger);color:#fff;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow)}
-.offline-badge.show{display:block}
-.text-primary{color:var(--primary)}
-.text-success{color:var(--success)}
-.text-accent{color:var(--accent)}
-.text-danger{color:var(--danger)}
-.text-info{color:var(--info)}
-.text-secondary{color:var(--text-secondary)}
-.norm-progress{height:10px;background:var(--bg);border-radius:5px;overflow:hidden;margin:8px 0;border:1px solid var(--border)}
-.norm-progress-fill{height:100%;border-radius:5px;transition:width .3s ease}
-.norm-progress-fill.under{background:linear-gradient(90deg,var(--danger),var(--accent))}
-.norm-progress-fill.norm{background:var(--success)}
-.norm-progress-fill.over{background:linear-gradient(90deg,var(--accent),var(--danger))}
-.norm-progress-labels{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text-secondary);margin-top:2px}
-.work-object-label{display:inline-block;background:var(--primary);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-right:6px}
-.work-object-label.multi{background:var(--edit)}
-.kpi-workers-list{font-size:.7rem;color:var(--text-secondary);margin-top:4px;max-height:80px;overflow-y:auto}
-.kpi-norm-info{font-size:.8rem;color:var(--text-secondary);margin-top:4px}
-.object-norm-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600;background:#e8f5e9;color:var(--success)}
-.object-norm-badge.warn{background:#fff3e0;color:var(--accent)}
-.object-norm-badge.bad{background:#ffebee;color:var(--danger)}
-.save-indicator{position:fixed;top:70px;right:16px;background:var(--success);color:#fff;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow);transition:opacity .3s}
-.save-indicator.show{display:block}
-.save-indicator.error{background:var(--danger)}
-.storage-status{position:fixed;top:70px;left:16px;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;z-index:99;display:none;box-shadow:var(--shadow)}
-.storage-status.ok{background:var(--success);color:#fff}
-.storage-status.warn{background:var(--warning);color:#000}
-.storage-status.error{background:var(--danger);color:#fff}
-.storage-status.show{display:block}
-@media(max-width:600px){
-  .week-view{grid-template-columns:repeat(7,1fr);overflow-x:auto}
-  .week-day-card{min-width:60px}
-}
-
-/* FIX: Тёмная тема */
-.dark-mode .task-item.important{background:rgba(198,40,40,.22);color:#fff}
-.dark-mode .task-item{background:#1e1e1e;border-color:#333}
-.dark-mode .calendar-day.has-task{background:#e65100;color:#fff}
-.dark-mode .week-day-card.has-task{background:#e65100;color:#fff}
-.dark-mode .week-day-card.has-entry{background:#1565c0;color:#fff}
-.dark-mode .week-day-card.important{background:#c62828;color:#fff}
-.dark-mode .object-tag{background:rgba(46,125,50,.25);color:#a5d6a7;border-color:#2e7d32}
-.dark-mode .people-tag{background:rgba(21,101,192,.25);color:#90caf9}
-.dark-mode .people-tag.support{background:rgba(255,111,0,.25);color:#ffcc80}
-.dark-mode .km-history-item.multi{background:rgba(21,101,192,.22)}
-.dark-mode .preview-item{background:rgba(21,101,192,.15)}
-.dark-mode .road-block{background:#1a1a1a;border-color:#333}
-.dark-mode .plan-box{background:#1a1a1a;border-color:#333}
-.dark-mode .timesheet-table th{background:#1565c0;color:#fff}
-.dark-mode .timesheet-table td:first-child{background:#1e1e1e}
-.dark-mode .norm-badge.ok{background:rgba(46,125,50,.25);color:#a5d6a7}
-.dark-mode .norm-badge.warn{background:rgba(255,111,0,.25);color:#ffcc80}
-.dark-mode .norm-badge.bad{background:rgba(198,40,40,.25);color:#ef9a9a}
-.dark-mode .squad-card{background:#1e1e1e;border-color:var(--primary)}
-.dark-mode .month-group{background:#1e1e1e;border-color:#333}
-.dark-mode .entry-item{background:#1e1e1e;border-color:#333}
-.dark-mode .entry-meta-line span{background:#2a2a2a}
-.dark-mode .worker-report-card{background:#1e1e1e}
-.dark-mode .catalog-item{border-color:#333}
-.dark-mode .catalog-actions{background:#1e1e1e;border-color:#333}
-.dark-mode .tmc-row{border-color:#333}
-.dark-mode .stock-panel .card{background:#1e1e1e}
-.dark-mode .subtab{background:#1e1e1e;border-color:#333;color:var(--text)}
-
-/* Tactile feedback */
-.nav-btn:active,.filter-chip:active,.subtab:active,.calendar-day:active,.week-day-card:active,.entry-item:active,.month-header:active{transform:scale(0.97);opacity:0.85}
-.nav-btn,.filter-chip,.subtab,.calendar-day,.week-day-card,.entry-item,.month-header{transition:transform .1s,opacity .1s,background .2s,box-shadow .2s}
-.filter-chip,.subtab,.week-day-card{cursor:pointer}
-.dark-mode .filter-chip{background:#1e1e1e;border-color:#444}
-.dark-mode .search-box{background:#1e1e1e;border-color:#444}
-.dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:#1e1e1e;border-color:#444}
-.dark-mode .btn-secondary{background:#2a2a2a;border-color:#444}
-.dark-mode .close-modal{background:#2a2a2a}
-.dark-mode .empty-state{color:#888}
-.dark-mode .hint{color:#aaa}
-.dark-mode .text-secondary{color:#aaa}
-
-.fab-top{position:fixed;bottom:100px;right:16px;width:48px;height:48px;border-radius:50%;background:var(--primary);color:#fff;border:none;box-shadow:0 4px 12px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:150;cursor:pointer;font-size:1.3rem}
-.fab-top.show{display:flex}
-
-.ptr-indicator{position:fixed;top:0;left:0;right:0;height:60px;background:var(--primary);color:#fff;display:none;align-items:center;justify-content:center;z-index:250;font-size:.9rem;font-weight:600;transform:translateY(-100%);transition:transform .2s}
-.ptr-indicator.show{display:flex;transform:translateY(0)}
-
-.cal-badge{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:.55rem;padding:1px 4px;border-radius:8px;background:var(--danger);color:#fff;font-weight:700;min-width:14px}
-.dark-mode .cal-badge{background:#ff5252}
-
-.nav-btn{position:relative;transition:all .2s}
-.nav-btn::after{content:"";position:absolute;bottom:0;left:25%;right:25%;height:3px;background:var(--primary);border-radius:3px 3px 0 0;transform:scaleX(0);transition:transform .2s}
-.nav-btn.active::after{transform:scaleX(1)}
-
-.page{animation:fadeIn .35s cubic-bezier(.4,0,.2,1)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.modal{transform:scale(.95);opacity:0;transition:all .25s cubic-bezier(.4,0,.2,1)}
-.modal-overlay.active .modal{transform:scale(1);opacity:1}
-
-@media(max-width:380px){
-  .app-header h1{font-size:1rem}
-  .kpi-item{padding:8px 4px}
-  .kpi-value{font-size:1.1rem}
-  .nav-btn{font-size:.6rem}
-  .nav-btn svg{width:20px;height:20px}
-}
-
-.timesheet-wrap{scrollbar-width:thin;scrollbar-color:var(--primary) transparent}
-.timesheet-wrap::-webkit-scrollbar{height:6px}
-.timesheet-wrap::-webkit-scrollbar-thumb{background:var(--primary);border-radius:3px}
-
-/* FIX: Недельный вид — текст на персиковых карточках */
-.week-day-card.has-task .week-day-info{color:var(--text);font-weight:500}
-.dark-mode .week-day-card.has-task .week-day-info{color:#fff}
-.week-day-card.has-task .week-day-name{color:var(--text);opacity:.8}
-.dark-mode .week-day-card.has-task .week-day-name{color:#fff;opacity:.9}
-.week-day-card.has-task .week-day-num{color:var(--text)}
-.dark-mode .week-day-card.has-task .week-day-num{color:#fff}
-
-.timesheet-table tfoot td{background:var(--primary);color:#fff;font-weight:700;border-color:rgba(255,255,255,.2)}
-.dark-mode .timesheet-table tfoot td{background:#1565c0}
-.timesheet-table tfoot td:first-child{background:var(--primary)!important}
-.dark-mode .timesheet-table tfoot td:first-child{background:#1565c0!important}
-</style>
-</head>
-<body>
-<button class="fab-top" id="fabTop">↑</button>
-<div class="ptr-indicator" id="ptrIndicator">⬇️ Отпустите для обновления</div>
-
-<div class="offline-badge" id="offlineBadge">📴 Офлайн-режим</div>
-<div class="save-indicator" id="saveIndicator">💾 Сохранено</div>
-<div class="storage-status" id="storageStatus"></div>
-
-<div class="app-header">
-  <div><h1>📋 Журнал производства работ</h1><div class="date-today" id="headerDate"></div></div>
-  <div id="netStatus">● Онлайн</div>
-</div>
-
-<div class="page active" id="pageJournal">
-  <div class="kpi-row">
-    <div class="kpi-item"><div class="kpi-value" id="statWorkers">0</div><div class="kpi-label">👷 На смене</div><div class="kpi-workers-list" id="statWorkersList"></div></div>
-    <div class="kpi-item"><div class="kpi-value" id="statObjects">0</div><div class="kpi-label">📍 Объектов</div><div class="kpi-norm-info" id="statObjectsNorm"></div></div>
-    <div class="kpi-item"><div class="kpi-value" id="statWorks">0</div><div class="kpi-label">🔧 Видов работ</div></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🛣️ Километраж дорог</div>
-    <div class="road-selector">
-      <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
-        <option value="">📍 Выберите дорогу для деталей</option>
-      </select>
-    </div>
-    <div id="roadsKmSummary" style="margin-top:12px"></div>
-    <div id="roadKmScale"></div>
-    <div id="roadKmHistory"></div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📅 Календарь и задачи</div>
-    <div id="dynamicCalendar"></div>
-    <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:.75rem;color:var(--text-secondary);flex-wrap:wrap">
-      <span>🔵 запись</span><span>🟠 задача</span><span>🔴 важная</span>
-    </div>
-  </div>
-
-  <div style="position:relative;margin-bottom:12px">
-  <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1.1rem;opacity:.6;pointer-events:none">🔍</span>
-  <input type="text" class="search-box" id="journalSearch" placeholder="Поиск: объект, работник, дата..." oninput="App.renderEntries()" style="padding-left:42px">
-</div>
-  <div class="filter-bar">
-    <button class="filter-chip active" onclick="App.setFilter('all',this)">Все</button>
-    <button class="filter-chip" onclick="App.setFilter('today',this)">Сегодня</button>
-    <button class="filter-chip" onclick="App.setFilter('week',this)">Неделя</button>
-    <button class="filter-chip" onclick="App.setFilter('important',this)">Важные</button>
-    <button class="filter-chip" onclick="App.setFilter('plan',this)">С задачами</button>
-  </div>
-  <div id="entriesList"></div>
-</div>
-
-<div class="page" id="pageNew">
-  <div id="editBadge" style="display:none"><div class="edit-badge">✏️ Редактирование записи #<span id="editId"></span></div></div>
-  <div id="draftBadge" style="display:none"><div class="draft-badge">📝 Восстановлен черновик</div></div>
-  <form id="entryForm" onsubmit="return App.saveEntry(event)">
-    <div class="card">
-      <div class="card-title">📍 Дата и тип</div>
-      <div class="form-group"><label>Дата производства работ</label><input type="date" id="inpDate" required></div>
-      <div class="checkbox-row" style="border:none;padding-top:4px">
-        <input type="checkbox" id="inpImportant" style="width:22px;height:22px;accent-color:var(--danger)">
-        <label for="inpImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная запись</label>
-      </div>
-    </div>
-    <div id="squadsContainer"></div>
-    <div class="row-btns">
-      <button type="button" class="btn btn-info" onclick="App.addSquad()">➕ Добавить наряд</button>
-      <button type="button" class="btn btn-secondary" onclick="App.saveTemplate()">💾 Шаблон</button>
-      <select class="btn btn-secondary" style="flex:2" id="templateSelect" onchange="App.loadTemplate(this.value)"><option value="">📂 Загрузить шаблон</option></select>
-    </div>
-    <div class="card">
-      <div class="card-title">📝 Прочее</div>
-      <div class="form-group"><label>Напоминание (дата и время)</label><input type="datetime-local" id="inpReminder"></div>
-      <div class="form-group"><label>Текст напоминания</label><input type="text" id="inpReminderText" placeholder="Например: Сдать сменный отчёт"></div>
-      <div class="form-group"><label>Температура воздуха</label><input type="text" id="inpWeather" placeholder="+15...+18"></div>
-      <div class="form-group"><label>Погодные условия</label><input type="text" id="inpWeatherCond" placeholder="Ясно, дождь, снег..."></div>
-      <div class="form-group"><label>Заметки</label><textarea id="inpNotes" placeholder="Дополнительные заметки..."></textarea></div>
-    </div>
-    <button type="submit" class="btn btn-primary" id="btnSubmit" style="margin-bottom:12px;min-height:52px;font-size:1.05rem">💾 Сохранить запись</button>
-    <button type="button" class="btn btn-secondary" onclick="App.cancelEdit()" id="btnCancelEdit" style="display:none">❌ Отменить редактирование</button>
-    <button type="button" class="btn btn-secondary" onclick="App.clearForm()" id="btnClear" style="margin-top:8px">Очистить форму</button>
-  </form>
-</div>
-
-<div class="page" id="pageCalendar">
-  <div class="card">
-    <div class="card-title">📅 Календарь задач и записей</div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <button class="btn btn-secondary btn-small" onclick="App.changeStaticMonth(-1)">◀</button>
-      <span id="calendarMonth2" style="font-weight:700;font-size:1.1rem"></span>
-      <button class="btn btn-secondary btn-small" onclick="App.changeStaticMonth(1)">▶</button>
-    </div>
-    <div class="calendar-grid" id="calendarGrid2"></div>
-  </div>
-</div>
-
-<div class="page" id="pageTimesheet">
-  <div class="card">
-    <div class="card-title">📋 Табель учёта рабочего времени</div>
-    <div class="form-group"><label>Месяц</label><input type="month" id="tsMonth" onchange="App.renderTimesheet()"></div>
-    <div class="form-group"><label>Категория</label><select id="tsCategory" onchange="App.renderTimesheet()"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
-    <div class="hint">💡 <b>Кликните ячейку</b> для редактирования. Число = часы, буквы = статус (Б, П, АБЗ, ОТП, У, В).<br>Галочка «🔄 Также изменить в наряде» — работает только при вводе числа.</div>
-    <div class="row-btns" style="margin-top:8px">
-      <button class="btn btn-info btn-small" onclick="App.addTimesheetWorker()">➕ Добавить работника</button>
-      <button class="btn btn-secondary btn-small" onclick="App.exportTimesheetCSV()">📄 CSV</button>
-      <button class="btn btn-success btn-small" onclick="App.exportTimesheetExcel()">📊 Excel</button>
-    </div>
-  </div>
-  <div id="timesheetResult"></div>
-  <div class="row-btns" id="tsControls" style="display:none;margin-top:12px">
-    <button class="btn btn-danger btn-small" onclick="App.clearTimesheetOverrides()">🔄 Сбросить корректировки</button>
-  </div>
-</div>
-
-<div class="page" id="pageReports">
-  <div class="subtabs">
-    <button class="subtab active" onclick="App.showReportTab('repAnalytics',this)">📊 Аналитика</button>
-    <button class="subtab" onclick="App.showReportTab('repDocs',this)">📋 Документы</button>
-    <button class="subtab" onclick="App.showReportTab('repRoads',this)">🛣️ Дороги</button>
-    <button class="subtab" onclick="App.showReportTab('repMachines',this)">🚜 Стоимость машин</button>
-  </div>
-  <div class="subpanel active" id="repAnalytics">
-    <div class="card">
-      <div class="card-title">📊 Формирование отчётов</div>
-      <div class="form-group"><label>Период с</label><input type="date" id="reportFrom"></div>
-      <div class="form-group"><label>Период по</label><input type="date" id="reportTo"></div>
-      <div class="form-group"><label>Категория</label><select id="reportCategory"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
-      <div class="row-btns">
-        <button class="btn btn-primary" onclick="App.generateSummaryReport()">📊 Сводный</button>
-        <button class="btn btn-accent" onclick="App.generateWorkersReport()">👷 По людям</button>
-        <button class="btn btn-success" onclick="App.generateObjectsReport()">📍 По объектам</button>
-      </div>
-    </div>
-    <div id="reportResult"></div>
-    <div class="row-btns" id="reportExports" style="display:none;margin-top:12px">
-      <button class="btn btn-secondary" onclick="App.exportCSV()">📄 CSV</button>
-      <button class="btn btn-secondary" onclick="App.exportJSON()">💾 JSON</button>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button>
-    </div>
-  </div>
-  <div class="subpanel" id="repDocs">
-    <div class="card">
-      <div class="card-title">📋 Генерация документов (Excel)</div>
-      <div class="form-group"><label>Месяц документа</label><input type="month" id="docMonth"></div>
-      <div class="form-group"><label>Объект / примечание</label><input type="text" id="docObject" placeholder="Например: Содержание а/д ПУ-3"></div>
-      <div class="row-btns">
-        <button class="btn btn-primary" onclick="App.generateOrderDoc()">📄 Наряд-задание</button>
-        <button class="btn btn-success" onclick="App.generateTimesheetDoc()">📊 Табель</button>
-        <button class="btn btn-accent" onclick="App.generateS29Doc()">📦 С-29 (материалы)</button>
-      </div>
-    </div>
-  </div>
-  <div class="subpanel" id="repRoads">
-    <div class="card">
-      <div class="card-title">🛣️ Аналитика по километражу</div>
-      <div class="form-group"><label>Выберите дорогу</label><select id="reportRoadSelect" onchange="App.generateRoadKmReport()"><option value="">Выберите дорогу</option></select></div>
-      <div id="roadReportResult"></div>
-    </div>
-  </div>
-  <div class="subpanel" id="repMachines">
-    <div class="card">
-      <div class="card-title">🚜 Стоимость эксплуатации машин и механизмов (по образцу ведомости №426)</div>
-      <div class="form-group"><label>Период с</label><input type="date" id="machFrom"></div>
-      <div class="form-group"><label>Период по</label><input type="date" id="machTo"></div>
-      <button class="btn btn-primary" onclick="App.generateMachinesCost()">Рассчитать</button>
-      <div id="machinesResult" style="margin-top:16px"></div>
-    </div>
-  </div>
-</div>
-
-<div class="page" id="pageMore">
-  <div class="subtabs">
-    <button class="subtab active" onclick="App.showSubtab('subCatalogs',this)">📚 Справочники</button>
-    <button class="subtab" onclick="App.showSubtab('subTasks',this)">📋 Задачи</button>
-    <button class="subtab" onclick="App.showSubtab('subStock',this)">📦 Склад</button>
-    <button class="subtab" onclick="App.showSubtab('subSettings',this)">⚙️ Настройки</button>
-  </div>
-  <div class="subpanel active" id="subCatalogs">
-    <input type="text" class="search-box catalog-search" id="catSearch" placeholder="🔍 Поиск по справочнику..." oninput="App.renderCatalogs()">
-    <div class="subtabs">
-      <button class="subtab active" onclick="App.showCatalog('catWorkers',this)">👷 Работники</button>
-      <button class="subtab" onclick="App.showCatalog('catWorks',this)">🔧 Виды работ</button>
-      <button class="subtab" onclick="App.showCatalog('catTools',this)">🛠️ Инструменты</button>
-      <button class="subtab" onclick="App.showCatalog('catRoads',this)">🛣️ Дороги</button>
-    </div>
-    <div id="catWorkers" class="catalog-panel active">
-      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('worker')">➕ Добавить работника</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('worker')">📥 Импорт CSV</button></div>
-      <div class="card" id="workersCatalogList"></div>
-    </div>
-    <div id="catWorks" class="catalog-panel" style="display:none">
-      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('work')">➕ Добавить вид работы</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('work')">📥 Импорт CSV</button></div>
-      <div class="card" id="worksCatalogList"></div>
-    </div>
-    <div id="catTools" class="catalog-panel" style="display:none">
-      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('tool')">➕ Добавить инструмент</button></div>
-      <div class="card" id="toolsCatalogList"></div>
-    </div>
-    <div id="catRoads" class="catalog-panel" style="display:none">
-      <div class="card catalog-actions"><button class="btn btn-primary" onclick="App.addCatalogItem('road')">➕ Добавить дорогу / объект</button><button class="btn btn-secondary btn-small" style="margin-top:8px" onclick="App.importCatalogCSV('road')">📥 Импорт CSV</button></div>
-      <div class="card" id="roadsCatalogList"></div>
-    </div>
-  </div>
-  <div class="subpanel" id="subTasks">
-    <div class="card">
-      <div class="card-title">📋 Новая задача</div>
-      <div class="form-group"><label>Что сделать</label><input type="text" id="newTaskText" placeholder="Например: Заказать щебень"></div>
-      <div class="form-group"><label>Дата выполнения</label><input type="date" id="newTaskDate"></div>
-      <div class="checkbox-row" style="border:none"><input type="checkbox" id="newTaskImportant" style="width:22px;height:22px;accent-color:var(--danger)"><label for="newTaskImportant" style="margin:0;text-transform:none;font-size:.95rem;color:var(--text);font-weight:500">🔴 Важная задача</label></div>
-      <button class="btn btn-primary" onclick="App.addTask()" style="margin-top:8px">➕ Добавить задачу</button>
-    </div>
-    <div class="card">
-      <div class="card-title">📋 Мои задачи</div>
-      <div class="filter-bar" style="margin-bottom:12px">
-        <button class="filter-chip active" onclick="App.setTaskFilter('all',this)">Все</button>
-        <button class="filter-chip" onclick="App.setTaskFilter('active',this)">Активные</button>
-        <button class="filter-chip" onclick="App.setTaskFilter('done',this)">Выполненные</button>
-        <button class="filter-chip" onclick="App.setTaskFilter('important',this)">Важные</button>
-      </div>
-      <div id="tasksList"></div>
-    </div>
-  </div>
-  <div class="subpanel" id="subStock">
-    <div class="subtabs">
-      <button class="subtab active" onclick="App.showStockTab('tabOrderStock',this)">📦 Склад нарядов</button>
-      <button class="subtab" onclick="App.showStockTab('tabManualStock',this)">📝 Ручной склад</button>
-    </div>
-    <div id="tabOrderStock" class="stock-panel active">
-      <div class="card">
-        <div class="card-title">📦 Остатки ТМЦ для нарядов</div>
-        <div class="hint">Расходуется автоматически при сохранении наряда. При редактировании старые материалы возвращаются.</div>
-        <div id="orderStockList"></div>
-        <button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('order')">➕ Добавить строку</button>
-      </div>
-    </div>
-    <div id="tabManualStock" class="stock-panel" style="display:none">
-      <div class="card">
-        <div class="card-title">📝 Ручной склад</div>
-        <div class="hint">Личный учёт материалов. Вы сами фиксируете приход и расход.</div>
-        <div id="manualStockList"></div>
-        <button class="btn btn-primary btn-small" style="margin-top:12px" onclick="App.addStockRow('manual')">➕ Добавить строку</button>
-      </div>
-      <div class="card">
-        <div class="card-title">📜 История операций</div>
-        <div id="manualStockHistory"></div>
-      </div>
-    </div>
-  </div>
-  <div class="subpanel" id="subSettings">
-    <div class="card">
-      <div class="card-title">Организация</div>
-      <div class="form-group"><label>Название ДРСУ / подразделения</label><input type="text" id="settingOrg" placeholder="ДРСУ №..."></div>
-      <div class="form-group"><label>ФИО мастера / прораба</label><input type="text" id="settingMaster" placeholder="Фамилия И.О."></div>
-      <button class="btn btn-primary" onclick="App.saveAppSettings()">Сохранить настройки</button>
-    </div>
-    <div class="card">
-      <div class="card-title">📚 Нормативная база</div>
-      <div class="hint">⚠️ Нормы и расценки загружаются отдельно. Загрузите JSON с видами работ, инструментами и ТМЦ.</div>
-      <div class="form-group"><label>Импорт нормативов (JSON)</label><input type="file" id="importNormsFile" accept=".json" onchange="App.importNormsData(this)"></div>
-      <button class="btn btn-info" onclick="App.exportNormsTemplate()">📥 Скачать шаблон JSON</button>
-    </div>
-    <div class="card">
-      <div class="card-title">🌗 Тема оформления</div>
-      <div class="row-btns">
-        <button class="btn btn-secondary" onclick="App.setTheme('auto')">🌓 Авто</button>
-        <button class="btn btn-secondary" onclick="App.setTheme('light')">☀️ Светлая</button>
-        <button class="btn btn-secondary" onclick="App.setTheme('dark')">🌙 Тёмная</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">💾 Резервное копирование</div>
-      <button class="btn btn-info" onclick="App.exportAllData()">📤 Экспорт всех данных</button>
-      <div class="form-group" style="margin-top:12px"><label>Импорт данных (JSON)</label><input type="file" id="importFile" accept=".json" onchange="App.importAllData(this)"></div>
-    </div>
-    <div class="card">
-      <div class="card-title">🗑️ Опасная зона</div>
-      <button class="btn btn-danger" onclick="App.clearAllData()">Очистить ВСЕ данные</button>
-    </div>
-    <div class="card">
-      <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v17.0 (Рефакторинг)</b><br>Все данные хранятся локально. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».<br><br><b style="color:var(--danger)">⚠️ ВАЖНО:</b> Если данные не сохраняются — проверьте, не отключены ли куки/хранилище в браузере, и не используете ли вы режим инкогнито.</p>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="swModal">
-  <div class="modal">
-    <div class="modal-header"><span>👷 Выбрать работников</span><button class="close-modal" onclick="App.closeSwModal()">×</button></div>
-    <div style="margin-bottom:10px"><label class="checkbox-row" style="border:none;padding:4px 0;"><input type="checkbox" id="swSelectAll" onchange="App.selectAllWorkers(this.checked)"> Выбрать всех</label></div>
-    <div id="swList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="sWorksModal">
-  <div class="modal">
-    <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
-    <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.</b></div>
-    <div id="sWorksList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="sTmcModal">
-  <div class="modal">
-    <div class="modal-header"><span>📦 Расход ТМЦ в наряде</span><button class="close-modal" onclick="App.closeSTmcModal()">×</button></div>
-    <div id="sTmcList"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="dayModal">
-  <div class="modal" style="max-height:90vh">
-    <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
-    <div id="dayModalContent"></div>
-    <div class="row-btns" style="margin-top:16px">
-      <button class="btn btn-primary" style="min-height:48px;font-size:1.05rem" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
-      <button class="btn btn-accent" style="min-height:48px;font-size:1.05rem" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
-      <button class="btn btn-secondary" style="min-height:48px;font-size:1.05rem" onclick="App.closeDayModal()">Закрыть</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="catalogModal">
-  <div class="modal">
-    <div class="modal-header"><span id="catalogModalTitle">Добавить</span><button class="close-modal" onclick="App.closeCatalogModal()">×</button></div>
-    <div id="catalogForm"></div>
-    <div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="workEditModal">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-header"><span>✏️ Редактировать работу</span><button class="close-modal" onclick="App.closeWorkEditModal()">×</button></div>
-    <div id="workEditForm"></div>
-    <div class="row-btns" style="margin-top:16px">
-      <button class="btn btn-primary" onclick="App.saveWorkEdit()">💾 Сохранить</button>
-      <button class="btn btn-secondary" onclick="App.closeWorkEditModal()">Отмена</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<nav class="bottom-nav">
-  <button class="nav-btn active" onclick="App.showPage('pageJournal')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Журнал</button>
-  <button class="nav-btn" onclick="App.showPage('pageNew')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Запись</button>
-  <button class="nav-btn" onclick="App.showPage('pageCalendar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Календарь</button>
-  <button class="nav-btn" onclick="App.showPage('pageTimesheet')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>Табель</button>
-  <button class="nav-btn" onclick="App.showPage('pageReports')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>Отчёт</button>
-  <button class="nav-btn" onclick="App.showPage('pageMore')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Ещё</button>
-</nav>
-
-<datalist id="roadsList"></datalist>
-
-<script>
-// ============================================
-// МОДУЛЬ: Конфигурация и константы
-// ============================================
-const CONFIG = {
-  PREFIX: 'drsu_v17_',
-  VERSION: '17.0',
-  DEBOUNCE_DELAY: 300,
-  AUTO_SAVE_INTERVAL: 5000
-};
-
-const STORAGE_KEYS = {
-  entries: CONFIG.PREFIX + 'entries',
-  workers: CONFIG.PREFIX + 'workers',
-  works: CONFIG.PREFIX + 'works',
-  tools: CONFIG.PREFIX + 'tools',
-  tmc: CONFIG.PREFIX + 'tmc',
-  tasks: CONFIG.PREFIX + 'tasks',
-  settings: CONFIG.PREFIX + 'settings',
-  roads: CONFIG.PREFIX + 'roads',
-  draft: CONFIG.PREFIX + 'draft',
-  tsOverrides: CONFIG.PREFIX + 'ts_overrides',
-  tsLetters: CONFIG.PREFIX + 'ts_letters',
-  stockOrder: CONFIG.PREFIX + 'stock_order',
-  stockManual: CONFIG.PREFIX + 'stock_manual',
-  templates: CONFIG.PREFIX + 'templates'
-};
 
 const CATEGORIES = {
-  road: { name: 'Дорожные рабочие', norm: true, color: '#2e7d32' },
-  gazelle: { name: 'Водители Газели', norm: false, color: '#0277bd' },
-  tractor: { name: 'Трактористы', norm: false, color: '#f9a825' },
-  maz: { name: 'Водители МАЗ', norm: false, color: '#6a1b9a' },
-  other: { name: 'Прочие', norm: false, color: '#616161' }
+  road:    { name: 'Дорожные рабочие', color: '#e65100', norm: true },
+  gazelle: { name: 'Водители Газели',  color: '#ff6f00', norm: false },
+  tractor: { name: 'Трактористы',      color: '#2e7d32', norm: false },
+  maz:     { name: 'Водители МАЗ',     color: '#6a1b9a', norm: false },
+  other:   { name: 'Прочие',           color: '#616161', norm: false }
 };
 
-const LETTER_CODES = { 'Б': 'Больничный', 'П': 'Прогул', 'АБЗ': 'Командировка', 'ОТП': 'Отпуск', 'У': 'Учеба', 'В': 'Выходной' };
+const MONTH_NAMES = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const DAY_NAMES_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const WORK_COLORS = ['#e65100','#2e7d32','#ff6f00','#c62828','#6a1b9a','#00695c','#0277bd','#f9a825'];
+const LETTER_CODES = { 'Б': true, 'П': true, 'АБЗ': true, 'ОТП': true, 'У': true, 'В': true };
 
-const MONTH_NAMES = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-
-const DAY_NAMES_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-
-const WORK_COLORS = ['#2e7d32', '#1565c0', '#ff6f00', '#6a1b9a', '#c62828', '#00695c', '#0277bd'];
-
-// ============================================
-// МОДУЛЬ: Хранилище (Storage)
-// ============================================
-const Storage = (function() {
-  'use strict';
-  
-  let storageAvailable = false;
-  let storageError = '';
-  let memoryBackup = {};
-  let idbDB = null;
-
-  async function initIndexedDB() {
-    return new Promise((resolve, reject) => {
-      if (typeof indexedDB === 'undefined') {
-        reject(new Error('IndexedDB не поддерживается'));
-        return;
-      }
-      const request = indexedDB.open('DRSU_Backup', 1);
-      request.onupgradeneeded = function(event) {
-        const db = event.target.result;
-        if (!db.objectStoreNames.contains('data')) {
-          db.createObjectStore('data', { keyPath: 'key' });
-        }
-      };
-      request.onsuccess = function(event) {
-        idbDB = event.target.result;
-        resolve(idbDB);
-      };
-      request.onerror = () => reject(new Error('Не удалось открыть IndexedDB'));
-    });
-  }
-
-  function checkStorage() {
-    try {
-      const test = '__drsu_storage_test__';
-      localStorage.setItem(test, test);
-      const result = localStorage.getItem(test) === test;
-      localStorage.removeItem(test);
-      storageAvailable = result;
-      if (!result) storageError = 'localStorage не работает корректно';
-      return result;
-    } catch (e) {
-      storageAvailable = false;
-      storageError = e.name + ': ' + e.message;
-      console.warn('localStorage недоступен:', e);
-      return false;
-    }
-  }
-
-  async function saveToIndexedDB(key, value) {
-    if (!idbDB) {
-      try { await initIndexedDB(); } catch (e) { return false; }
-    }
-    return new Promise((resolve) => {
-      try {
-        const tx = idbDB.transaction(['data'], 'readwrite');
-        const store = tx.objectStore('data');
-        store.put({ key: key, value: JSON.stringify(value), timestamp: Date.now() });
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => resolve(false);
-      } catch (e) {
-        console.warn('IndexedDB save failed:', key, e);
-        resolve(false);
-      }
-    });
-  }
-
-  async function loadFromIndexedDB(key) {
-    if (!idbDB) {
-      try { await initIndexedDB(); } catch (e) { return null; }
-    }
-    return new Promise((resolve) => {
-      try {
-        const tx = idbDB.transaction(['data'], 'readonly');
-        const store = tx.objectStore('data');
-        const request = store.get(key);
-        request.onsuccess = function() {
-          if (request.result) {
-            try {
-              const data = JSON.parse(request.result.value);
-              resolve(data);
-            } catch (e) { resolve(null); }
-          } else {
-            resolve(null);
-          }
-        };
-        request.onerror = () => resolve(null);
-      } catch (e) {
-        resolve(null);
-      }
-    });
-  }
-
-  async function save(key, val) {
-    // 1. Всегда сохраняем в память
-    try {
-      memoryBackup[key] = JSON.parse(JSON.stringify(val));
-    } catch (e) {
-      console.warn('Memory backup failed for', key, e);
-    }
-
-    // 2. Пробуем localStorage
-    let lsSuccess = false;
-    if (storageAvailable) {
-      try {
-        const json = JSON.stringify(val);
-        localStorage.setItem(key, json);
-        lsSuccess = true;
-      } catch (e) {
-        console.warn('localStorage save error for key', key, e);
-        if (e.name === 'QuotaExceededError' || e.code === 22) {
-          storageError = 'Хранилище переполнено!';
-        } else {
-          storageError = e.name + ': ' + e.message;
-        }
-      }
-    }
-
-    // 3. Fallback на IndexedDB
-    if (!lsSuccess) {
-      const idbSuccess = await saveToIndexedDB(key, val);
-      if (idbSuccess) {
-        console.log('Saved to IndexedDB:', key);
-        return true;
-      }
-    }
-
-    return lsSuccess;
-  }
-
-  async function load(key, def) {
-    // Сначала localStorage
-    if (storageAvailable) {
-      try {
-        const v = localStorage.getItem(key);
-        if (v !== null) {
-          const parsed = JSON.parse(v);
-          memoryBackup[key] = JSON.parse(JSON.stringify(parsed));
-          return parsed;
-        }
-      } catch (e) {
-        console.warn('Load error for key', key, e);
-      }
-    }
-    // Fallback на IndexedDB
-    const idbData = await loadFromIndexedDB(key);
-    if (idbData !== null) {
-      memoryBackup[key] = JSON.parse(JSON.stringify(idbData));
-      return idbData;
-    }
-    // Fallback на память
-    if (memoryBackup[key] !== undefined) {
-      return JSON.parse(JSON.stringify(memoryBackup[key]));
-    }
-    return def;
-  }
-
-  async function saveAll(dataMap) {
-    const promises = Object.entries(dataMap).map(([key, val]) => save(key, val));
-    const results = await Promise.all(promises);
-    return results.every(r => r === true);
-  }
-
-  async function loadAll(keys, defaults) {
-    const result = {};
-    for (const key of keys) {
-      result[key] = await load(key, defaults[key] !== undefined ? defaults[key] : null);
-    }
-    return result;
-  }
-
-  function clearAll() {
-    Object.values(STORAGE_KEYS).forEach(k => {
-      try { localStorage.removeItem(k); } catch (e) {}
-    });
-    memoryBackup = {};
-    if (idbDB) {
-      try {
-        const tx = idbDB.transaction(['data'], 'readwrite');
-        const store = tx.objectStore('data');
-        store.clear();
-      } catch (e) {}
-    }
-  }
-
-  function getStatus() {
-    return { available: storageAvailable, error: storageError };
-  }
-
-  return {
-    checkStorage,
-    save,
-    load,
-    saveAll,
-    loadAll,
-    clearAll,
-    getStatus,
-    initIndexedDB
-  };
-})();
-
-// ============================================
-// МОДУЛЬ: Состояние приложения (State)
-// ============================================
-const State = (function() {
-  'use strict';
-
-  const data = {
-    entries: [],
-    workers: [],
-    works: [],
-    tools: [],
-    tmc: [],
-    tasks: [],
-    settings: {},
-    roads: [],
-    stockOrder: [],
-    stockManual: [],
-    templates: [],
-    timesheetOverrides: {},
-    timesheetLetters: {}
-  };
-
-  const ui = {
-    currentFilter: 'all',
-    currentTaskFilter: 'all',
-    currentMonth: new Date(),
-    selectedCalendarDate: null,
-    editingEntryIndex: -1,
-    currentSquadId: null,
-    catalogType: '',
-    catalogEditingId: null,
-    formSquads: [],
-    draftTimer: null,
-    selectedRoadForScale: '',
-    searchDebounceTimer: null
-  };
-
-  function get(key) { return data[key]; }
-  function set(key, val) { data[key] = val; }
-  function getUI(key) { return ui[key]; }
-  function setUI(key, val) { ui[key] = val; }
-
-  function getAllForSave() {
-    return {
-      [STORAGE_KEYS.entries]: data.entries,
-      [STORAGE_KEYS.workers]: data.workers,
-      [STORAGE_KEYS.works]: data.works,
-      [STORAGE_KEYS.tools]: data.tools,
-      [STORAGE_KEYS.tmc]: data.tmc,
-      [STORAGE_KEYS.tasks]: data.tasks,
-      [STORAGE_KEYS.settings]: data.settings,
-      [STORAGE_KEYS.roads]: data.roads,
-      [STORAGE_KEYS.stockOrder]: data.stockOrder,
-      [STORAGE_KEYS.stockManual]: data.stockManual,
-      [STORAGE_KEYS.templates]: data.templates,
-      [STORAGE_KEYS.tsOverrides]: data.timesheetOverrides,
-      [STORAGE_KEYS.tsLetters]: data.timesheetLetters
-    };
-  }
-
-  function setAllFromImport(imported) {
-    if (imported.entries) data.entries = imported.entries;
-    if (imported.workers) data.workers = imported.workers;
-    if (imported.works) data.works = imported.works;
-    if (imported.tools) data.tools = imported.tools;
-    if (imported.tmc) data.tmc = imported.tmc;
-    if (imported.tasks) data.tasks = imported.tasks;
-    if (imported.settings) data.settings = imported.settings;
-    if (imported.roads) data.roads = imported.roads;
-    if (imported.stockOrder) data.stockOrder = imported.stockOrder;
-    if (imported.stockManual) data.stockManual = imported.stockManual;
-    if (imported.templates) data.templates = imported.templates;
-    if (imported.timesheetOverrides) data.timesheetOverrides = imported.timesheetOverrides;
-    if (imported.timesheetLetters) data.timesheetLetters = imported.timesheetLetters;
-  }
-
-  function reset() {
-    data.entries = []; data.workers = []; data.works = []; data.tools = [];
-    data.tmc = []; data.tasks = []; data.settings = {}; data.roads = [];
-    data.stockOrder = []; data.stockManual = []; data.templates = [];
-    data.timesheetOverrides = {}; data.timesheetLetters = {};
-  }
-
-  return {
-    get, set, getUI, setUI,
-    getAllForSave, setAllFromImport, reset
-  };
-})();
-
-// ============================================
-// МОДУЛЬ: Утилиты (Utils)
-// ============================================
 const Utils = {
-  toLocalISODate(d) {
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  },
-  todayStr() { return Utils.toLocalISODate(new Date()); },
-  formatDate(d) {
-    if (!d) return '';
-    const p = d.split('-');
-    return p[2] + '.' + p[1] + '.' + p[0];
-  },
-  escapeHtml(s) {
-    if (!s) return '';
-    return String(s).replace(/[&<>"]/g, function(m) {
-      if (m === '&') return '&amp;';
-      if (m === '<') return '&lt;';
-      if (m === '>') return '&gt;';
-      if (m === '"') return '&quot;';
-      return m;
-    });
-  },
-  jsAttr(s) {
-    return String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;');
-  },
-  showToast(msg) {
-    const t = document.getElementById('toast');
-    if (t) {
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 3000);
-    }
-  },
   $(id) { return document.getElementById(id); },
-  downloadFile(content, filename, type) {
-    const blob = new Blob([content], { type });
+  todayStr() { return new Date().toISOString().slice(0,10); },
+  toLocalISODate(d) {
+    const offset = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - offset * 60000);
+    return local.toISOString().slice(0,10);
+  },
+  formatDate(str) {
+    if (!str) return '';
+    const [y,m,d] = str.split('-');
+    return `${d}.${m}.${y}`;
+  },
+  getWeekStart(d) {
+    const date = new Date(d);
+    const day = date.getDay() || 7;
+    if (day !== 1) date.setHours(-24 * (day - 1));
+    return date;
+  },
+  getWeekEnd(d) {
+    const start = this.getWeekStart(d);
+    return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+  },
+  escapeHtml(str) {
+    if (str == null) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  },
+  jsAttr(str) {
+    return this.escapeHtml(String(str)).replace(/'/g, '&apos;');
+  },
+  debounce(fn, delay) {
+    let t;
+    return function(...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), delay);
+    };
+  },
+  downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], {type: mimeType});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
   },
-  debounce(fn, delay) {
-    let timer;
-    return function(...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), delay);
-    };
-  },
-  getWeekStart(d) {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(date.setDate(diff));
-  },
-  getWeekEnd(d) {
-    const start = Utils.getWeekStart(d);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 6);
-    return end;
+  showToast(msg) {
+    const el = document.getElementById('toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
   }
 };
 
-// ============================================
-// МОДУЛЬ: UI Рендереры
-// ============================================
-const UI = (function() {
-  'use strict';
+const STORAGE_KEYS = {
+  entries: 'drsu_v17_entries',
+  workers: 'drsu_v17_workers',
+  works: 'drsu_v17_works',
+  tools: 'drsu_v17_tools',
+  tmc: 'drsu_v17_tmc',
+  tasks: 'drsu_v17_tasks',
+  settings: 'drsu_v17_settings',
+  roads: 'drsu_v17_roads',
+  stockOrder: 'drsu_v17_stockOrder',
+  stockManual: 'drsu_v17_stockManual',
+  templates: 'drsu_v17_templates',
+  timesheetOverrides: 'drsu_v17_ts_overrides',
+  timesheetLetters: 'drsu_v17_ts_letters',
+  draft: 'drsu_v17_draft'
+};
 
-  function showPage(id) {
+const Storage = {
+  async save(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch(e) { console.error('Storage save error', e); return false; }
+  },
+  async load(key, defaultValue) {
+    try {
+      const v = localStorage.getItem(key);
+      return v === null ? defaultValue : JSON.parse(v);
+    } catch(e) { return defaultValue; }
+  },
+  async saveAll(data) {
+    try {
+      for (let key in data) {
+        const storageKey = STORAGE_KEYS[key];
+        if (storageKey) localStorage.setItem(storageKey, JSON.stringify(data[key]));
+      }
+      return true;
+    } catch(e) { console.error('saveAll error', e); return false; }
+  },
+  clearAll() {
+    Object.values(STORAGE_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+  }
+};
+
+const State = {
+  _data: {
+    entries: [], workers: [], works: [], tools: [], tmc: [], tasks: [],
+    settings: { theme: 'auto', org: '', master: '' },
+    roads: [], stockOrder: [], stockManual: [], templates: [],
+    timesheetOverrides: {}, timesheetLetters: {}
+  },
+  _ui: {
+    currentFilter: 'all', currentTaskFilter: 'all',
+    currentMonth: new Date(), selectedRoadForScale: '',
+    formSquads: [], editingEntryIndex: -1, currentSquadId: null,
+    selectedCalendarDate: null, draftTimer: null,
+    catalogType: '', catalogEditingId: null
+  },
+  get(key) { return this._data[key]; },
+  set(key, value) { this._data[key] = value; },
+  getUI(key) { return this._ui[key]; },
+  setUI(key, value) { this._ui[key] = value; },
+  getAllForSave() { return { ...this._data }; },
+  setAllFromImport(data) {
+    for (let k in this._data) {
+      if (data[k] !== undefined) this._data[k] = data[k];
+    }
+  },
+  reset() {
+    this._data = {
+      entries: [], workers: [], works: [], tools: [], tmc: [], tasks: [],
+      settings: { theme: 'auto', org: '', master: '' },
+      roads: [], stockOrder: [], stockManual: [], templates: [],
+      timesheetOverrides: {}, timesheetLetters: {}
+    };
+    this._ui = {
+      currentFilter: 'all', currentTaskFilter: 'all',
+      currentMonth: new Date(), selectedRoadForScale: '',
+      formSquads: [], editingEntryIndex: -1, currentSquadId: null,
+      selectedCalendarDate: null, draftTimer: null,
+      catalogType: '', catalogEditingId: null
+    };
+  },
+  async init() {
+    for (let k in this._data) {
+      const storageKey = STORAGE_KEYS[k];
+      if (storageKey) {
+        const v = await Storage.load(storageKey, this._data[k]);
+        if (v !== undefined && v !== null) this._data[k] = v;
+      }
+    }
+  }
+};
+
+const UI = {
+  showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const page = Utils.$(id);
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const page = document.getElementById(id);
     if (page) page.classList.add('active');
-
-    const pages = ['pageJournal', 'pageNew', 'pageCalendar', 'pageTimesheet', 'pageReports', 'pageMore'];
-    const idx = pages.indexOf(id);
-    if (idx >= 0) {
-      const navs = document.querySelectorAll('.nav-btn');
-      navs.forEach(n => n.classList.remove('active'));
-      if (navs[idx]) navs[idx].classList.add('active');
-    }
-
-    if (id === 'pageJournal') {
-      App.renderEntries();
-      App.renderRoadSelector();
-      App.renderRoadsKmSummary();
-    }
-    if (id === 'pageCalendar') App.renderCalendar();
-    if (id === 'pageTimesheet') App.renderTimesheet();
-    if (id === 'pageReports') App.renderReportRoadSelect();
-    if (id === 'pageMore') {
-      App.renderCatalogs();
-      App.renderStock();
-      App.renderTemplates();
-      App.renderTasks();
-    }
-    window.scrollTo(0, 0);
-  }
-
-  function showSubtab(id, btn) {
-    document.querySelectorAll('#pageMore .subpanel').forEach(p => p.classList.remove('active'));
-    const el = Utils.$(id);
-    if (el) el.classList.add('active');
-    if (btn) {
-      btn.parentElement.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-    if (id === 'subStock') App.renderStock();
-    if (id === 'subTasks') App.renderTasks();
-  }
-
-  function showCatalog(id, btn) {
-    document.querySelectorAll('.catalog-panel').forEach(p => p.style.display = 'none');
-    const el = Utils.$(id);
-    if (el) el.style.display = 'block';
-    if (btn) {
-      btn.parentElement.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-    App.renderCatalogs();
-  }
-
-  function showStockTab(id, btn) {
-    document.querySelectorAll('.stock-panel').forEach(p => p.style.display = 'none');
-    const el = Utils.$(id);
-    if (el) el.style.display = 'block';
-    if (btn) {
-      btn.parentElement.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-    App.renderStock();
-  }
-
-  function showReportTab(id, btn) {
-    document.querySelectorAll('#pageReports .subpanel').forEach(p => p.classList.remove('active'));
-    const el = Utils.$(id);
-    if (el) el.classList.add('active');
-    if (btn) {
-      btn.parentElement.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-    }
-  }
-
-  function showSaveIndicator(success, msg) {
-    const ind = Utils.$('saveIndicator');
-    if (!ind) return;
-    ind.textContent = msg || (success ? '💾 Сохранено' : '❌ Ошибка сохранения');
-    ind.className = 'save-indicator' + (success ? '' : ' error') + ' show';
-    setTimeout(() => { ind.classList.remove('show'); }, 2000);
-  }
-
-  function showStorageStatus() {
-    const ind = Utils.$('storageStatus');
-    if (!ind) return;
-    const status = Storage.getStatus();
-    if (status.available) {
-      ind.textContent = '✅ Хранилище OK';
-      ind.className = 'storage-status ok show';
-    } else {
-      ind.textContent = '⚠️ ' + (status.error || 'Хранилище недоступно');
-      ind.className = 'storage-status warn show';
-    }
-    setTimeout(() => { ind.classList.remove('show'); }, 3000);
-  }
-
-  // Единая функция рендера календаря
-  function renderCalendarGrid(containerId, year, month, options = {}) {
-    const container = Utils.$(containerId);
+    const map = { pageJournal: 0, pageNew: 1, pageCalendar: 2, pageTimesheet: 3, pageReports: 4, pageMore: 5 };
+    const btns = document.querySelectorAll('.bottom-nav .nav-btn');
+    if (btns[map[id]] !== undefined) btns[map[id]].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+  showSubtab(id, btn) {
+    const parent = btn.closest('.page') || document;
+    parent.querySelectorAll('.subpanel').forEach(p => p.classList.remove('active'));
+    parent.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById(id);
+    if (panel) panel.classList.add('active');
+    btn.classList.add('active');
+  },
+  showCatalog(id, btn) {
+    const parent = document.getElementById('subCatalogs');
+    if (!parent) return;
+    parent.querySelectorAll('.catalog-panel').forEach(p => {
+      p.style.display = p.id === id ? 'block' : 'none';
+      p.classList.toggle('active', p.id === id);
+    });
+    parent.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  },
+  showStockTab(id, btn) {
+    const parent = document.getElementById('subStock');
+    if (!parent) return;
+    parent.querySelectorAll('.stock-panel').forEach(p => {
+      p.style.display = p.id === id ? 'block' : 'none';
+      p.classList.toggle('active', p.id === id);
+    });
+    parent.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  },
+  showReportTab(id, btn) {
+    const parent = document.getElementById('pageReports');
+    if (!parent) return;
+    parent.querySelectorAll('.subpanel').forEach(p => p.classList.remove('active'));
+    parent.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById(id);
+    if (panel) panel.classList.add('active');
+    btn.classList.add('active');
+  },
+  renderCalendarGrid(containerId, year, month, options) {
+    const container = document.getElementById(containerId);
     if (!container) return;
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-    const today = Utils.todayStr();
+    options = options || {};
     const entries = State.get('entries');
     const tasks = State.get('tasks');
-
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDay = new Date(year, month, 1).getDay() || 7;
     let html = '';
     if (options.showNav) {
       html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1886,219 +909,97 @@ const UI = (function() {
       </div>`;
     }
     html += '<div class="calendar-grid">';
-    DAY_NAMES_SHORT.forEach(d => html += `<div class="calendar-day header">${d}</div>`);
-    for (let i = 0; i < startOffset; i++) html += `<div class="calendar-day"></div>`;
-
+    const dn = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+    dn.forEach(d => html += `<div class="calendar-day header">${d}</div>`);
+    for (let i = 1; i < firstDay; i++) html += '<div class="calendar-day"></div>';
     for (let d = 1; d <= daysInMonth; d++) {
-      const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const dayEntries = entries.filter(e => e.date === ds);
+      const dayTasks = tasks.filter(t => t.date === ds && !t.done);
       const hasImportant = dayEntries.some(e => e.important);
-      const hasTask = tasks.some(t => t.date === ds && !t.done);
-      const isToday = ds === today;
-
       let cls = 'calendar-day';
-      if (isToday) cls += ' today';
-      else if (hasImportant && options.filter === 'important') cls += ' important-day';
+      if (ds === Utils.todayStr()) cls += ' today';
+      if (hasImportant) cls += ' important-day';
       else if (dayEntries.length) cls += ' has-entry';
-      if (hasTask && (!options.filter || options.filter === 'all' || options.filter === 'plan')) cls += ' has-task';
-
-      // Apply filter restrictions
-      if (options.filter === 'important' && !hasImportant) cls = 'calendar-day';
-      if (options.filter === 'plan' && !hasTask && !dayEntries.some(e => e.squads?.some(s => s.planTomorrow))) cls = 'calendar-day';
-
-      const entryCount = dayEntries.length;
-      const taskCount = tasks.filter(t => t.date === ds && !t.done).length;
-      let badgeHtml = '';
-      if (entryCount > 0 || taskCount > 0) {
-        const total = entryCount + taskCount;
-        badgeHtml = `<span class="cal-badge">${total > 9 ? "9+" : total}</span>`;
-      }
-
-      html += `<div class="${cls}" onclick="App.showDayDetails('${Utils.jsAttr(ds)}')">${d}${badgeHtml}</div>`;
+      if (dayTasks.length) cls += ' has-task';
+      const badge = (dayEntries.length + dayTasks.length) > 0 ? `<span class="cal-badge">${dayEntries.length + dayTasks.length}</span>` : '';
+      html += `<div class="${cls}" onclick="App.showDayDetails('${ds}')"><span>${d}</span>${badge}</div>`;
     }
     html += '</div>';
     container.innerHTML = html;
   }
+};
 
-  return {
-    showPage, showSubtab, showCatalog, showStockTab, showReportTab,
-    showSaveIndicator, showStorageStatus, renderCalendarGrid
+// ============================================
+// ГЛАВНАЯ ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ
+// ============================================
+async function init() {
+  await State.init();
+  initDefaultData();
+
+  const inpDate = Utils.$('inpDate');
+  if (inpDate) inpDate.value = Utils.todayStr();
+  if (Utils.$('tsMonth')) Utils.$('tsMonth').value = Utils.todayStr().slice(0, 7);
+  if (Utils.$('docMonth')) Utils.$('docMonth').value = Utils.todayStr().slice(0, 7);
+  if (Utils.$('reportFrom')) Utils.$('reportFrom').value = Utils.todayStr().slice(0, 7) + '-01';
+  if (Utils.$('reportTo')) Utils.$('reportTo').value = Utils.todayStr();
+  if (Utils.$('machFrom')) Utils.$('machFrom').value = Utils.todayStr().slice(0, 7) + '-01';
+  if (Utils.$('machTo')) Utils.$('machTo').value = Utils.todayStr();
+
+  const settings = State.get('settings');
+  if (Utils.$('settingOrg')) Utils.$('settingOrg').value = settings.org || '';
+  if (Utils.$('settingMaster')) Utils.$('settingMaster').value = settings.master || '';
+
+  applyTheme();
+  renderEntries();
+  renderCalendar();
+  renderCatalogs();
+  renderStock();
+  renderTasks();
+  renderTemplates();
+  renderRoadSelector();
+  renderReportRoadSelect();
+
+  const hasDraft = await loadDraft();
+  if (!hasDraft && State.getUI('formSquads').length === 0) {
+    addSquad();
+  }
+
+  const updateNet = () => {
+    const el = Utils.$('netStatus');
+    const badge = Utils.$('offlineBadge');
+    if (el) { el.textContent = navigator.onLine ? '● Онлайн' : '● Офлайн'; }
+    if (badge) badge.classList.toggle('show', !navigator.onLine);
   };
-})();
+  window.addEventListener('online', updateNet);
+  window.addEventListener('offline', updateNet);
+  updateNet();
+
+  const updateHeaderDate = () => {
+    const el = Utils.$('headerDate');
+    if (el) el.textContent = new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  updateHeaderDate();
+
+  const fab = Utils.$('fabTop');
+  if (fab) {
+    window.addEventListener('scroll', () => fab.classList.toggle('show', window.scrollY > 300));
+    fab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
+}
+
 
 // ============================================
-// МОДУЛЬ: Основное приложение (App)
+// МОДУЛЬ: Конфигурация и константы
 // ============================================
-const App = (function() {
-  'use strict';
+const CONFIG = {
+  PREFIX: 'drsu_v17_',
+  VERSION: '17.0',
+  DEBOUNCE_DELAY: 300,
+  AUTO_SAVE_INTERVAL: 5000
+};
 
-  // --- Инициализация ---
-  async function init() {
-    Storage.checkStorage();
-    await Storage.initIndexedDB().catch(() => {});
-    
-    const loaded = await Storage.loadAll(Object.values(STORAGE_KEYS), {
-      [STORAGE_KEYS.entries]: [],
-      [STORAGE_KEYS.workers]: [],
-      [STORAGE_KEYS.works]: [],
-      [STORAGE_KEYS.tools]: [],
-      [STORAGE_KEYS.tmc]: [],
-      [STORAGE_KEYS.tasks]: [],
-      [STORAGE_KEYS.settings]: {},
-      [STORAGE_KEYS.roads]: [],
-      [STORAGE_KEYS.stockOrder]: [],
-      [STORAGE_KEYS.stockManual]: [],
-      [STORAGE_KEYS.templates]: [],
-      [STORAGE_KEYS.tsOverrides]: {},
-      [STORAGE_KEYS.tsLetters]: {}
-    });
-
-    State.set('entries', loaded[STORAGE_KEYS.entries]);
-    State.set('workers', loaded[STORAGE_KEYS.workers]);
-    State.set('works', loaded[STORAGE_KEYS.works]);
-    State.set('tools', loaded[STORAGE_KEYS.tools]);
-    State.set('tmc', loaded[STORAGE_KEYS.tmc]);
-    State.set('tasks', loaded[STORAGE_KEYS.tasks]);
-    State.set('settings', loaded[STORAGE_KEYS.settings]);
-    State.set('roads', loaded[STORAGE_KEYS.roads]);
-    State.set('stockOrder', loaded[STORAGE_KEYS.stockOrder]);
-    State.set('stockManual', loaded[STORAGE_KEYS.stockManual]);
-    State.set('templates', loaded[STORAGE_KEYS.templates]);
-    State.set('timesheetOverrides', loaded[STORAGE_KEYS.tsOverrides]);
-    State.set('timesheetLetters', loaded[STORAGE_KEYS.tsLetters]);
-
-    initDefaultData();
-    applyTheme();
-
-    Utils.$('headerDate').textContent = new Date().toLocaleDateString('ru-RU', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
-    Utils.$('inpDate').value = Utils.todayStr();
-    Utils.$('tsMonth').value = Utils.todayStr().slice(0, 7);
-    Utils.$('docMonth').value = Utils.todayStr().slice(0, 7);
-    Utils.$('reportFrom').value = Utils.todayStr();
-    Utils.$('reportTo').value = Utils.todayStr();
-    Utils.$('machFrom').value = Utils.todayStr();
-    Utils.$('machTo').value = Utils.todayStr();
-
-    const settings = State.get('settings');
-    if (settings.org) Utils.$('settingOrg').value = settings.org;
-    if (settings.master) Utils.$('settingMaster').value = settings.master;
-
-    initOffline();
-    initEventListeners();
-
-    renderEntries();
-    renderCatalogs();
-    renderStock();
-    renderTasks();
-    renderTemplates();
-    renderCalendar();
-    renderRoadSelector();
-
-    if (!loadDraft()) addSquad();
-
-    if (!Storage.getStatus().available) {
-      setTimeout(() => Utils.showToast('⚠️ localStorage недоступен! Данные сохраняются в IndexedDB/памяти. Экспортируйте перед закрытием!'), 1500);
-    }
-
-    // Автосохранение
-    setInterval(async () => {
-      const formSquads = State.getUI('formSquads');
-      const editingEntryIndex = State.getUI('editingEntryIndex');
-      if (formSquads.length > 0 && editingEntryIndex < 0) {
-        saveDraft();
-        await Storage.saveAll(State.getAllForSave());
-      }
-    }, CONFIG.AUTO_SAVE_INTERVAL);
-  }
-
-  function initEventListeners() {
-    // Форсированное сохранение при закрытии
-    window.addEventListener('beforeunload', () => {
-      const formSquads = State.getUI('formSquads');
-      const editingEntryIndex = State.getUI('editingEntryIndex');
-      if (formSquads.length > 0 && editingEntryIndex < 0) {
-        saveDraft();
-      }
-      Storage.saveAll(State.getAllForSave());
-    });
-
-    // Сохранение при смене видимости
-    document.addEventListener('visibilitychange', async () => {
-      if (document.visibilityState === 'hidden') {
-        const formSquads = State.getUI('formSquads');
-        const editingEntryIndex = State.getUI('editingEntryIndex');
-        if (formSquads.length > 0 && editingEntryIndex < 0) {
-          saveDraft();
-        }
-        await Storage.saveAll(State.getAllForSave());
-      }
-    });
-
-    // FAB
-    const fab = document.getElementById('fabTop');
-    if (fab) {
-      window.addEventListener('scroll', () => {
-        fab.classList.toggle('show', window.scrollY > 400);
-      }, { passive: true });
-      fab.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    }
-
-    // Pull-to-refresh
-    (function() {
-      let startY = 0, isPulling = false;
-      const ptr = document.getElementById('ptrIndicator');
-      if (!ptr) return;
-      document.addEventListener('touchstart', (e) => {
-        if (window.scrollY <= 5) { startY = e.touches[0].clientY; isPulling = true; }
-      }, { passive: true });
-      document.addEventListener('touchmove', (e) => {
-        if (!isPulling) return;
-        const diff = e.touches[0].clientY - startY;
-        if (diff > 60 && diff < 200) {
-          ptr.style.transform = 'translateY(' + Math.min(diff - 60, 0) + 'px)';
-          ptr.classList.add('show');
-        }
-      }, { passive: true });
-      document.addEventListener('touchend', (e) => {
-        if (!isPulling) return;
-        const diff = e.changedTouches[0].clientY - startY;
-        ptr.classList.remove('show');
-        ptr.style.transform = '';
-        isPulling = false;
-        if (diff > 120) {
-          Utils.showToast('🔄 Обновление...');
-          setTimeout(() => location.reload(), 400);
-        }
-      }, { passive: true });
-    })();
-  }
-
-  function initOffline() {
-    function setOnlineStatus() {
-      const netStatus = Utils.$('netStatus');
-      const offlineBadge = Utils.$('offlineBadge');
-      if (navigator.onLine) {
-        if (netStatus) netStatus.textContent = '● Онлайн';
-        if (offlineBadge) offlineBadge.classList.remove('show');
-      } else {
-        if (netStatus) netStatus.textContent = '● Офлайн';
-        if (offlineBadge) offlineBadge.classList.add('show');
-      }
-    }
-    window.addEventListener('online', () => {
-      setOnlineStatus();
-      Utils.showToast('🌐 Соединение восстановлено');
-    });
-    window.addEventListener('offline', () => {
-      setOnlineStatus();
-      Utils.showToast('📴 Офлайн-режим активирован');
-    });
-    setOnlineStatus();
-  }
-
-  function initDefaultData() {
+function initDefaultData() {
     let changed = false;
     const works = State.get('works');
     const tools = State.get('tools');
@@ -2934,8 +1835,8 @@ const App = (function() {
     Storage.save(STORAGE_KEYS.draft, draft);
   }
 
-  function loadDraft() {
-    const draft = Storage.load(STORAGE_KEYS.draft, null);
+  async function loadDraft() {
+    const draft = await Storage.load(STORAGE_KEYS.draft, null);
     if (draft && draft.squads && draft.squads.length) {
       Utils.$('inpDate').value = draft.date || Utils.todayStr();
       Utils.$('inpImportant').checked = draft.important;
@@ -4590,7 +3491,7 @@ const App = (function() {
   }
 
   // --- Склад ---
-  function renderStock() {
+  async function renderStock() {
     const stockOrder = State.get('stockOrder');
     const stockManual = State.get('stockManual');
 
@@ -4600,12 +3501,12 @@ const App = (function() {
     const mHtml = stockManual.map((s, i) => `<div class="tmc-row"><div><b>${Utils.escapeHtml(s.name)}</b><div class="text-secondary" style="font-size:.8rem">${s.unit || ''} | ${s.qty.toFixed(2)} ${s.unit || ''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editStockQty('manual',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteStock('manual',${i})">🗑️</button></div></div>`).join('') || '<div class="empty-state">Склад пуст</div>';
     Utils.$('manualStockList').innerHTML = mHtml;
 
-    const history = Storage.load(STORAGE_KEYS.stockManual + '_history', []);
+    const history = await Storage.load(STORAGE_KEYS.stockManual + '_history', []);
     const hHtml = history.map(h => `<div style="font-size:.8rem;padding:4px 0;border-bottom:1px dashed var(--border)">${Utils.formatDate(h.date)} — <b>${Utils.escapeHtml(h.name)}</b>: ${h.qty > 0 ? '+' : ''}${h.qty} ${h.unit || ''} <span class="text-secondary">${h.note || ''}</span></div>`).join('') || '<div class="empty-state">Нет операций</div>';
     Utils.$('manualStockHistory').innerHTML = hHtml;
   }
 
-  function addStockRow(type) {
+  async function addStockRow(type) {
     const name = prompt('Название материала:');
     if (!name) return;
     const trimmed = name.trim();
@@ -4618,12 +3519,12 @@ const App = (function() {
     } else {
       State.get('stockManual').push(item);
     }
-    Storage.saveAll(State.getAllForSave());
+    await Storage.saveAll(State.getAllForSave());
     renderStock();
     Utils.showToast('Добавлено');
   }
 
-  function editStockQty(type, idx) {
+  async function editStockQty(type, idx) {
     const arr = type === 'order' ? State.get('stockOrder') : State.get('stockManual');
     const item = arr[idx];
     if (!item) return;
@@ -4633,13 +3534,13 @@ const App = (function() {
     if (type === 'manual') {
       const diff = newQty - item.qty;
       const note = prompt('Примечание к корректировке:', '') || '';
-      const history = Storage.load(STORAGE_KEYS.stockManual + '_history', []);
+      const history = await Storage.load(STORAGE_KEYS.stockManual + '_history', []);
       history.push({ date: Utils.todayStr(), name: item.name, unit: item.unit, qty: diff, note });
-      Storage.save(STORAGE_KEYS.stockManual + '_history', history);
+      await Storage.save(STORAGE_KEYS.stockManual + '_history', history);
     }
 
     item.qty = newQty;
-    Storage.saveAll(State.getAllForSave());
+    await Storage.saveAll(State.getAllForSave());
     renderStock();
   }
 
@@ -4713,7 +3614,7 @@ const App = (function() {
     State.reset();
     renderEntries();
     renderCatalogs();
-    renderStock();
+    await renderStock();
     renderTasks();
     Utils.showToast('Все данные очищены');
   }
@@ -4832,6 +3733,23 @@ const App = (function() {
   };
 })();
 
+
+// === Modal scroll-to-top ===
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  const modal = overlay.querySelector('.modal');
+  if (!modal) return;
+  const fab = document.createElement('button');
+  fab.className = 'modal-fab';
+  fab.innerHTML = '↑';
+  fab.title = 'Наверх';
+  fab.onclick = () => modal.scrollTo({ top: 0, behavior: 'smooth' });
+  fab.style.display = 'none';
+  modal.appendChild(fab);
+  modal.addEventListener('scroll', () => {
+    fab.style.display = modal.scrollTop > 200 ? 'flex' : 'none';
+  });
+});
+
 App.init();
 </script>
 
@@ -4851,7 +3769,7 @@ App.init();
         <span style="font-size:.9rem">🔄 Также изменить в наряде (только для чисел)</span>
       </label>
     </div>
-    <div class="row-btns" style="margin-top:12px">
+    <div class="modal-footer">
       <button class="btn btn-primary" onclick="App.saveTsEdit()">💾 Сохранить</button>
       <button class="btn btn-secondary" onclick="App.closeTsEditModal()">Отмена</button>
       <button class="btn btn-danger btn-small" onclick="App.clearTsEditCell()">🗑️</button>
