@@ -2718,7 +2718,7 @@ function initDefaultData() {
     workersList.forEach(dw => {
       html += `<tr><td>${Utils.escapeHtml(dw.name)}</td>`;
       for (let d = 1; d <= daysInMonth; d++) {
-        const key = dw.name + '|' + d;
+        const key = month + '|' + dw.name + '|' + d;
         const val = timesheetOverrides[key];
         const letter = timesheetLetters[key];
         const display = letter || ((val !== undefined && val !== null) ? val : (dw.days[d] || ''));
