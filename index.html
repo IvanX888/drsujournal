@@ -19,7 +19,7 @@
 <title>Журнал производства работ — ДРСУ v17.0 (Рефакторинг)</title>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
 <style>
 :root{--primary:#e65100;--primary-light:#ff8f00;--primary-dark:#bf360c;--accent:#ff6f00;--bg:#f5f5f5;--card:#fff;--text:#212121;--text-secondary:#616161;--border:#e0e0e0;--success:#2e7d32;--danger:#c62828;--warning:#f9a825;--edit:#00695c;--info:#0277bd;--shadow:0 2px 8px rgba(0,0,0,.12);--radius:16px}
 @media(prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--text:#eee;--text-secondary:#aaa;--border:#333;--shadow:0 2px 8px rgba(0,0,0,.5)}}
@@ -100,7 +100,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .empty-state{text-align:center;padding:40px 20px;color:var(--text-secondary)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .modal-overlay.active{display:flex}
-.modal{background:var(--card);border-radius:20px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;animation:modalIn .3s;box-shadow:var(--shadow)}
+.modal{background:var(--card);border-radius:20px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;padding-bottom:70px;animation:modalIn .3s;box-shadow:var(--shadow)}
 @keyframes modalIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-weight:700;font-size:1.1rem;color:var(--primary)}
 .close-modal{background:var(--bg);border:none;width:36px;height:36px;border-radius:50%;font-size:1.2rem;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
@@ -318,7 +318,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .timesheet-table tfoot td:first-child{background:var(--primary)!important}
 .dark-mode .timesheet-table tfoot td:first-child{background:#e65100!important}
 
-.modal-footer{position:sticky;bottom:0;background:var(--card);padding:12px 0 4px;margin:0 -20px -20px;border-top:2px solid var(--border);display:flex;gap:8px;z-index:5;backdrop-filter:blur(8px)}
+.modal-footer{position:sticky;bottom:0;background:var(--card);padding:8px 16px;border-top:2px solid var(--border);display:flex;gap:8px;z-index:5;backdrop-filter:blur(8px);margin:0 -20px}
+.modal-footer .btn{padding:10px 16px;font-size:.9rem;min-height:40px;flex:1}
+.modal-footer .btn-small{padding:6px 10px;font-size:.75rem;min-height:32px;flex:0 0 auto}
 .modal-footer .btn{flex:1;margin:0 20px}
 .modal-footer .btn:first-child{margin-left:20px}
 .modal-footer .btn:last-child{margin-right:20px}
@@ -329,7 +331,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .modal-fab:active{transform:scale(.9)}
 
 </style>
-<base target="_blank">
 <base target="_blank">
 <base target="_blank">
 </head>
@@ -353,17 +354,22 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="kpi-item"><div class="kpi-value" id="statWorks">0</div><div class="kpi-label">🔧 Видов работ</div></div>
   </div>
 
-  <div class="card">
-    <div class="card-title">🛣️ Километраж дорог</div>
-    <div class="road-selector">
-      <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
-        <option value="">📍 Выберите дорогу для деталей</option>
-      </select>
+  <div class="card" id="roadKmCard">
+    <div class="card-title" style="cursor:pointer" onclick="document.getElementById('roadKmBody').classList.toggle('collapsed')">
+      🛣️ Километраж дорог <span style="font-size:.75rem;color:var(--text-secondary);margin-left:8px">👆 Нажмите чтобы свернуть</span>
     </div>
-    <div id="roadsKmSummary" style="margin-top:12px"></div>
-    <div id="roadKmScale"></div>
-    <div id="roadKmHistory"></div>
+    <div id="roadKmBody">
+      <div class="road-selector">
+        <select id="roadSelector" onchange="App.selectRoadForScale(this.value)">
+          <option value="">📍 Выберите дорогу для деталей</option>
+        </select>
+      </div>
+      <div id="roadsKmSummary" style="margin-top:12px"></div>
+      <div id="roadKmScale"></div>
+      <div id="roadKmHistory"></div>
+    </div>
   </div>
+  <style>.collapsed{display:none}</style>
 
   <div class="card">
     <div class="card-title">📅 Календарь и задачи</div>
@@ -645,6 +651,17 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   </div>
 </div>
 
+
+<div class="modal-overlay" id="objectDetailModal">
+  <div class="modal" style="max-height:90vh">
+    <div class="modal-header"><span id="objectDetailTitle">📍 Объект</span><button class="close-modal" onclick="App.closeObjectDetailModal()">×</button></div>
+    <div id="objectDetailContent"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="App.closeObjectDetailModal()">Закрыть</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="dayModal">
   <div class="modal" style="max-height:90vh">
     <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
@@ -799,7 +816,19 @@ const Storage = {
         if (storageKey) localStorage.setItem(storageKey, JSON.stringify(data[key]));
       }
       return true;
-    } catch(e) { console.error('saveAll error', e); return false; }
+    } catch(e) {
+      console.error('saveAll error', e);
+      // Показываем тост, но не бросаем ошибку дальше
+      setTimeout(() => {
+        const toast = document.getElementById('toast');
+        if (toast) {
+          toast.textContent = '⚠️ Ошибка сохранения. Проверьте режим инкогнито или лимит хранилища. Используйте экспорт данных!';
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+      }, 100);
+      return false;
+    }
   },
   clearAll() {
     Object.values(STORAGE_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
@@ -1406,7 +1435,7 @@ function initDefaultData() {
         const barColor = pct >= 90 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
         const maxWorks = Math.max(...segments.map(s => s.workCount), 1);
         const multiText = maxWorks > 1 ? ` | <span style="color:var(--primary)">🔧 до ${maxWorks} работ</span>` : '';
-        html += `<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.selectRoadForScale('${Utils.jsAttr(road.name)}')">
+        html += `<div style="margin-bottom:10px;cursor:pointer;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border);transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.showDetailModal('${Utils.jsAttr(road.name)}')">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <span style="font-weight:600;font-size:.9rem">${Utils.escapeHtml(road.name)}</span>
             <span style="font-size:.8rem;color:var(--text-secondary)">${coveredKm.toFixed(1)} / ${totalLength} км <b style="color:${barColor}">(${pct.toFixed(0)}%)</b></span>
@@ -1439,7 +1468,7 @@ function initDefaultData() {
           }
         });
       });
-      if (objEntries.length > 0) {
+      if (objEntries.length > 0 || (obj.planWorks && obj.planWorks.length)) {
         const totalVolume = objEntries.reduce((s, e) => s + e.volume, 0);
         activeObjects.push({ obj, entries: objEntries, totalVolume });
       }
@@ -1449,14 +1478,61 @@ function initDefaultData() {
       html += `<div style="font-size:.8rem;color:var(--text-secondary);margin:16px 0 10px">📍 Объекты / Базы / АБЗ | Период: <b>${filterLabel}</b></div>`;
       activeObjects.forEach(({ obj, entries: objEntries, totalVolume }) => {
         const typeLabel = { object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[obj.type] || '📍 Объект';
-        const planHtml = obj.plan ? `<span style="color:var(--primary)"> | План: ${Utils.escapeHtml(obj.plan)}</span>` : '';
-        html += `<div style="margin-bottom:10px;padding:8px;background:var(--bg);border-radius:12px;border:1px solid var(--border)">
+        const planHtml = obj.plan ? `<span style="color:var(--primary)"> | ${Utils.escapeHtml(obj.plan)}</span>` : '';
+
+        // Считаем план/факт/остаток
+        let planTotal = 0, doneTotal = 0;
+        const workProgress = [];
+        if (obj.planWorks && obj.planWorks.length) {
+          obj.planWorks.forEach(pw => {
+            planTotal += pw.volume;
+            let done = 0;
+            objEntries.forEach(e => { if (e.work === pw.workName) done += e.volume; });
+            doneTotal += done;
+            const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
+            const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
+            const rem = Math.max(0, pw.volume - done);
+            workProgress.push({ name: pw.workName, plan: pw.volume, done, rem, pct, unit: pw.unit || 'м²', color: bc });
+          });
+        }
+        const totalPct = planTotal > 0 ? Math.min(100, (doneTotal / planTotal) * 100) : 0;
+        const totalRem = Math.max(0, planTotal - doneTotal);
+        const totalColor = totalPct >= 100 ? 'var(--success)' : (totalPct > 50 ? 'var(--primary)' : 'var(--accent)');
+
+        // Прогресс-бар общий
+        let progressHtml = '';
+        if (planTotal > 0) {
+          progressHtml = `<div style="margin:8px 0">
+            <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-bottom:4px">
+              <span><b>${doneTotal.toFixed(1)}</b> из <b>${planTotal.toFixed(1)}</b> ${workProgress[0]?.unit || 'м²'}</span>
+              <span style="color:${totalColor};font-weight:700">${totalPct.toFixed(0)}%</span>
+            </div>
+            <div style="height:10px;background:var(--card);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
+              <div style="width:${totalPct}%;height:100%;background:${totalColor};transition:width .3s"></div>
+            </div>
+            ${totalRem > 0 ? `<div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">Осталось: <b>${totalRem.toFixed(1)}</b> ${workProgress[0]?.unit || 'м²'}</div>` : '<div style="font-size:.75rem;color:var(--success);margin-top:2px">✅ План выполнен!</div>'}
+          </div>`;
+        }
+
+        // Детали по работам
+        let worksHtml = '';
+        if (workProgress.length > 0) {
+          worksHtml = '<div style="margin-top:6px;font-size:.75rem">' + workProgress.map(wp => 
+            `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)">
+              <span style="color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${Utils.escapeHtml(wp.name)}</span>
+              <span style="margin-left:8px;white-space:nowrap"><b style="color:${wp.color}">${wp.done.toFixed(1)}</b> / ${wp.plan} ${wp.unit}</span>
+            </div>`
+          ).join('') + '</div>';
+        }
+
+        html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.showDetailModal('${Utils.jsAttr(obj.name)}')">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <span style="font-weight:600;font-size:.9rem">${Utils.escapeHtml(obj.name)} <span style="font-size:.75rem;color:var(--text-secondary)">${typeLabel}${planHtml}</span></span>
-            <span style="font-size:.8rem;color:var(--text-secondary)">Работ: ${objEntries.length}</span>
+            <span style="font-weight:700;font-size:1rem;color:var(--primary)">${Utils.escapeHtml(obj.name)} <span style="font-size:.75rem;color:var(--text-secondary);font-weight:400">${typeLabel}${planHtml}</span></span>
+            <span style="font-size:.8rem;color:var(--text-secondary)">👆 Подробнее</span>
           </div>
-          <div style="font-size:.8rem;color:var(--text-secondary)">Общий объём: <b class="text-primary">${totalVolume.toFixed(2)}</b> ед.</div>
-          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">${objEntries.slice(0, 3).map(e => `${Utils.formatDate(e.date)}: ${Utils.escapeHtml(e.work)} ${e.volume}${e.unit || ''}`).join(' | ')}${objEntries.length > 3 ? '...' : ''}</div>
+          ${progressHtml}
+          ${worksHtml}
+          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:6px">${objEntries.slice(0, 2).map(e => `${Utils.formatDate(e.date)}: ${Utils.escapeHtml(e.work.split(' ').slice(0,3).join(' '))}… <b>${e.volume}</b>${e.unit || ''}`).join(' | ')}${objEntries.length > 2 ? '…' : ''}</div>
         </div>`;
       });
     }
@@ -1644,8 +1720,34 @@ function initDefaultData() {
     });
 
     let html = `<div class="km-scale-container">
-      <div class="road-scale-title"><span>${Utils.escapeHtml(road.name)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${typeLabel}${road.plan ? ' | План: ' + Utils.escapeHtml(road.plan) : ''}</span></div>
-      <div style="font-size:.9rem;margin:8px 0">Всего записей: <b>${objEntries.length}</b></div>`;
+      <div class="road-scale-title"><span>${Utils.escapeHtml(road.name)}</span><span style="font-size:.8rem;color:var(--text-secondary)">${typeLabel}${road.plan ? ' | ' + Utils.escapeHtml(road.plan) : ''}</span></div>`;
+
+    // План работ
+    if (road.planWorks && road.planWorks.length) {
+      html += `<div style="margin:8px 0;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.85rem">📋 План работ</div>`;
+      road.planWorks.forEach(pw => {
+        let done = 0;
+        objEntries.forEach(e => {
+          // Сопоставляем по названию работы (основной способ)
+          if (e.work === pw.workName) done += e.volume;
+        });
+        const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
+        const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
+        html += `<div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px">
+            <span>${Utils.escapeHtml(pw.workName)}</span>
+            <span><b>${done.toFixed(2)}</b> / ${pw.volume} ${pw.unit || 'м²'} <b style="color:${bc}">(${pct.toFixed(0)}%)</b></span>
+          </div>
+          <div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
+            <div style="width:${pct}%;height:100%;background:${bc};transition:width .3s"></div>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<div style="font-size:.9rem;margin:8px 0">Всего записей: <b>${objEntries.length}</b></div>`;
 
     if (objEntries.length === 0) {
       html += `<div class="empty-state">Нет данных по объекту</div>`;
@@ -1656,7 +1758,7 @@ function initDefaultData() {
         workSummary[e.work].total += e.volume;
         workSummary[e.work].count++;
       });
-      html += `<div style="margin-top:8px"><b>Виды работ:</b></div>`;
+      html += `<div style="margin-top:8px"><b>Выполнено:</b></div>`;
       for (let w in workSummary) {
         html += `<div style="margin:4px 0;padding:6px;background:var(--bg);border-radius:8px"><span class="text-info">${Utils.escapeHtml(w)}</span> — <b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit || 'ед.'} <span style="font-size:.75rem;color:var(--text-secondary)">(${workSummary[w].count} раз)</span></div>`;
       }
@@ -1774,46 +1876,69 @@ function initDefaultData() {
     const form = Utils.$('workEditForm');
     const tools = State.get('tools');
 
+    const fmt = (v) => (v !== undefined && v !== null && !isNaN(v)) ? String(v).replace(/,/g, '.') : '';
     form.innerHTML = `
-      <div class="form-group"><label>Вид работы</label><input type="text" value="${Utils.escapeHtml(w.name)}" readonly style="background:var(--bg)"></div>
-      <div class="form-group"><label>Объём (${w.unit || 'ед.'})</label><input type="number" id="editWorkVolume" value="${w.volume}" step="0.01" min="0"></div>
-      <div class="form-group"><label>Часы инструмента</label><input type="number" id="editWorkHours" value="${w.toolHours || 0}" step="0.5" min="0"></div>
+      <div class="form-group"><label>Вид работы</label><input type="text" value="${Utils.escapeHtml(w.name)}" readonly style="background:var(--bg);opacity:.7"></div>
+      <div class="form-group"><label>Объём (${w.unit || 'ед.'})</label><input type="text" id="editWorkVolume" value="${fmt(w.volume)}" inputmode="decimal" style="font-size:1rem;font-weight:600"></div>
+      <div class="form-group"><label>Часы инструмента</label><input type="text" id="editWorkHours" value="${fmt(w.toolHours)}" inputmode="decimal"></div>
       <div class="form-group"><label>Объект/дорога</label><input type="text" id="editWorkRoad" value="${Utils.escapeHtml(w.road || '')}"></div>
       <div class="km-inputs">
-        <div><label>От км</label><input type="number" id="editWorkKmFrom" value="${w.kmFrom !== undefined ? w.kmFrom : ''}" step="0.1"></div>
-        <div><label>До км</label><input type="number" id="editWorkKmTo" value="${w.kmTo !== undefined ? w.kmTo : ''}" step="0.1"></div>
+        <div><label>От км</label><input type="text" id="editWorkKmFrom" value="${fmt(w.kmFrom)}" inputmode="decimal"></div>
+        <div><label>До км</label><input type="text" id="editWorkKmTo" value="${fmt(w.kmTo)}" inputmode="decimal"></div>
       </div>
     `;
     modal.classList.add('active');
   }
 
   function saveWorkEdit() {
-    const sid = currentEditWorkSquadId;
-    const idx = currentEditWorkIdx;
-    const s = State.getUI('formSquads').find(x => x.id === sid);
-    if (!s || !s.works[idx]) return;
+    try {
+      const sid = currentEditWorkSquadId;
+      const idx = currentEditWorkIdx;
+      const s = State.getUI('formSquads').find(x => x.id === sid);
+      if (!s || !s.works || idx === undefined || !s.works[idx]) {
+        Utils.showToast('❌ Работа не найдена');
+        return;
+      }
 
-    const w = s.works[idx];
-    const newVol = parseFloat(Utils.$('editWorkVolume').value);
-    const newHours = parseFloat(Utils.$('editWorkHours').value);
-    const newRoad = Utils.$('editWorkRoad').value.trim();
-    const newKmFrom = parseFloat(Utils.$('editWorkKmFrom').value);
-    const newKmTo = parseFloat(Utils.$('editWorkKmTo').value);
+      const w = s.works[idx];
+      // Надёжный парсинг: заменяем запятую на точку
+      const parseVal = (v) => {
+        if (v == null || v === '') return NaN;
+        return parseFloat(String(v).trim().replace(/,/g, '.').replace(/\s/g, ''));
+      };
 
-    if (!isNaN(newVol) && newVol >= 0) w.volume = newVol;
-    if (!isNaN(newHours) && newHours >= 0) {
-      w.toolHours = newHours;
-      const tool = State.get('tools').find(t => t.id === w.toolId);
-      if (tool) w.fuelLiters = Math.round(tool.fuelConsumption * newHours * 100) / 100;
+      const volEl = Utils.$('editWorkVolume');
+      const hoursEl = Utils.$('editWorkHours');
+      const roadEl = Utils.$('editWorkRoad');
+      const kmFromEl = Utils.$('editWorkKmFrom');
+      const kmToEl = Utils.$('editWorkKmTo');
+
+      const newVol = volEl ? parseVal(volEl.value) : NaN;
+      if (!isNaN(newVol) && newVol >= 0) {
+        w.volume = newVol;
+      }
+      const newHours = hoursEl ? parseVal(hoursEl.value) : NaN;
+      if (!isNaN(newHours) && newHours >= 0) {
+        w.toolHours = newHours;
+        const tool = State.get('tools').find(t => t.id === w.toolId);
+        if (tool && tool.fuelConsumption) {
+          w.fuelLiters = Math.round(tool.fuelConsumption * newHours * 100) / 100;
+        }
+      }
+      if (roadEl && roadEl.value.trim()) w.road = roadEl.value.trim();
+      const newKmFrom = kmFromEl ? parseVal(kmFromEl.value) : NaN;
+      if (!isNaN(newKmFrom)) w.kmFrom = newKmFrom;
+      const newKmTo = kmToEl ? parseVal(kmToEl.value) : NaN;
+      if (!isNaN(newKmTo)) w.kmTo = newKmTo;
+
+      renderSquads();
+      scheduleDraftSave();
+      closeWorkEditModal();
+      Utils.showToast('✅ Сохранено: ' + w.name + ' = ' + w.volume + ' ' + (w.unit || ''));
+    } catch (err) {
+      console.error('saveWorkEdit error:', err);
+      Utils.showToast('❌ Ошибка: ' + err.message);
     }
-    if (newRoad) w.road = newRoad;
-    if (!isNaN(newKmFrom)) w.kmFrom = newKmFrom;
-    if (!isNaN(newKmTo)) w.kmTo = newKmTo;
-
-    renderSquads();
-    scheduleDraftSave();
-    closeWorkEditModal();
-    Utils.showToast('Работа обновлена');
   }
 
   function closeWorkEditModal() {
@@ -1905,7 +2030,7 @@ function initDefaultData() {
 
     const pct = totalPeopleHours > 0 ? (totalLaborNorm / totalPeopleHours) * 100 : 0;
     const diff = totalLaborNorm - totalPeopleHours;
-    let statusClass = 'ok', statusText = 'В пределах нормы (90-110%)', progressClass = 'norm';
+    let statusClass = 'ok', statusText = totalPeopleHours > 0 ? 'В пределах нормы (90-110%)' : 'Нет рабочих нормируемой категории', progressClass = 'norm';
     if (pct < 80) { statusClass = 'bad'; statusText = '⚠️ Сильное недовыполнение!'; progressClass = 'under'; }
     else if (pct < 90) { statusClass = 'warn'; statusText = '⚠️ Недовыполнение нормы.'; progressClass = 'under'; }
     else if (pct > 130) { statusClass = 'bad'; statusText = '⚠️ Критическое превышение!'; progressClass = 'over'; }
@@ -1972,7 +2097,7 @@ function initDefaultData() {
           const fuel = w.fuelLiters || 0;
           const machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
           const workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
-          const kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined)
+          const kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined && !isNaN(w.kmFrom) && !isNaN(w.kmTo))
             ? `<span class="km-range-badge">${w.kmFrom}–${w.kmTo} км</span>` : '';
           let toolHtml = '';
           if (tool) {
@@ -2575,7 +2700,7 @@ function initDefaultData() {
             const tool = tools.find(t => t.id === w.toolId);
             const machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
             const workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
-            const kmInfo2 = (w.kmFrom !== undefined && w.kmTo !== undefined) ? ' | 🛣️ <span class="text-info">' + w.kmFrom + '–' + w.kmTo + ' км</span>' : '';
+            const kmInfo2 = (w.kmFrom !== undefined && w.kmTo !== undefined && !isNaN(w.kmFrom) && !isNaN(w.kmTo)) ? ' | 🛣️ <span class="text-info">' + w.kmFrom + '–' + w.kmTo + ' км</span>' : '';
             let toolHtml = '';
             if (tool) {
               toolHtml = `<br>&nbsp;&nbsp;Инструмент: <span class="text-secondary">${Utils.escapeHtml(tool.name)} ${w.toolHours || 0}ч${w.fuelLiters ? ` | ⛽ <span class="text-accent">${w.fuelLiters.toFixed(2)} л</span>` : ''}${machineCost ? ` | 🛠️ <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>` : ''}</span>`;
@@ -2596,6 +2721,241 @@ function initDefaultData() {
     if (e.notes) html += `<div style="margin-top:4px;">📝 ${Utils.escapeHtml(e.notes)}</div>`;
     if (e.reminder) html += `<div style="margin-top:4px;color:var(--accent)">⏰ Напоминание: ${Utils.formatDate(e.reminder.slice(0, 10))} ${e.reminder.slice(11, 16)} — ${Utils.escapeHtml(e.reminderText || '')}</div>`;
     return html;
+  }
+
+  // --- Детали объекта ---
+  function showDetailModal(name) {
+    const modal = Utils.$('objectDetailModal');
+    const title = Utils.$('objectDetailTitle');
+    const content = Utils.$('objectDetailContent');
+    const obj = State.get('roads').find(r => r.name === name);
+    if (!obj) return;
+
+    const isRoad = obj.type === 'road' || !obj.type;
+    title.textContent = (isRoad ? '🛣️ ' : '📍 ') + name;
+    const typeLabel = { road: '🛣️ Дорога', object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[obj.type] || '📍 Объект';
+
+    const entries = State.get('entries');
+    const objEntries = [];
+    entries.forEach(e => {
+      e.squads?.forEach(sq => {
+        if (sq.objects?.includes(name)) {
+          sq.works?.forEach(w => {
+            objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0, kmFrom: w.kmFrom, kmTo: w.kmTo });
+          });
+        }
+      });
+    });
+
+    let html = `<div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">${typeLabel}${obj.plan ? ' | ' + Utils.escapeHtml(obj.plan) : ''}${obj.length ? ' | Протяжённость: ' + obj.length + ' км' : ''}</div>`;
+
+    // === ДОРОГА: километраж и участки ===
+    if (isRoad && obj.length > 0) {
+      const segments = [];
+      objEntries.forEach(e => {
+        if (e.kmFrom !== undefined && e.kmTo !== undefined && !isNaN(e.kmFrom) && !isNaN(e.kmTo)) {
+          segments.push({ from: e.kmFrom, to: e.kmTo, date: e.date, work: e.work });
+        }
+      });
+
+      let coveredKm = 0;
+      let uniqueRanges = [];
+      if (segments.length > 0) {
+        const sorted = segments.slice().sort((a, b) => a.from - b.from);
+        const merged = [];
+        sorted.forEach(s => {
+          if (merged.length === 0) merged.push({ from: s.from, to: s.to });
+          else {
+            const last = merged[merged.length - 1];
+            if (s.from <= last.to) last.to = Math.max(last.to, s.to);
+            else merged.push({ from: s.from, to: s.to });
+          }
+        });
+        merged.forEach(m => { coveredKm += (m.to - m.from); });
+        uniqueRanges = merged;
+      }
+
+      const pct = obj.length ? Math.min(100, (coveredKm / obj.length) * 100) : 0;
+      const barColor = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
+
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">🛣️ Покрытие дороги</div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+          <span><b>${coveredKm.toFixed(1)}</b> из <b>${obj.length}</b> км</span>
+          <span style="color:${barColor};font-weight:700">${pct.toFixed(0)}%</span>
+        </div>
+        <div style="height:10px;background:var(--card);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
+          <div style="width:${pct}%;height:100%;background:${barColor};transition:width .3s"></div>
+        </div>
+        ${uniqueRanges.length > 0 ? `<div style="font-size:.8rem;color:var(--text-secondary);margin-top:6px"><b>Участки:</b> ${uniqueRanges.map(r => r.from + '–' + r.to + ' км').join(', ')}</div>` : ''}
+        ${segments.length > 0 ? `<div style="font-size:.8rem;color:var(--text-secondary);margin-top:4px"><b>Работ:</b> ${segments.length}</div>` : ''}
+      </div>`;
+    }
+
+    // === План работ (для объектов и дорог) ===
+    if (obj.planWorks && obj.planWorks.length) {
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📋 План работ</div>`;
+      obj.planWorks.forEach(pw => {
+        let done = 0;
+        objEntries.forEach(e => { if (e.work === pw.workName) done += e.volume; });
+        const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
+        const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
+        const rem = Math.max(0, pw.volume - done);
+        html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+            <span style="font-weight:600">${Utils.escapeHtml(pw.workName)}</span>
+            <span><b style="color:${bc}">${done.toFixed(1)}</b> / ${pw.volume} ${pw.unit || 'м²'}</span>
+          </div>
+          <div style="height:10px;background:var(--card);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
+            <div style="width:${pct}%;height:100%;background:${bc};transition:width .3s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-top:4px">
+            <span style="color:var(--text-secondary)">${pct.toFixed(0)}% выполнено</span>
+            <span style="color:var(--text-secondary)">Осталось: <b>${rem.toFixed(1)}</b> ${pw.unit || 'м²'}</span>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    } else if (!isRoad) {
+      html += `<div class="empty-state" style="padding:20px">План работ не задан</div>`;
+    }
+
+    // === История выполнения ===
+    if (objEntries.length > 0) {
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📜 История выполнения</div>`;
+      const byDate = {};
+      objEntries.forEach(e => {
+        if (!byDate[e.date]) byDate[e.date] = [];
+        byDate[e.date].push(e);
+      });
+      Object.keys(byDate).sort().reverse().forEach(date => {
+        const dayWorks = byDate[date];
+        const dayTotal = dayWorks.reduce((s, w) => s + w.volume, 0);
+        html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-weight:600;font-size:.85rem;color:var(--primary);margin-bottom:4px">${Utils.formatDate(date)} — ${dayTotal.toFixed(1)} ед.</div>`;
+        dayWorks.forEach(w => {
+          const kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined && !isNaN(w.kmFrom) && !isNaN(w.kmTo)) ? ` | 🛣️ ${w.kmFrom}–${w.kmTo} км` : '';
+          html += `<div style="font-size:.8rem;padding:2px 0">• ${Utils.escapeHtml(w.work)} — <b>${w.volume}</b> ${w.unit || ''}${kmBadge} 👷${w.people}</div>`;
+        });
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+
+    content.innerHTML = html;
+    modal.classList.add('active');
+  }
+
+  function closeDetailModal() {
+    Utils.$('objectDetailModal').classList.remove('active');
+  }
+
+  // --- Детали дороги ---
+  function showRoadDetailModal(roadName) {
+    const modal = Utils.$('objectDetailModal');
+    const title = Utils.$('objectDetailTitle');
+    const content = Utils.$('objectDetailContent');
+    const road = State.get('roads').find(r => r.name === roadName);
+    if (!road) return;
+
+    title.textContent = '🛣️ ' + roadName;
+
+    const segments = getRoadKmSegments(roadName, State.getUI('currentFilter'));
+    const totalLength = parseFloat(road.length) || 0;
+    let coveredKm = 0;
+    let uniqueRanges = [];
+
+    if (totalLength > 0 && segments.length > 0) {
+      const sorted = segments.slice().sort((a, b) => a.kmFrom - b.kmFrom);
+      const merged = [];
+      sorted.forEach(s => {
+        if (merged.length === 0) merged.push({ from: s.kmFrom, to: s.kmTo });
+        else {
+          const last = merged[merged.length - 1];
+          if (s.kmFrom <= last.to) last.to = Math.max(last.to, s.kmTo);
+          else merged.push({ from: s.kmFrom, to: s.kmTo });
+        }
+      });
+      merged.forEach(m => { coveredKm += (m.to - m.from); });
+      uniqueRanges = merged;
+    }
+
+    const pct = totalLength ? Math.min(100, (coveredKm / totalLength) * 100) : 0;
+    const barColor = pct >= 90 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
+
+    let html = `<div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">🛣️ Дорога | Протяжённость: ${totalLength} км</div>`;
+
+    // Общий прогресс
+    html += `<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:6px">
+        <span><b>${coveredKm.toFixed(1)}</b> из <b>${totalLength}</b> км покрыто</span>
+        <span style="color:${barColor};font-weight:700">${pct.toFixed(0)}%</span>
+      </div>
+      <div style="height:12px;background:var(--card);border-radius:6px;overflow:hidden;border:1px solid var(--border)">
+        <div style="width:${pct}%;height:100%;background:${barColor};transition:width .3s"></div>
+      </div>
+    </div>`;
+
+    // Участки
+    if (uniqueRanges.length > 0) {
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📍 Участки работ</div>`;
+      uniqueRanges.forEach((range, i) => {
+        const rangeSegments = segments.filter(s => !(s.kmTo <= range.from || s.kmFrom >= range.to));
+        const worksList = [...new Set(rangeSegments.map(s => s.workName))];
+        html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-weight:600;font-size:.85rem">${range.from} – ${range.to} км</div>
+          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">${worksList.map(Utils.escapeHtml).join(', ')}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // Виды работ
+    const workSummary = {};
+    segments.forEach(s => {
+      if (!workSummary[s.workName]) workSummary[s.workName] = { total: 0, unit: s.unit, ranges: [] };
+      workSummary[s.workName].total += s.volume;
+      workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
+    });
+
+    if (Object.keys(workSummary).length > 0) {
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">🔧 Виды работ</div>`;
+      for (let w in workSummary) {
+        const ws = workSummary[w];
+        const uniqueRanges2 = [...new Set(ws.ranges)];
+        html += `<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;font-size:.85rem">
+            <span style="color:var(--info)">${Utils.escapeHtml(w)}</span>
+            <span><b>${ws.total.toFixed(2)}</b> ${ws.unit || ''}</span>
+          </div>
+          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">Участки: ${uniqueRanges2.join(', ')}</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+
+    // История по дням
+    const byDate = {};
+    segments.forEach(s => {
+      if (!byDate[s.entryDate]) byDate[s.entryDate] = [];
+      byDate[s.entryDate].push(s);
+    });
+
+    if (Object.keys(byDate).length > 0) {
+      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📜 История</div>`;
+      Object.keys(byDate).sort().reverse().forEach(date => {
+        const daySegs = byDate[date];
+        html += `<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-weight:600;font-size:.85rem;color:var(--primary);margin-bottom:4px">${Utils.formatDate(date)}</div>`;
+        daySegs.forEach(s => {
+          html += `<div style="font-size:.8rem;padding:2px 0">• ${Utils.escapeHtml(s.workName)} — <b>${s.volume}</b> ${s.unit || ''} | ${s.kmFrom}–${s.kmTo} км</div>`;
+        });
+        html += `</div>`;
+      });
+      html += `</div>`;
+    }
+
+    content.innerHTML = html;
+    modal.classList.add('active');
   }
 
   // --- Детали дня ---
@@ -2666,18 +3026,12 @@ function initDefaultData() {
     const timesheetOverrides = State.get('timesheetOverrides');
     const timesheetLetters = State.get('timesheetLetters');
 
-    console.log('[Табель] Месяц:', month, 'Категория:', cat, 'Дней:', daysInMonth, 'Записей:', entries.length);
-
     const dayWorkers = {};
-    let matchedEntries = 0;
     entries.forEach(e => {
       if (!e.date || !e.date.startsWith(month)) return;
-      matchedEntries++;
-      e.squads?.forEach((sq, si) => {
+      e.squads?.forEach(sq => {
         const catOk = (cat === 'all' || sq.category === cat);
         if (!catOk) return;
-        const peopleCount = sq.people?.length || 0;
-        console.log('[Табель] Запись', e.date, 'наряд', si, 'людей:', peopleCount);
         sq.people?.forEach(p => {
           if (!dayWorkers[p.name]) dayWorkers[p.name] = { name: p.name, days: {}, total: 0 };
           const d = parseInt(e.date.slice(8), 10);
@@ -2686,7 +3040,6 @@ function initDefaultData() {
         });
       });
     });
-    console.log('[Табель] Совпало записей:', matchedEntries, 'Работников:', Object.keys(dayWorkers).length);
 
     // timesheetOverrides теперь учитывают месяц: ключ = "month|name|day"
     Object.keys(timesheetOverrides).forEach(key => {
@@ -3287,10 +3640,26 @@ function initDefaultData() {
     }).join('') || '<div class="empty-state">Нет инструментов</div>';
     Utils.$('toolsCatalogList').innerHTML = tHtml;
 
-    const rHtml = roads.filter(r => !search || r.name.toLowerCase().includes(search)).map((r, i) => {
+    // Убираем дубликаты по ID
+    const uniqueRoads = [];
+    const seenIds = new Set();
+    roads.forEach(r => {
+      if (!seenIds.has(r.id)) {
+        seenIds.add(r.id);
+        uniqueRoads.push(r);
+      }
+    });
+    const rHtml = uniqueRoads.filter(r => !search || r.name.toLowerCase().includes(search)).map((r, i) => {
+      const realIdx = roads.indexOf(r);
       const typeLabel = { road: '🛣️ Дорога', object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[r.type] || '📍 Объект';
-      const typeInfo = r.type === 'road' ? (r.length ? r.length + ' км' : '') : (r.plan ? 'План: ' + Utils.escapeHtml(r.plan) : '');
-      return `<div class="catalog-item"><div><b>${Utils.escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${typeLabel}${typeInfo ? ' | ' + typeInfo : ''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${i})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${i})">🗑️</button></div></div>`;
+      const typeInfo = r.type === 'road' ? (r.length ? r.length + ' км' : '') : (r.plan ? Utils.escapeHtml(r.plan) : '');
+      let pwHtml = '';
+      if (r.planWorks && r.planWorks.length) {
+        pwHtml = '<div style="margin-top:4px">' + r.planWorks.map(pw => 
+          `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:var(--bg);border-radius:8px;border:1px solid var(--border);font-size:.75rem"><span style="color:var(--text-secondary)">${Utils.escapeHtml(pw.workName)}</span> <b style="color:var(--primary)">${pw.volume}${pw.unit || 'м²'}</b>${pw.workId ? '<small style="color:var(--text-secondary);margin-left:4px">✓</small>' : ''}</span>`
+        ).join('') + '</div>';
+      }
+      return `<div class="catalog-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="width:100%;display:flex;justify-content:space-between;align-items:center"><div><b>${Utils.escapeHtml(r.name)}</b><div class="text-secondary" style="font-size:.8rem">${typeLabel}${typeInfo ? ' | ' + typeInfo : ''}</div></div><div class="stock-actions"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${realIdx})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${realIdx})">🗑️</button></div></div>${pwHtml}</div>`;
     }).join('') || '<div class="empty-state">Нет дорог/объектов</div>';
     Utils.$('roadsCatalogList').innerHTML = rHtml;
 
@@ -3324,12 +3693,18 @@ function initDefaultData() {
         '<div class="form-group"><label>Зарплата машиниста (руб/ч)</label><input type="number" id="catInp4" step="0.01" placeholder="0"></div>';
     } else if (type === 'road') {
       html = '<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div>' +
-        '<div class="form-group"><label>Тип</label><select id="catInp2"><option value="road">🛣️ Дорога (есть км)</option><option value="object">📍 Объект (без км)</option><option value="abz">🏭 АБЗ</option><option value="base">🏢 База</option></select></div>' +
+        '<div class="form-group"><label>Тип</label><select id="catInp2" onchange="App.togglePlanWorks()"><option value="road">🛣️ Дорога (есть км)</option><option value="object">📍 Объект (без км)</option><option value="abz">🏭 АБЗ</option><option value="base">🏢 База</option></select></div>' +
         '<div class="form-group"><label>Протяжённость (км) — только для дорог</label><input type="number" id="catInp3" step="0.1" placeholder="0"></div>' +
-        '<div class="form-group"><label>План работы (объём/норма) — для объектов</label><input type="text" id="catInp4" placeholder="Например: 10 вагонов, 50 тонн"></div>';
+        '<div id="planWorksBox" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">' +
+        '<div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.85rem">📋 План работ (объём)</div>' +
+        '<div id="planWorksList"></div>' +
+        '<button type="button" class="btn btn-small btn-secondary" onclick="App.addPlanWork()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">➕ Добавить работу</button>' +
+        '</div>' +
+        '<div class="form-group" id="oldPlanBox" style="display:none"><label>Примечание</label><input type="text" id="catInp4" placeholder="Например: Текущий ремонт"></div>';
     }
     Utils.$('catalogForm').innerHTML = html;
     Utils.$('catalogModal').classList.add('active');
+    if (type === 'road') setTimeout(() => togglePlanWorks(), 50);
   }
 
   function editCatalogItem(type, idx) {
@@ -3346,7 +3721,71 @@ function initDefaultData() {
     if (Utils.$('catInp1')) Utils.$('catInp1').value = item.name || '';
     if (Utils.$('catInp2')) Utils.$('catInp2').value = item.type || 'road';
     if (Utils.$('catInp3')) Utils.$('catInp3').value = item.length || '';
-    if (Utils.$('catInp4')) Utils.$('catInp4').value = item.plan || '';
+    if (Utils.$('catInp4') && item.plan) Utils.$('catInp4').value = item.plan;
+    togglePlanWorks();
+    if (item.planWorks) {
+      item.planWorks.forEach(pw => addPlanWork(pw));
+    }
+  }
+
+  function togglePlanWorks() {
+    const type = Utils.$('catInp2')?.value || 'road';
+    const isRoad = type === 'road';
+    const box = Utils.$('planWorksBox');
+    const oldBox = Utils.$('oldPlanBox');
+    if (box) box.style.display = isRoad ? 'none' : 'block';
+    if (oldBox) oldBox.style.display = isRoad ? 'none' : 'block';
+  }
+
+  function addPlanWork(data) {
+    const list = Utils.$('planWorksList');
+    if (!list) return;
+    const works = State.get('works');
+    const row = document.createElement('div');
+    row.className = 'plan-work-row';
+    row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center';
+    const s = 'padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem;width:100%';
+    const opts = works.map(w => '<option value="' + Utils.escapeHtml(w.name) + '" data-id="' + w.id + '" data-unit="' + Utils.escapeHtml(w.unit || 'м²') + '">').join('');
+    const rowId = 'pwr_' + Date.now() + '_' + Math.random().toString(36).slice(2,5);
+    row.innerHTML = '<input type="hidden" class="pwid" value="' + (data ? (data.workId || '') : '') + '">' +
+      '<div style="flex:3;position:relative">' +
+      '<input type="text" class="pwn" id="' + rowId + '_name" list="pwDatalist" placeholder="Выберите или введите работу" value="' + (data ? Utils.escapeHtml(data.workName) : '') + '" style="' + s + '" onchange="App.fillPlanWorkUnit(this)">' +
+      '<datalist id="pwDatalist">' + opts + '</datalist>' +
+      '</div>' +
+      '<input type="text" class="pwv" placeholder="Объём" inputmode="decimal" value="' + (data ? String(data.volume).replace(/,/g, '.') : '') + '" style="flex:1;' + s + '">' +
+      '<input type="text" class="pwu" id="' + rowId + '_unit" placeholder="Ед." value="' + (data ? Utils.escapeHtml(data.unit) : 'м²') + '" style="flex:1;' + s + '">' +
+      '<button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()" style="padding:4px 8px;font-size:.75rem;min-height:32px">×</button>';
+    list.appendChild(row);
+  }
+
+  function fillPlanWorkUnit(inp) {
+    const name = inp.value.trim();
+    if (!name) return;
+    const work = State.get('works').find(w => w.name === name);
+    if (work) {
+      const row = inp.closest('.plan-work-row');
+      const unitInp = row.querySelector('.pwu');
+      const idInp = row.querySelector('.pwid');
+      if (unitInp && !unitInp.value.trim()) unitInp.value = work.unit || 'м²';
+      if (idInp) idInp.value = work.id;
+    }
+  }
+
+  function getPlanWorks() {
+    const rows = document.querySelectorAll('.plan-work-row');
+    const out = [];
+    rows.forEach(r => {
+      const n = r.querySelector('.pwn')?.value.trim();
+      const v = parseFloat(String(r.querySelector('.pwv')?.value || '').replace(/,/g, '.'));
+      const u = r.querySelector('.pwu')?.value.trim() || 'м²';
+      const wid = r.querySelector('.pwid')?.value;
+      if (n && !isNaN(v) && v > 0) {
+        const item = { workName: n, volume: v, unit: u };
+        if (wid) item.workId = parseInt(wid);
+        out.push(item);
+      }
+    });
+    return out;
   }
 
   async function saveCatalogItem() {
@@ -3373,8 +3812,16 @@ function initDefaultData() {
     } else if (type === 'road') {
       const roadType = Utils.$('catInp2').value || 'road';
       const len = parseFloat(Utils.$('catInp3').value) || 0;
-      const plan = Utils.$('catInp4').value.trim();
-      item = { id: Date.now(), name, length: len, type: roadType, plan: plan };
+      const plan = Utils.$('catInp4')?.value.trim() || '';
+      const pw = getPlanWorks();
+      const catalogEditingId = State.getUI('catalogEditingId');
+      let oldId = null;
+      if (catalogEditingId !== null) {
+        const old = State.get('roads')[catalogEditingId];
+        if (old) oldId = old.id;
+      }
+      item = { id: oldId || Date.now(), name, length: len, type: roadType, plan: plan };
+      if (pw.length) item.planWorks = pw;
     }
 
     const catalogEditingId = State.getUI('catalogEditingId');
@@ -3431,7 +3878,7 @@ function initDefaultData() {
           const name = parts[0].trim();
           if (!name) return;
           if (type === 'worker') {
-            const cat = parts[1]?.trim() || 'other';
+            let cat = parts[1]?.trim() || 'other';
             if (!CATEGORIES[cat]) cat = 'other';
             State.get('workers').push({ name, category: cat, grade: parseInt(parts[2]) || 0 });
           } else if (type === 'work') {
@@ -3765,7 +4212,9 @@ function initDefaultData() {
     saveAppSettings, setTheme, exportAllData, importAllData, clearAllData, importNormsData, exportNormsTemplate,
     selectRoadForScale, generateRoadKmReport, toggleEntry, toggleMonth, deleteMonth,
     generateMachinesCost,
-    renderEntries, renderCalendar, renderRoadSelector, renderRoadsKmSummary, renderRoadKmScale, renderDynamicCalendar
+    renderEntries, renderCalendar, renderRoadSelector, renderRoadsKmSummary, renderRoadKmScale, renderDynamicCalendar,
+    togglePlanWorks, addPlanWork, getPlanWorks, fillPlanWorkUnit,
+    showDetailModal, closeDetailModal
   };
 })();
 
