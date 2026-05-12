@@ -333,6 +333,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -654,10 +655,10 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 
 <div class="modal-overlay" id="objectDetailModal">
   <div class="modal" style="max-height:90vh">
-    <div class="modal-header"><span id="objectDetailTitle">📍 Объект</span><button class="close-modal" onclick="App.closeObjectDetailModal()">×</button></div>
+    <div class="modal-header"><span id="objectDetailTitle">📍 Объект</span><button class="close-modal" onclick="App.closeDetailModal()">×</button></div>
     <div id="objectDetailContent"></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="App.closeObjectDetailModal()">Закрыть</button>
+      <button class="btn btn-primary" onclick="App.closeDetailModal()">Закрыть</button>
     </div>
   </div>
 </div>
@@ -3698,7 +3699,7 @@ function initDefaultData() {
         '<div id="planWorksBox" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">' +
         '<div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.85rem">📋 План работ (объём)</div>' +
         '<div id="planWorksList"></div>' +
-        '<button type="button" class="btn btn-small btn-secondary" onclick="App.addPlanWork()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">➕ Добавить работу</button>' +
+        '<button type="button" class="btn btn-small btn-info" onclick="App.openRoadWorksModal()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">🔧 Выбрать виды работ</button><button type="button" class="btn btn-small btn-secondary" onclick="App.addPlanWork()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">➕ Добавить вручную</button>' +
         '</div>' +
         '<div class="form-group" id="oldPlanBox" style="display:none"><label>Примечание</label><input type="text" id="catInp4" placeholder="Например: Текущий ремонт"></div>';
     }
@@ -4188,6 +4189,56 @@ function initDefaultData() {
     container.innerHTML = html;
   }
 
+
+  // --- Модальное окно выбора видов работ для плана объекта/дороги ---
+  function openRoadWorksModal() {
+    const modal = Utils.$('roadWorksModal');
+    const list = Utils.$('roadWorksList');
+    const works = State.get('works');
+    if (!works.length) {
+      list.innerHTML = '<div class="empty-state">Сначала добавьте виды работ в справочник</div>';
+    } else {
+      list.innerHTML = works.map(w => 
+        '<div class="work-item" style="padding:8px 0;border-bottom:1px solid var(--border)">' +
+        '<label style="display:flex;align-items:center;gap:8px;cursor:pointer">' +
+        '<input type="checkbox" class="rwork-cb" data-name="' + Utils.escapeHtml(w.name) + '" data-unit="' + Utils.escapeHtml(w.unit || 'м²') + '" style="width:20px;height:20px">' +
+        '<span style="flex:1"><b class="text-info">' + Utils.escapeHtml(w.name) + '</b> <small class="text-secondary">(' + Utils.escapeHtml(w.unit || 'м²') + ')</small></span>' +
+        '</label>' +
+        '<div style="margin-left:28px;margin-top:6px;display:flex;gap:8px;flex-wrap:wrap">' +
+        '<label style="font-size:.85rem">Объём: <input type="number" class="rwork-vol" value="0" step="0.01" style="width:90px;padding:6px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text)"></label>' +
+        '<label style="font-size:.85rem">Ед.: <input type="text" class="rwork-unit" value="' + Utils.escapeHtml(w.unit || 'м²') + '" style="width:70px;padding:6px;border-radius:8px;border:1.5px solid var(--border);background:var(--card);color:var(--text)"></label>' +
+        '</div></div>'
+      ).join('');
+    }
+    modal.classList.add('active');
+  }
+
+  function closeRoadWorksModal() {
+    Utils.$('roadWorksModal').classList.remove('active');
+  }
+
+  function applyRoadWorks() {
+    const items = [];
+    document.querySelectorAll('#roadWorksList .work-item').forEach(item => {
+      const cb = item.querySelector('.rwork-cb');
+      if (!cb || !cb.checked) return;
+      const volInp = item.querySelector('.rwork-vol');
+      const unitInp = item.querySelector('.rwork-unit');
+      const vol = volInp ? parseFloat(String(volInp.value).replace(/,/g, '.')) : NaN;
+      const unit = unitInp ? unitInp.value.trim() : (cb.dataset.unit || 'м²');
+      if (!isNaN(vol) && vol > 0) {
+        items.push({ workName: cb.dataset.name, volume: vol, unit: unit });
+      }
+    });
+    if (!items.length) {
+      Utils.showToast('Не выбрано ни одной работы с объёмом > 0');
+      return;
+    }
+    items.forEach(it => addPlanWork(it));
+    closeRoadWorksModal();
+    Utils.showToast('Добавлено ' + items.length + ' работ в план');
+  }
+
   // --- Публичный API ---
   return {
     init,
@@ -4214,7 +4265,8 @@ function initDefaultData() {
     generateMachinesCost,
     renderEntries, renderCalendar, renderRoadSelector, renderRoadsKmSummary, renderRoadKmScale, renderDynamicCalendar,
     togglePlanWorks, addPlanWork, getPlanWorks, fillPlanWorkUnit,
-    showDetailModal, closeDetailModal
+    showDetailModal, closeDetailModal,
+    openRoadWorksModal, closeRoadWorksModal, applyRoadWorks
   };
 })();
 
@@ -4237,6 +4289,18 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 App.init();
 </script>
+
+<div class="modal-overlay" id="roadWorksModal">
+  <div class="modal">
+    <div class="modal-header"><span>🔧 Выбрать виды работ для плана</span><button class="close-modal" onclick="App.closeRoadWorksModal()">×</button></div>
+    <div class="hint" style="margin-bottom:10px">Отметьте нужные виды работ и укажите плановый объём. Они добавятся в план объекта/дороги.</div>
+    <div id="roadWorksList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="App.applyRoadWorks()">✅ Добавить выбранные</button>
+      <button class="btn btn-secondary" onclick="App.closeRoadWorksModal()">Отмена</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="tsEditModal">
   <div class="modal" style="max-width:360px">
