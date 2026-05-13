@@ -1159,6 +1159,180 @@ function getLaborNorm(laborCost, volume, unit) {
   return laborCost * (norm.value / 1000); // laborCost за 1000 единиц
 }
 
+
+
+// ============================================
+// УНИФИЦИРОВАННЫЙ РАСЧЁТ ПРОГРЕССА ОБЪЕКТА
+// ============================================
+
+/**
+ * Рассчитывает прогресс объекта/дороги
+ * @param {string} objName - имя объекта
+ * @param {string} filterType - тип фильтра ('all', 'today', 'week', 'month')
+ * @returns {Object} { totalPlan, totalDone, totalRem, pct, byWork: [{name, plan, done, rem, pct, unit}] }
+ */
+function calculateObjectProgress(objName, filterType) {
+  const entries = State.get('entries');
+  const obj = State.get('roads').find(r => r.name === objName);
+  const planWorks = obj?.planWorks || [];
+
+  // Собираем все работы по объекту с учётом фильтра
+  const objEntries = [];
+  entries.forEach(e => {
+    // Фильтр по периоду
+    if (filterType === 'today' && e.date !== Utils.todayStr()) return;
+    if (filterType === 'week') {
+      const sd = Utils.getWeekStart(new Date());
+      const ed = Utils.getWeekEnd(new Date());
+      const de = new Date(e.date);
+      if (de < sd || de > ed) return;
+    }
+    if (filterType === 'important' && !e.important) return;
+
+    e.squads?.forEach(sq => {
+      if (sq.objects?.includes(objName)) {
+        sq.works?.forEach(w => {
+          if (isWorkForObject(w, objName, sq.objects)) {
+            objEntries.push({
+              date: e.date,
+              work: w.name,
+              volume: w.volume,
+              unit: w.unit,
+              normVolume: normalizeVolume(w.volume, w.unit)
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // Считаем по видам работ
+  const byWork = [];
+  let totalPlan = 0, totalDone = 0;
+
+  planWorks.forEach(pw => {
+    const done = objEntries
+      .filter(e => e.work === pw.workName)
+      .reduce((s, e) => s + e.normVolume.value, 0);
+    const plan = normalizeVolume(pw.volume, pw.unit).value;
+    const rem = Math.max(0, plan - done);
+    const pct = plan > 0 ? Math.min(100, (done / plan) * 100) : 0;
+
+    totalPlan += plan;
+    totalDone += done;
+
+    byWork.push({
+      name: pw.workName,
+      plan: plan,
+      done: done,
+      rem: rem,
+      pct: pct,
+      unit: pw.unit || 'м²',
+      rawPlan: pw.volume,
+      rawDone: done / (normalizeVolume(1, pw.unit).value || 1)
+    });
+  });
+
+  const totalRem = Math.max(0, totalPlan - totalDone);
+  const totalPct = totalPlan > 0 ? Math.min(100, (totalDone / totalPlan) * 100) : 0;
+
+  return {
+    totalPlan,
+    totalDone,
+    totalRem,
+    pct: totalPct,
+    byWork,
+    entryCount: objEntries.length
+  };
+}
+
+// ============================================
+// ============================================
+// УНИФИЦИРОВАННЫЙ РАСЧЁТ ПРОГРЕССА ОБЪЕКТА
+// ============================================
+
+/**
+ * Рассчитывает прогресс объекта/дороги
+ * @param {string} objName - имя объекта
+ * @param {string} filterType - тип фильтра ('all', 'today', 'week', 'month')
+ * @returns {Object} { totalPlan, totalDone, totalRem, pct, byWork: [{name, plan, done, rem, pct, unit}] }
+ */
+function calculateObjectProgress(objName, filterType) {
+  const entries = State.get('entries');
+  const obj = State.get('roads').find(r => r.name === objName);
+  const planWorks = obj?.planWorks || [];
+
+  // Собираем все работы по объекту с учётом фильтра
+  const objEntries = [];
+  entries.forEach(e => {
+    // Фильтр по периоду
+    if (filterType === 'today' && e.date !== Utils.todayStr()) return;
+    if (filterType === 'week') {
+      const sd = Utils.getWeekStart(new Date());
+      const ed = Utils.getWeekEnd(new Date());
+      const de = new Date(e.date);
+      if (de < sd || de > ed) return;
+    }
+    if (filterType === 'important' && !e.important) return;
+
+    e.squads?.forEach(sq => {
+      if (sq.objects?.includes(objName)) {
+        sq.works?.forEach(w => {
+          if (isWorkForObject(w, objName, sq.objects)) {
+            objEntries.push({
+              date: e.date,
+              work: w.name,
+              volume: w.volume,
+              unit: w.unit,
+              normVolume: normalizeVolume(w.volume, w.unit)
+            });
+          }
+        });
+      }
+    });
+  });
+
+  // Считаем по видам работ
+  const byWork = [];
+  let totalPlan = 0, totalDone = 0;
+
+  planWorks.forEach(pw => {
+    const done = objEntries
+      .filter(e => e.work === pw.workName)
+      .reduce((s, e) => s + e.normVolume.value, 0);
+    const plan = normalizeVolume(pw.volume, pw.unit).value;
+    const rem = Math.max(0, plan - done);
+    const pct = plan > 0 ? Math.min(100, (done / plan) * 100) : 0;
+
+    totalPlan += plan;
+    totalDone += done;
+
+    byWork.push({
+      name: pw.workName,
+      plan: plan,
+      done: done,
+      rem: rem,
+      pct: pct,
+      unit: pw.unit || 'м²',
+      rawPlan: pw.volume,
+      rawDone: done / (normalizeVolume(1, pw.unit).value || 1)
+    });
+  });
+
+  const totalRem = Math.max(0, totalPlan - totalDone);
+  const totalPct = totalPlan > 0 ? Math.min(100, (totalDone / totalPlan) * 100) : 0;
+
+  return {
+    totalPlan,
+    totalDone,
+    totalRem,
+    pct: totalPct,
+    byWork,
+    entryCount: objEntries.length
+  };
+}
+
+// ============================================
 // ============================================
 const CONFIG = {
   PREFIX: 'drsu_v17_',
@@ -1603,24 +1777,14 @@ function initDefaultData() {
         const typeLabel = { object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[obj.type] || '📍 Объект';
         const planHtml = obj.plan ? `<span style="color:var(--primary)"> | ${Utils.escapeHtml(obj.plan)}</span>` : '';
 
-        // Считаем план/факт/остаток
-        let planTotal = 0, doneTotal = 0;
-        const workProgress = [];
-        if (obj.planWorks && obj.planWorks.length) {
-          obj.planWorks.forEach(pw => {
-            planTotal += pw.volume;
-            let done = 0;
-            objEntries.forEach(e => { if (e.work === pw.workName) done += e.volume; });
-            doneTotal += done;
-            const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
-            const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
-            const rem = Math.max(0, pw.volume - done);
-            workProgress.push({ name: pw.workName, plan: pw.volume, done, rem, pct, unit: pw.unit || 'м²', color: bc });
-          });
-        }
-        const totalPct = planTotal > 0 ? Math.min(100, (doneTotal / planTotal) * 100) : 0;
-        const totalRem = Math.max(0, planTotal - doneTotal);
+        // Унифицированный расчёт прогресса
+        const progress = calculateObjectProgress(obj.name, State.getUI('currentFilter'));
+        const planTotal = progress.totalPlan;
+        const doneTotal = progress.totalDone;
+        const totalPct = progress.pct;
+        const totalRem = progress.totalRem;
         const totalColor = totalPct >= 100 ? 'var(--success)' : (totalPct > 50 ? 'var(--primary)' : 'var(--accent)');
+        const workProgress = progress.byWork;
 
         // Прогресс-бар общий
         let progressHtml = '';
@@ -1850,18 +2014,14 @@ function initDefaultData() {
     if (road.planWorks && road.planWorks.length) {
       html += `<div style="margin:8px 0;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
         <div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.85rem">📋 План работ</div>`;
-      road.planWorks.forEach(pw => {
-        let done = 0;
-        objEntries.forEach(e => {
-          // Сопоставляем по названию работы (основной способ)
-          if (e.work === pw.workName) done += e.volume;
-        });
-        const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
+      const scaleProgress = calculateObjectProgress(road.name, State.getUI('currentFilter'));
+      scaleProgress.byWork.forEach(pw => {
+        const pct = pw.pct;
         const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
         html += `<div style="margin-bottom:6px">
           <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px">
             <span>${Utils.escapeHtml(pw.workName)}</span>
-            <span><b>${done.toFixed(2)}</b> / ${pw.volume} ${pw.unit || 'м²'} <b style="color:${bc}">(${pct.toFixed(0)}%)</b></span>
+            <span><b>${pw.done.toFixed(2)}</b> / ${pw.rawPlan} ${pw.unit} <b style="color:${bc}">(${pw.pct.toFixed(0)}%)</b></span>
           </div>
           <div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
             <div style="width:${pct}%;height:100%;background:${bc};transition:width .3s"></div>
@@ -2727,7 +2887,7 @@ function initDefaultData() {
         s.objects?.forEach(o => {
           objectsSet.add(o);
           if (!objectStats[o]) objectStats[o] = { norm: 0, fact: 0 };
-          s.works?.forEach(w => { if (w.laborCost && isWorkForObject(w, o, s.objects)) objectStats[o].norm += w.laborCost * w.volume; });
+          s.works?.forEach(w => { if (w.laborCost && isWorkForObject(w, o, s.objects)) objectStats[o].norm += w.laborCost * (normalizeVolume(w.volume, w.unit).value / 1000); });
           const normPeople = s.people?.filter(p => {
             const w = workers.find(x => x.name === p.name);
             return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
@@ -2933,10 +3093,9 @@ function initDefaultData() {
     // === План работ (для объектов и дорог) ===
     if (obj.planWorks && obj.planWorks.length) {
       html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📋 План работ</div>`;
-      obj.planWorks.forEach(pw => {
-        let done = 0;
-        objEntries.forEach(e => { if (e.work === pw.workName) done += e.volume; });
-        const pct = pw.volume > 0 ? Math.min(100, (done / pw.volume) * 100) : 0;
+      const detailProgress = calculateObjectProgress(name, 'all');
+      detailProgress.byWork.forEach(pw => {
+        const pct = pw.pct;
         const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
         const rem = Math.max(0, pw.volume - done);
         html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
@@ -3426,7 +3585,7 @@ function initDefaultData() {
           if (!objectStats[o]) objectStats[o] = { name: o, works: 0, volume: 0, hours: 0, people: 0 };
           objectStats[o].works += sq.works?.length || 0;
           objectStats[o].people += sq.people?.length || 0;
-          sq.works?.forEach(w => { if (isWorkForObject(w, o, sq.objects)) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
+          sq.works?.forEach(w => { if (isWorkForObject(w, o, sq.objects)) { const nv = normalizeVolume(w.volume, w.unit); objectStats[o].volume += nv.value; objectStats[o].hours += (w.laborCost || 0) * (nv.value / 1000); } });
         });
       });
     });
