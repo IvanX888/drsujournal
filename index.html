@@ -333,9 +333,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -1814,7 +1811,7 @@ function initDefaultData() {
     const src = State.getUI('formSquads').find(s => s.id === sid);
     if (!src) return;
     const dup = JSON.parse(JSON.stringify(src));
-    dup.id = 'sq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    dup.id = 'sq_' + Utils.generateId();
     const formSquads = State.getUI('formSquads');
     formSquads.push(dup);
     State.setUI('formSquads', formSquads);
@@ -2882,114 +2879,6 @@ function initDefaultData() {
   }
 
   // --- Детали дороги ---
-  function showRoadDetailModal(roadName) {
-    const modal = Utils.$('objectDetailModal');
-    const title = Utils.$('objectDetailTitle');
-    const content = Utils.$('objectDetailContent');
-    const road = State.get('roads').find(r => r.name === roadName);
-    if (!road) return;
-
-    title.textContent = '🛣️ ' + roadName;
-
-    const segments = getRoadKmSegments(roadName, State.getUI('currentFilter'));
-    const totalLength = parseFloat(road.length) || 0;
-    let coveredKm = 0;
-    let uniqueRanges = [];
-
-    if (totalLength > 0 && segments.length > 0) {
-      const sorted = segments.slice().sort((a, b) => a.kmFrom - b.kmFrom);
-      const merged = [];
-      sorted.forEach(s => {
-        if (merged.length === 0) merged.push({ from: s.kmFrom, to: s.kmTo });
-        else {
-          const last = merged[merged.length - 1];
-          if (s.kmFrom <= last.to) last.to = Math.max(last.to, s.kmTo);
-          else merged.push({ from: s.kmFrom, to: s.kmTo });
-        }
-      });
-      merged.forEach(m => { coveredKm += (m.to - m.from); });
-      uniqueRanges = merged;
-    }
-
-    const pct = totalLength ? Math.min(100, (coveredKm / totalLength) * 100) : 0;
-    const barColor = pct >= 90 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
-
-    let html = `<div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:12px">🛣️ Дорога | Протяжённость: ${totalLength} км</div>`;
-
-    // Общий прогресс
-    html += `<div style="margin-bottom:16px">
-      <div style="display:flex;justify-content:space-between;font-size:.9rem;margin-bottom:6px">
-        <span><b>${coveredKm.toFixed(1)}</b> из <b>${totalLength}</b> км покрыто</span>
-        <span style="color:${barColor};font-weight:700">${pct.toFixed(0)}%</span>
-      </div>
-      <div style="height:12px;background:var(--card);border-radius:6px;overflow:hidden;border:1px solid var(--border)">
-        <div style="width:${pct}%;height:100%;background:${barColor};transition:width .3s"></div>
-      </div>
-    </div>`;
-
-    // Участки
-    if (uniqueRanges.length > 0) {
-      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📍 Участки работ</div>`;
-      uniqueRanges.forEach((range, i) => {
-        const rangeSegments = segments.filter(s => !(s.kmTo <= range.from || s.kmFrom >= range.to));
-        const worksList = [...new Set(rangeSegments.map(s => s.workName))];
-        html += `<div style="margin-bottom:8px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
-          <div style="font-weight:600;font-size:.85rem">${range.from} – ${range.to} км</div>
-          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">${worksList.map(Utils.escapeHtml).join(', ')}</div>
-        </div>`;
-      });
-      html += `</div>`;
-    }
-
-    // Виды работ
-    const workSummary = {};
-    segments.forEach(s => {
-      if (!workSummary[s.workName]) workSummary[s.workName] = { total: 0, unit: s.unit, ranges: [] };
-      workSummary[s.workName].total += s.volume;
-      workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
-    });
-
-    if (Object.keys(workSummary).length > 0) {
-      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">🔧 Виды работ</div>`;
-      for (let w in workSummary) {
-        const ws = workSummary[w];
-        const uniqueRanges2 = [...new Set(ws.ranges)];
-        html += `<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
-          <div style="display:flex;justify-content:space-between;font-size:.85rem">
-            <span style="color:var(--info)">${Utils.escapeHtml(w)}</span>
-            <span><b>${ws.total.toFixed(2)}</b> ${ws.unit || ''}</span>
-          </div>
-          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">Участки: ${uniqueRanges2.join(', ')}</div>
-        </div>`;
-      }
-      html += `</div>`;
-    }
-
-    // История по дням
-    const byDate = {};
-    segments.forEach(s => {
-      if (!byDate[s.entryDate]) byDate[s.entryDate] = [];
-      byDate[s.entryDate].push(s);
-    });
-
-    if (Object.keys(byDate).length > 0) {
-      html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📜 История</div>`;
-      Object.keys(byDate).sort().reverse().forEach(date => {
-        const daySegs = byDate[date];
-        html += `<div style="margin-bottom:6px;padding:8px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">
-          <div style="font-weight:600;font-size:.85rem;color:var(--primary);margin-bottom:4px">${Utils.formatDate(date)}</div>`;
-        daySegs.forEach(s => {
-          html += `<div style="font-size:.8rem;padding:2px 0">• ${Utils.escapeHtml(s.workName)} — <b>${s.volume}</b> ${s.unit || ''} | ${s.kmFrom}–${s.kmTo} км</div>`;
-        });
-        html += `</div>`;
-      });
-      html += `</div>`;
-    }
-
-    content.innerHTML = html;
-    modal.classList.add('active');
-  }
-
   // --- Детали дня ---
   function showDayDetails(date) {
     State.setUI('selectedCalendarDate', date);
@@ -3949,7 +3838,7 @@ function initDefaultData() {
               laborCost: parseFloat(parts[2]) || 0, directCost: parseFloat(parts[3]) || 0, toolCost: parseFloat(parts[4]) || 0
             });
           } else if (type === 'road') {
-            State.get('roads').push({ id: Date.now(), name, length: parseFloat(parts[1]) || 0 });
+            State.get('roads').push({ id: Utils.generateId(), name, length: parseFloat(parts[1]) || 0 });
           }
         });
         Storage.saveAll(State.getAllForSave());
