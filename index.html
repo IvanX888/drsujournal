@@ -333,6 +333,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -3097,11 +3098,11 @@ function initDefaultData() {
       detailProgress.byWork.forEach(pw => {
         const pct = pw.pct;
         const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
-        const rem = Math.max(0, pw.volume - done);
+        const rem = Math.max(0, pw.volume - pw.done);
         html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
             <span style="font-weight:600">${Utils.escapeHtml(pw.workName)}</span>
-            <span><b style="color:${bc}">${done.toFixed(1)}</b> / ${pw.volume} ${pw.unit || 'м²'}</span>
+            <span><b style="color:${bc}">${pw.done.toFixed(1)}</b> / ${pw.volume} ${pw.unit || 'м²'}</span>
           </div>
           <div style="height:10px;background:var(--card);border-radius:5px;overflow:hidden;border:1px solid var(--border)">
             <div style="width:${pct}%;height:100%;background:${bc};transition:width .3s"></div>
