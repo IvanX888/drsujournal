@@ -335,6 +335,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -2618,7 +2619,7 @@ function initDefaultData() {
         s.objects?.forEach(o => {
           objectsSet.add(o);
           if (!objectStats[o]) objectStats[o] = { norm: 0, fact: 0 };
-          s.works?.forEach(w => { if (w.laborCost) objectStats[o].norm += w.laborCost * w.volume; });
+          s.works?.forEach(w => { if (w.laborCost && (w.road === o || !w.road)) objectStats[o].norm += w.laborCost * w.volume; });
           const normPeople = s.people?.filter(p => {
             const w = workers.find(x => x.name === p.name);
             return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
@@ -3426,7 +3427,7 @@ function initDefaultData() {
           if (!objectStats[o]) objectStats[o] = { name: o, works: 0, volume: 0, hours: 0, people: 0 };
           objectStats[o].works += sq.works?.length || 0;
           objectStats[o].people += sq.people?.length || 0;
-          sq.works?.forEach(w => { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; });
+          sq.works?.forEach(w => { if (w.road === o || !w.road) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
         });
       });
     });
