@@ -1047,6 +1047,119 @@ async function init() {
 // ============================================
 // МОДУЛЬ: Конфигурация и константы
 // ============================================
+
+// ============================================
+// УНИФИЦИРОВАННЫЕ ФУНКЦИИ АГРЕГАЦИИ И ФОРМАТИРОВАНИЯ
+// ============================================
+
+/**
+ * Проверяет, относится ли работа к объекту
+ * @param {Object} w - работа (work)
+ * @param {string} objName - имя объекта
+ * @param {Array} squadObjects - объекты наряда (опционально)
+ * @returns {boolean}
+ */
+function isWorkForObject(w, objName, squadObjects) {
+  if (!w) return false;
+  // Работа без привязки (w.road пустой) относится ко всем объектам наряда
+  if (!w.road) return true;
+  // Работа привязана к текущему объекту
+  if (w.road === objName) return true;
+  // Работа привязана к другому объекту в том же наряде (подобъект/родитель)
+  if (squadObjects && Array.isArray(squadObjects) && squadObjects.includes(w.road)) return true;
+  return false;
+}
+
+/**
+ * Конвертирует объём работы в базовые единицы (м², м³, шт и т.д.)
+ * @param {number} volume - объём
+ * @param {string} unit - единица измерения
+ * @returns {Object} {value, unit, display}
+ */
+function normalizeVolume(volume, unit) {
+  if (volume === undefined || volume === null || isNaN(volume)) {
+    return { value: 0, unit: unit || 'ед.', display: '0' };
+  }
+
+  const u = (unit || '').toString().trim().toLowerCase();
+
+  // 1000 м² → м²
+  if (u === '1000 м²' || u === '1000 m2') {
+    return { 
+      value: volume * 1000, 
+      unit: 'м²', 
+      display: volume < 1 ? `${(volume * 1000).toFixed(1)} м²` : `${volume.toFixed(2)} тыс. м²`
+    };
+  }
+
+  // 1000 м³ → м³
+  if (u === '1000 м³' || u === '1000 m3') {
+    return { 
+      value: volume * 1000, 
+      unit: 'м³', 
+      display: volume < 1 ? `${(volume * 1000).toFixed(1)} м³` : `${volume.toFixed(2)} тыс. м³`
+    };
+  }
+
+  // 10 плот. м³ → плот. м³
+  if (u.includes('плот')) {
+    const match = u.match(/(\d+)/);
+    const multiplier = match ? parseInt(match[1]) : 1;
+    return { 
+      value: volume * multiplier, 
+      unit: 'плот. м³', 
+      display: `${(volume * multiplier).toFixed(2)} плот. м³`
+    };
+  }
+
+  // 10 деревьев → деревьев
+  if (u.includes('дерев')) {
+    const match = u.match(/(\d+)/);
+    const multiplier = match ? parseInt(match[1]) : 1;
+    return { 
+      value: volume * multiplier, 
+      unit: 'деревьев', 
+      display: `${(volume * multiplier).toFixed(0)} деревьев`
+    };
+  }
+
+  // 100 крон → крон
+  if (u.includes('крон')) {
+    const match = u.match(/(\d+)/);
+    const multiplier = match ? parseInt(match[1]) : 1;
+    return { 
+      value: volume * multiplier, 
+      unit: 'крон', 
+      display: `${(volume * multiplier).toFixed(0)} крон`
+    };
+  }
+
+  // По умолчанию
+  return { 
+    value: volume, 
+    unit: unit || 'ед.', 
+    display: `${volume} ${unit || 'ед.'}`
+  };
+}
+
+/**
+ * Форматирует объём для отображения (с учётом единиц)
+ */
+function formatWorkVolume(volume, unit) {
+  const norm = normalizeVolume(volume, unit);
+  return norm.display;
+}
+
+/**
+ * Получает норму в чел-часах с учётом единиц
+ */
+function getLaborNorm(laborCost, volume, unit) {
+  if (!laborCost || !volume) return 0;
+  const norm = normalizeVolume(volume, unit);
+  return laborCost * (norm.value / 1000); // laborCost за 1000 единиц
+}
+
+// ============================================
 const CONFIG = {
   PREFIX: 'drsu_v17_',
   VERSION: '17.0',
@@ -1472,9 +1585,7 @@ function initDefaultData() {
         e.squads?.forEach(sq => {
           if (sq.objects?.includes(obj.name)) {
             sq.works?.forEach(w => {
-              // Smart filter: work counts if bound to this obj, unbound, or bound to sibling obj in squad
-              const roadMatch = !w.road || w.road === obj.name || sq.objects?.includes(w.road);
-              if (!roadMatch) return;
+              if (!isWorkForObject(w, obj.name, sq.objects)) return;
               objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit });
             });
           }
@@ -1602,7 +1713,7 @@ function initDefaultData() {
     segments.forEach(s => {
       const kmKey = Math.floor(s.kmFrom);
       if (!normByKm[kmKey]) normByKm[kmKey] = { totalM2: 0, byWork: {} };
-      const actualM2 = (s.volume || 0) * (s.unit === '1000 м²' ? 1000 : 1);
+      const normVol = normalizeVolume(s.volume || 0, s.unit); const actualM2 = normVol.value;
       normByKm[kmKey].totalM2 += actualM2;
       if (!normByKm[kmKey].byWork[s.workName]) normByKm[kmKey].byWork[s.workName] = 0;
       normByKm[kmKey].byWork[s.workName] += actualM2;
@@ -1725,8 +1836,7 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(road.name)) {
           sq.works?.forEach(w => {
-            const roadMatch = !w.road || w.road === road.name || sq.objects?.includes(w.road);
-            if (!roadMatch) return;
+            if (!isWorkForObject(w, road.name, sq.objects)) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0 });
           });
         }
@@ -2033,7 +2143,7 @@ function initDefaultData() {
     let totalLaborNorm = 0, totalWorkerCost = 0, totalToolCost = 0, totalFuel = 0, totalMachineCost = 0;
 
     (sq.works || []).forEach(w => {
-      if (w.laborCost) totalLaborNorm += w.laborCost * w.volume;
+      if (w.laborCost) totalLaborNorm += w.laborCost * (normalizeVolume(w.volume, w.unit).value / 1000);
       const wc = (w.directCost || 0) - (w.toolCost || 0);
       totalWorkerCost += wc * w.volume;
       totalToolCost += (w.toolCost || 0) * w.volume;
@@ -2484,7 +2594,7 @@ function initDefaultData() {
   async function duplicateEntry(idx) {
     const entries = State.get('entries');
     const e = JSON.parse(JSON.stringify(entries[idx]));
-    e.id = Date.now();
+    e.id = Utils.generateId();
     e.created = new Date().toISOString();
     e.date = Utils.todayStr();
     entries.unshift(e);
@@ -2617,7 +2727,7 @@ function initDefaultData() {
         s.objects?.forEach(o => {
           objectsSet.add(o);
           if (!objectStats[o]) objectStats[o] = { norm: 0, fact: 0 };
-          s.works?.forEach(w => { if (w.laborCost && (!w.road || w.road === o)) objectStats[o].norm += w.laborCost * w.volume; });
+          s.works?.forEach(w => { if (w.laborCost && isWorkForObject(w, o, s.objects)) objectStats[o].norm += w.laborCost * w.volume; });
           const normPeople = s.people?.filter(p => {
             const w = workers.find(x => x.name === p.name);
             return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
@@ -2683,7 +2793,7 @@ function initDefaultData() {
         return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
       }) || [];
       const fact = normPeople.reduce((s, p) => s + (parseFloat(p.hours) || 8), 0);
-      const norm = sq.works?.reduce((s, w) => s + ((w.laborCost || 0) * w.volume), 0) || 0;
+      const norm = sq.works?.reduce((s, w) => s + ((w.laborCost || 0) * (normalizeVolume(w.volume, w.unit).value / 1000)), 0) || 0;
       totalNorm += norm;
       totalFact += fact;
     });
@@ -2769,8 +2879,7 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(name)) {
           sq.works?.forEach(w => {
-            const roadMatch = !w.road || w.road === name || sq.objects?.includes(w.road);
-            if (!roadMatch) return;
+            if (!isWorkForObject(w, name, sq.objects)) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0, kmFrom: w.kmFrom, kmTo: w.kmTo });
           });
         }
@@ -3317,7 +3426,7 @@ function initDefaultData() {
           if (!objectStats[o]) objectStats[o] = { name: o, works: 0, volume: 0, hours: 0, people: 0 };
           objectStats[o].works += sq.works?.length || 0;
           objectStats[o].people += sq.people?.length || 0;
-          sq.works?.forEach(w => { if (!w.road || w.road === o) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
+          sq.works?.forEach(w => { if (isWorkForObject(w, o, sq.objects)) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
         });
       });
     });
