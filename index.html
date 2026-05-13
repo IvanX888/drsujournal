@@ -1472,8 +1472,9 @@ function initDefaultData() {
         e.squads?.forEach(sq => {
           if (sq.objects?.includes(obj.name)) {
             sq.works?.forEach(w => {
-              // FIX: фильтруем работы по конкретному объекту
-              if (w.road !== obj.name) return;
+              // Smart filter: work counts if bound to this obj, unbound, or bound to sibling obj in squad
+              const roadMatch = !w.road || w.road === obj.name || sq.objects?.includes(w.road);
+              if (!roadMatch) return;
               objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit });
             });
           }
@@ -1724,8 +1725,8 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(road.name)) {
           sq.works?.forEach(w => {
-            // FIX: фильтруем работы по конкретному объекту
-            if (w.road !== road.name) return;
+            const roadMatch = !w.road || w.road === road.name || sq.objects?.includes(w.road);
+            if (!roadMatch) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0 });
           });
         }
@@ -2616,7 +2617,7 @@ function initDefaultData() {
         s.objects?.forEach(o => {
           objectsSet.add(o);
           if (!objectStats[o]) objectStats[o] = { norm: 0, fact: 0 };
-          s.works?.forEach(w => { if (w.laborCost && (w.road === o || !w.road)) objectStats[o].norm += w.laborCost * w.volume; });
+          s.works?.forEach(w => { if (w.laborCost && (!w.road || w.road === o)) objectStats[o].norm += w.laborCost * w.volume; });
           const normPeople = s.people?.filter(p => {
             const w = workers.find(x => x.name === p.name);
             return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
@@ -2768,8 +2769,8 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(name)) {
           sq.works?.forEach(w => {
-            // FIX: фильтруем работы по конкретному объекту/дороге
-            if (w.road !== name) return;
+            const roadMatch = !w.road || w.road === name || sq.objects?.includes(w.road);
+            if (!roadMatch) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0, kmFrom: w.kmFrom, kmTo: w.kmTo });
           });
         }
@@ -3316,7 +3317,7 @@ function initDefaultData() {
           if (!objectStats[o]) objectStats[o] = { name: o, works: 0, volume: 0, hours: 0, people: 0 };
           objectStats[o].works += sq.works?.length || 0;
           objectStats[o].people += sq.people?.length || 0;
-          sq.works?.forEach(w => { if (w.road === o || !w.road) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
+          sq.works?.forEach(w => { if (!w.road || w.road === o) { objectStats[o].volume += w.volume; objectStats[o].hours += (w.laborCost || 0) * w.volume; } });
         });
       });
     });
