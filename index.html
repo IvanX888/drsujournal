@@ -334,6 +334,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -730,11 +731,12 @@ const LETTER_CODES = { 'Б': true, 'П': true, 'АБЗ': true, 'ОТП': true, '
 
 const Utils = {
   $(id) { return document.getElementById(id); },
-  todayStr() { return new Date().toISOString().slice(0,10); },
+  todayStr() { 
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  },
   toLocalISODate(d) {
-    const offset = d.getTimezoneOffset();
-    const local = new Date(d.getTime() - offset * 60000);
-    return local.toISOString().slice(0,10);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   },
   formatDate(str) {
     if (!str) return '';
@@ -742,14 +744,16 @@ const Utils = {
     return `${d}.${m}.${y}`;
   },
   getWeekStart(d) {
-    const date = new Date(d);
+    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const day = date.getDay() || 7;
-    if (day !== 1) date.setHours(-24 * (day - 1));
+    if (day !== 1) date.setDate(date.getDate() - (day - 1));
     return date;
   },
   getWeekEnd(d) {
     const start = this.getWeekStart(d);
-    return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    end.setDate(end.getDate() + 6);
+    return end;
   },
   escapeHtml(str) {
     if (str == null) return '';
@@ -1464,6 +1468,8 @@ function initDefaultData() {
         e.squads?.forEach(sq => {
           if (sq.objects?.includes(obj.name)) {
             sq.works?.forEach(w => {
+              // FIX: фильтруем работы по конкретному объекту
+              if (w.road !== obj.name) return;
               objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit });
             });
           }
@@ -1714,6 +1720,8 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(road.name)) {
           sq.works?.forEach(w => {
+            // FIX: фильтруем работы по конкретному объекту
+            if (w.road !== road.name) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0 });
           });
         }
@@ -2384,8 +2392,12 @@ function initDefaultData() {
       clearForm();
       clearDraft();
       showPage('pageJournal');
+      // FIX: принудительно обновляем все представления
       renderEntries();
       renderCalendar();
+      renderRoadsKmSummary();
+      const selectedRoad = State.getUI('selectedRoadForScale');
+      if (selectedRoad) renderRoadKmScale(selectedRoad);
       return false;
 
     } catch (err) {
@@ -2405,6 +2417,12 @@ function initDefaultData() {
     Utils.$('btnSubmit').textContent = '💾 Сохранить запись';
     Utils.$('entryForm').reset();
     Utils.$('inpDate').value = Utils.todayStr();
+    Utils.$('inpImportant').checked = false;
+    Utils.$('inpReminder').value = '';
+    Utils.$('inpReminderText').value = '';
+    Utils.$('inpWeather').value = '';
+    Utils.$('inpWeatherCond').value = '';
+    Utils.$('inpNotes').value = '';
     renderSquads();
     clearDraft();
     Utils.$('draftBadge').style.display = 'none';
@@ -2454,6 +2472,9 @@ function initDefaultData() {
     await Storage.saveAll(State.getAllForSave());
     renderEntries();
     renderCalendar();
+    renderRoadsKmSummary();
+    const selectedRoadDel = State.getUI('selectedRoadForScale');
+    if (selectedRoadDel) renderRoadKmScale(selectedRoadDel);
     Utils.showToast('Запись удалена');
   }
 
@@ -2467,6 +2488,9 @@ function initDefaultData() {
     await Storage.saveAll(State.getAllForSave());
     renderEntries();
     renderCalendar();
+    renderRoadsKmSummary();
+    const selectedRoadDup = State.getUI('selectedRoadForScale');
+    if (selectedRoadDup) renderRoadKmScale(selectedRoadDup);
     Utils.showToast('Запись продублирована на сегодня');
   }
 
@@ -2742,6 +2766,8 @@ function initDefaultData() {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(name)) {
           sq.works?.forEach(w => {
+            // FIX: фильтруем работы по конкретному объекту/дороге
+            if (w.road !== name) return;
             objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit, people: sq.people?.length || 0, kmFrom: w.kmFrom, kmTo: w.kmTo });
           });
         }
@@ -4083,6 +4109,7 @@ function initDefaultData() {
         renderTemplates();
         renderCalendar();
         renderRoadSelector();
+        renderTimesheet();
         Utils.showToast('Данные импортированы');
       } catch (err) {
         Utils.showToast('Ошибка импорта: ' + err.message);
