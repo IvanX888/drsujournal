@@ -762,6 +762,12 @@ const Utils = {
   jsAttr(str) {
     return this.escapeHtml(String(str)).replace(/'/g, '&apos;');
   },
+  generateId() {
+    try {
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch(e) {}
+    return Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 11);
+  },
   debounce(fn, delay) {
     let t;
     return function(...args) {
@@ -1783,7 +1789,7 @@ function initDefaultData() {
 
   // --- Наряды (Squads) ---
   function addSquad(data) {
-    const sid = 'sq_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+    const sid = 'sq_' + Utils.generateId();
     const squad = data ? JSON.parse(JSON.stringify(data)) : {
       id: sid, category: 'road', objects: [], people: [], works: [], tmc: [],
       planToday: '', planTomorrow: '', notes: ''
@@ -2335,9 +2341,8 @@ function initDefaultData() {
     const stockOrder = State.get('stockOrder');
     const editingEntryIndex = State.getUI('editingEntryIndex');
 
-    // Транзакционность: сохраняем состояние для отката
-    const stockBackup = JSON.parse(JSON.stringify(stockOrder));
-    const entriesBackup = JSON.parse(JSON.stringify(entries));
+    // FIX: Полная транзакционность — сохраняем всё состояние для отката
+    const stateBackup = JSON.parse(JSON.stringify(State.getAllForSave()));
 
     try {
       // Возврат старых материалов при редактировании
@@ -2363,7 +2368,7 @@ function initDefaultData() {
       }
 
       const entry = {
-        id: Date.now(),
+        id: Utils.generateId(),
         date,
         important: Utils.$('inpImportant').checked,
         squads: JSON.parse(JSON.stringify(formSquads)),
@@ -2401,9 +2406,8 @@ function initDefaultData() {
       return false;
 
     } catch (err) {
-      // Откат при ошибке
-      State.set('stockOrder', stockBackup);
-      State.set('entries', entriesBackup);
+      // FIX: Полный откат при ошибке — восстанавливаем всё состояние
+      State.setAllFromImport(stateBackup);
       Utils.showToast('❌ ' + err.message);
       return false;
     }
@@ -2504,7 +2508,7 @@ function initDefaultData() {
     const name = prompt('Название шаблона:', 'Бригада ' + Utils.todayStr());
     if (!name) return;
     const templates = State.get('templates');
-    templates.push({ id: Date.now(), name, squads: JSON.parse(JSON.stringify(formSquads)) });
+    templates.push({ id: Utils.generateId(), name, squads: JSON.parse(JSON.stringify(formSquads)) });
     await Storage.saveAll(State.getAllForSave());
     renderTemplates();
     Utils.showToast('Шаблон сохранён');
@@ -3830,12 +3834,12 @@ function initDefaultData() {
       const labor = parseFloat(Utils.$('catInp3').value) || 0;
       const direct = parseFloat(Utils.$('catInp4').value) || 0;
       const tool = parseFloat(Utils.$('catInp5').value) || 0;
-      item = { id: Date.now(), name, unit, laborCost: labor, directCost: direct, toolCost: tool };
+      item = { id: Utils.generateId(), name, unit, laborCost: labor, directCost: direct, toolCost: tool };
     } else if (type === 'tool') {
       const fuel = parseFloat(Utils.$('catInp2').value) || 0;
       const machine = parseFloat(Utils.$('catInp3').value) || 0;
       const salary = parseFloat(Utils.$('catInp4').value) || 0;
-      item = { id: Date.now(), name, fuelConsumption: fuel, machineCostPerHour: machine, salaryPerHour: salary };
+      item = { id: Utils.generateId(), name, fuelConsumption: fuel, machineCostPerHour: machine, salaryPerHour: salary };
     } else if (type === 'road') {
       const roadType = Utils.$('catInp2').value || 'road';
       const len = parseFloat(Utils.$('catInp3').value) || 0;
@@ -3847,7 +3851,7 @@ function initDefaultData() {
         const old = State.get('roads')[catalogEditingId];
         if (old) oldId = old.id;
       }
-      item = { id: oldId || Date.now(), name, length: len, type: roadType, plan: plan };
+      item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan };
       if (pw.length) item.planWorks = pw;
     }
 
@@ -3871,7 +3875,37 @@ function initDefaultData() {
   }
 
   async function deleteCatalogItem(type, idx) {
-    if (!confirm('Удалить?')) return;
+    if (type === 'worker') {
+      const worker = State.get('workers')[idx];
+      if (!worker) return;
+      // FIX: проверяем, используется ли работник в нарядах
+      const entries = State.get('entries');
+      const usedInEntries = [];
+      entries.forEach((e, eIdx) => {
+        e.squads?.forEach(sq => {
+          if (sq.people?.some(p => p.name === worker.name)) {
+            usedInEntries.push(`${Utils.formatDate(e.date)} (запись #${eIdx + 1})`);
+          }
+        });
+      });
+      let msg = `Удалить работника "${worker.name}"?`;
+      if (usedInEntries.length > 0) {
+        msg += `\n\n⚠️ ВНИМАНИЕ: Этот работник есть в ${usedInEntries.length} наряде(ах):\n${usedInEntries.slice(0, 5).join('\n')}${usedInEntries.length > 5 ? '\n...и др.' : ''}\n\nПосле удаления он останется в старых записях, но будет отображаться как "прочий".`;
+      }
+      if (!confirm(msg)) return;
+    } else if (type === 'work') {
+      const work = State.get('works')[idx];
+      if (!confirm(`Удалить вид работы "${work?.name || ''}"?\n\nЭто не удалит работу из существующих нарядов.`)) return;
+    } else if (type === 'tool') {
+      if (!confirm('Удалить инструмент?')) return;
+    } else if (type === 'road') {
+      const road = State.get('roads')[idx];
+      const entries = State.get('entries');
+      const usedInEntries = entries.some(e => e.squads?.some(sq => sq.objects?.includes(road?.name)));
+      let msg = `Удалить "${road?.name || ''}"?`;
+      if (usedInEntries) msg += '\n\n⚠️ Этот объект/дорога используется в нарядах!';
+      if (!confirm(msg)) return;
+    }
     if (type === 'worker') State.get('workers').splice(idx, 1);
     else if (type === 'work') State.get('works').splice(idx, 1);
     else if (type === 'tool') State.get('tools').splice(idx, 1);
@@ -3910,7 +3944,7 @@ function initDefaultData() {
             State.get('workers').push({ name, category: cat, grade: parseInt(parts[2]) || 0 });
           } else if (type === 'work') {
             State.get('works').push({
-              id: Date.now(), name, unit: parts[1]?.trim() || 'ед.',
+              id: Utils.generateId(), name, unit: parts[1]?.trim() || 'ед.',
               laborCost: parseFloat(parts[2]) || 0, directCost: parseFloat(parts[3]) || 0, toolCost: parseFloat(parts[4]) || 0
             });
           } else if (type === 'road') {
@@ -3958,7 +3992,7 @@ function initDefaultData() {
 
     const tasks = State.get('tasks');
     tasks.push({
-      id: Date.now(), text, date,
+      id: Utils.generateId(), text, date,
       important: Utils.$('newTaskImportant').checked,
       done: false
     });
@@ -4022,7 +4056,7 @@ function initDefaultData() {
     const trimmed = name.trim();
     const unit = prompt('Единица измерения:', 'шт') || 'шт';
     const qty = parseFloat(prompt('Начальный остаток:', '0'));
-    const item = { id: Date.now(), name: trimmed, unit, qty: isNaN(qty) ? 0 : qty };
+    const item = { id: Utils.generateId(), name: trimmed, unit, qty: isNaN(qty) ? 0 : qty };
 
     if (type === 'order') {
       State.get('stockOrder').push(item);
@@ -4099,7 +4133,18 @@ function initDefaultData() {
     reader.onload = async function(e) {
       try {
         const data = JSON.parse(e.target.result);
-        State.setAllFromImport(data);
+        // FIX: sanitize imported strings to prevent XSS
+        function sanitize(obj) {
+          if (typeof obj === 'string') return obj.replace(/[<>&"']/g, '');
+          if (Array.isArray(obj)) return obj.map(sanitize);
+          if (obj && typeof obj === 'object') {
+            const out = {};
+            for (let k in obj) out[k] = sanitize(obj[k]);
+            return out;
+          }
+          return obj;
+        }
+        State.setAllFromImport(sanitize(data));
         await Storage.saveAll(State.getAllForSave());
         applyTheme();
         renderEntries();
@@ -4137,9 +4182,21 @@ function initDefaultData() {
     reader.onload = async function(e) {
       try {
         const data = JSON.parse(e.target.result);
-        if (Array.isArray(data.works)) State.set('works', data.works);
-        if (Array.isArray(data.tools)) State.set('tools', data.tools);
-        if (Array.isArray(data.tmc)) State.set('tmc', data.tmc);
+        // FIX: sanitize
+        function sanitize(obj) {
+          if (typeof obj === 'string') return obj.replace(/[<>&"']/g, '');
+          if (Array.isArray(obj)) return obj.map(sanitize);
+          if (obj && typeof obj === 'object') {
+            const out = {};
+            for (let k in obj) out[k] = sanitize(obj[k]);
+            return out;
+          }
+          return obj;
+        }
+        const clean = sanitize(data);
+        if (Array.isArray(clean.works)) State.set('works', clean.works);
+        if (Array.isArray(clean.tools)) State.set('tools', clean.tools);
+        if (Array.isArray(clean.tmc)) State.set('tmc', clean.tmc);
         await Storage.saveAll(State.getAllForSave());
         renderCatalogs();
         Utils.showToast('Нормативы загружены');
