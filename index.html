@@ -333,7 +333,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 </style>
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -1060,17 +1059,32 @@ async function init() {
  * @param {Array} squadObjects - объекты наряда (опционально)
  * @returns {boolean}
  */
+/**
+ * Проверяет, относится ли работа к объекту
+ * @param {Object} w - работа (work)
+ * @param {string} objName - имя объекта
+ * @param {Array} squadObjects - объекты наряда (опционально)
+ * @returns {boolean}
+ */
 function isWorkForObject(w, objName, squadObjects) {
   if (!w) return false;
-  // Работа без привязки (w.road пустой) относится ко всем объектам наряда
-  if (!w.road) return true;
-  // Работа привязана к текущему объекту
-  if (w.road === objName) return true;
-  // Работа привязана к другому объекту в том же наряде (подобъект/родитель)
-  if (squadObjects && Array.isArray(squadObjects) && squadObjects.includes(w.road)) return true;
+  // Работа привязана к конкретному объекту
+  if (w.road) {
+    return w.road === objName;
+  }
+  // Работа без привязки: относится ко ВСЕМ объектам наряда
+  if (squadObjects && Array.isArray(squadObjects) && squadObjects.length > 0) {
+    return squadObjects.includes(objName);
+  }
   return false;
 }
 
+/**
+ * Конвертирует объём работы в базовые единицы (м², м³, шт и т.д.)
+ * @param {number} volume - объём
+ * @param {string} unit - единица измерения
+ * @returns {Object} {value, unit, display}
+ */
 /**
  * Конвертирует объём работы в базовые единицы (м², м³, шт и т.д.)
  * @param {number} volume - объём
@@ -1082,10 +1096,11 @@ function normalizeVolume(volume, unit) {
     return { value: 0, unit: unit || 'ед.', display: '0' };
   }
 
-  const u = (unit || '').toString().trim().toLowerCase();
+  const u = (unit || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
 
-  // 1000 м² → м²
-  if (u === '1000 м²' || u === '1000 m2') {
+  // Распознаём "1000 м²", "1000м2", "1000 m2", "1000 м2" и т.д.
+  const m2Match = u.match(/^(\d+)\s*м?²?m?2?$/);
+  if (m2Match && parseInt(m2Match[1]) === 1000) {
     return { 
       value: volume * 1000, 
       unit: 'м²', 
@@ -1093,8 +1108,9 @@ function normalizeVolume(volume, unit) {
     };
   }
 
-  // 1000 м³ → м³
-  if (u === '1000 м³' || u === '1000 m3') {
+  // Распознаём "1000 м³", "1000м3", "1000 m3" и т.д.
+  const m3Match = u.match(/^(\d+)\s*м?³?m?3?$/);
+  if (m3Match && parseInt(m3Match[1]) === 1000) {
     return { 
       value: volume * 1000, 
       unit: 'м³', 
@@ -1172,6 +1188,12 @@ function getLaborNorm(laborCost, volume, unit) {
  * @param {string} filterType - тип фильтра ('all', 'today', 'week', 'month')
  * @returns {Object} { totalPlan, totalDone, totalRem, pct, byWork: [{name, plan, done, rem, pct, unit}] }
  */
+/**
+ * Унифицированный расчёт прогресса объекта/дороги
+ * @param {string} objName - имя объекта
+ * @param {string} filterType - тип фильтра ('all', 'today', 'week', 'important')
+ * @returns {Object} { totalPlan, totalDone, totalRem, pct, byWork, entryCount }
+ */
 function calculateObjectProgress(objName, filterType) {
   const entries = State.get('entries');
   const obj = State.get('roads').find(r => r.name === objName);
@@ -1258,80 +1280,6 @@ function calculateObjectProgress(objName, filterType) {
  * @param {string} filterType - тип фильтра ('all', 'today', 'week', 'month')
  * @returns {Object} { totalPlan, totalDone, totalRem, pct, byWork: [{name, plan, done, rem, pct, unit}] }
  */
-function calculateObjectProgress(objName, filterType) {
-  const entries = State.get('entries');
-  const obj = State.get('roads').find(r => r.name === objName);
-  const planWorks = obj?.planWorks || [];
-
-  // Собираем все работы по объекту с учётом фильтра
-  const objEntries = [];
-  entries.forEach(e => {
-    // Фильтр по периоду
-    if (filterType === 'today' && e.date !== Utils.todayStr()) return;
-    if (filterType === 'week') {
-      const sd = Utils.getWeekStart(new Date());
-      const ed = Utils.getWeekEnd(new Date());
-      const de = new Date(e.date);
-      if (de < sd || de > ed) return;
-    }
-    if (filterType === 'important' && !e.important) return;
-
-    e.squads?.forEach(sq => {
-      if (sq.objects?.includes(objName)) {
-        sq.works?.forEach(w => {
-          if (isWorkForObject(w, objName, sq.objects)) {
-            objEntries.push({
-              date: e.date,
-              work: w.name,
-              volume: w.volume,
-              unit: w.unit,
-              normVolume: normalizeVolume(w.volume, w.unit)
-            });
-          }
-        });
-      }
-    });
-  });
-
-  // Считаем по видам работ
-  const byWork = [];
-  let totalPlan = 0, totalDone = 0;
-
-  planWorks.forEach(pw => {
-    const done = objEntries
-      .filter(e => e.work === pw.workName)
-      .reduce((s, e) => s + e.normVolume.value, 0);
-    const plan = normalizeVolume(pw.volume, pw.unit).value;
-    const rem = Math.max(0, plan - done);
-    const pct = plan > 0 ? Math.min(100, (done / plan) * 100) : 0;
-
-    totalPlan += plan;
-    totalDone += done;
-
-    byWork.push({
-      name: pw.workName,
-      plan: plan,
-      done: done,
-      rem: rem,
-      pct: pct,
-      unit: pw.unit || 'м²',
-      rawPlan: pw.volume,
-      rawDone: done / (normalizeVolume(1, pw.unit).value || 1)
-    });
-  });
-
-  const totalRem = Math.max(0, totalPlan - totalDone);
-  const totalPct = totalPlan > 0 ? Math.min(100, (totalDone / totalPlan) * 100) : 0;
-
-  return {
-    totalPlan,
-    totalDone,
-    totalRem,
-    pct: totalPct,
-    byWork,
-    entryCount: objEntries.length
-  };
-}
 
 // ============================================
 // ============================================
@@ -1618,17 +1566,26 @@ function initDefaultData() {
         return de >= sd && de <= ed;
       });
     } else if (filterType === 'important') {
-      sourceEntries = entries.filter(e => e.important);
+      const sd = Utils.getWeekStart(new Date());
+      const ed = Utils.getWeekEnd(new Date());
+      sourceEntries = entries.filter(e => {
+        const de = new Date(e.date);
+        return e.important && de >= sd && de <= ed;
+      });
     } else if (filterType === 'plan') {
       const taskDates = new Set(State.get('tasks').filter(t => !t.done).map(t => t.date));
-      sourceEntries = entries.filter(e => taskDates.has(e.date));
+      sourceEntries = entries.filter(e => taskDates.has(e.date) || e.squads?.some(s => s.planTomorrow));
     }
 
     const segments = [];
     sourceEntries.forEach((e, eIdx) => {
       e.squads?.forEach((sq, sqIdx) => {
+        // Проверяем, что дорога в объектах наряда
+        if (!sq.objects?.includes(roadName)) return;
         sq.works?.forEach((w, wIdx) => {
-          if (w.road === roadName && w.kmFrom !== undefined && w.kmTo !== undefined) {
+          // Работа привязана к этой дороге ИЛИ без привязки (тогда к первому объекту)
+          const workRoad = w.road || (sq.objects?.[0] || '');
+          if (workRoad === roadName && w.kmFrom !== undefined && w.kmTo !== undefined) {
             segments.push({
               entryId: e.id, entryDate: e.date, entryIdx: eIdx, squadIdx: sqIdx, workIdx: wIdx,
               workName: w.name, kmFrom: parseFloat(w.kmFrom), kmTo: parseFloat(w.kmTo),
@@ -1747,39 +1704,19 @@ function initDefaultData() {
 
     let activeObjects = [];
     objectItems.forEach(obj => {
-      const objEntries = [];
-      entries.forEach(e => {
-        if (currentFilter === 'today' && e.date !== Utils.todayStr()) return;
-        if (currentFilter === 'week') {
-          const sd = Utils.getWeekStart(new Date());
-          const ed = Utils.getWeekEnd(new Date());
-          const de = new Date(e.date);
-          if (de < sd || de > ed) return;
-        }
-        if (currentFilter === 'important' && !e.important) return;
-        e.squads?.forEach(sq => {
-          if (sq.objects?.includes(obj.name)) {
-            sq.works?.forEach(w => {
-              if (!isWorkForObject(w, obj.name, sq.objects)) return;
-              objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit });
-            });
-          }
-        });
-      });
-      if (objEntries.length > 0 || (obj.planWorks && obj.planWorks.length)) {
-        const totalVolume = objEntries.reduce((s, e) => s + e.volume, 0);
-        activeObjects.push({ obj, entries: objEntries, totalVolume });
+      // Унифицированный расчёт прогресса
+      const progress = calculateObjectProgress(obj.name, currentFilter);
+      if (progress.entryCount > 0 || (obj.planWorks && obj.planWorks.length)) {
+        activeObjects.push({ obj, progress });
       }
     });
 
     if (activeObjects.length > 0) {
       html += `<div style="font-size:.8rem;color:var(--text-secondary);margin:16px 0 10px">📍 Объекты / Базы / АБЗ | Период: <b>${filterLabel}</b></div>`;
-      activeObjects.forEach(({ obj, entries: objEntries, totalVolume }) => {
+      activeObjects.forEach(({ obj, progress }) => {
         const typeLabel = { object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[obj.type] || '📍 Объект';
         const planHtml = obj.plan ? `<span style="color:var(--primary)"> | ${Utils.escapeHtml(obj.plan)}</span>` : '';
 
-        // Унифицированный расчёт прогресса
-        const progress = calculateObjectProgress(obj.name, State.getUI('currentFilter'));
         const planTotal = progress.totalPlan;
         const doneTotal = progress.totalDone;
         const totalPct = progress.pct;
@@ -1805,12 +1742,38 @@ function initDefaultData() {
         // Детали по работам
         let worksHtml = '';
         if (workProgress.length > 0) {
-          worksHtml = '<div style="margin-top:6px;font-size:.75rem">' + workProgress.map(wp => 
-            `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)">
+          worksHtml = '<div style="margin-top:6px;font-size:.75rem">' + workProgress.map(wp => {
+            const wpColor = wp.pct >= 100 ? 'var(--success)' : (wp.pct > 50 ? 'var(--primary)' : 'var(--accent)');
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px dashed var(--border)">
               <span style="color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${Utils.escapeHtml(wp.name)}</span>
-              <span style="margin-left:8px;white-space:nowrap"><b style="color:${wp.color}">${wp.done.toFixed(1)}</b> / ${wp.plan} ${wp.unit}</span>
-            </div>`
-          ).join('') + '</div>';
+              <span style="margin-left:8px;white-space:nowrap"><b style="color:${wpColor}">${wp.done.toFixed(1)}</b> / ${wp.plan} ${wp.unit}</span>
+            </div>`;
+          }).join('') + '</div>';
+        }
+
+        // Последние записи
+        let lastEntriesHtml = '';
+        const objEntries = [];
+        entries.forEach(e => {
+          if (currentFilter === 'today' && e.date !== Utils.todayStr()) return;
+          if (currentFilter === 'week') {
+            const sd = Utils.getWeekStart(new Date());
+            const ed = Utils.getWeekEnd(new Date());
+            const de = new Date(e.date);
+            if (de < sd || de > ed) return;
+          }
+          if (currentFilter === 'important' && !e.important) return;
+          e.squads?.forEach(sq => {
+            if (sq.objects?.includes(obj.name)) {
+              sq.works?.forEach(w => {
+                if (!isWorkForObject(w, obj.name, sq.objects)) return;
+                objEntries.push({ date: e.date, work: w.name, volume: w.volume, unit: w.unit });
+              });
+            }
+          });
+        });
+        if (objEntries.length > 0) {
+          lastEntriesHtml = `<div style="font-size:.75rem;color:var(--text-secondary);margin-top:6px">${objEntries.slice(0, 2).map(e => `${Utils.formatDate(e.date)}: ${Utils.escapeHtml(e.work.split(' ').slice(0,3).join(' '))}… <b>${e.volume}</b>${e.unit || ''}`).join(' | ')}${objEntries.length > 2 ? '…' : ''}</div>`;
         }
 
         html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:12px;border:1px solid var(--border);cursor:pointer;transition:box-shadow .2s" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'" onclick="App.showDetailModal('${Utils.jsAttr(obj.name)}')">
@@ -1820,7 +1783,7 @@ function initDefaultData() {
           </div>
           ${progressHtml}
           ${worksHtml}
-          <div style="font-size:.75rem;color:var(--text-secondary);margin-top:6px">${objEntries.slice(0, 2).map(e => `${Utils.formatDate(e.date)}: ${Utils.escapeHtml(e.work.split(' ').slice(0,3).join(' '))}… <b>${e.volume}</b>${e.unit || ''}`).join(' | ')}${objEntries.length > 2 ? '…' : ''}</div>
+          ${lastEntriesHtml}
         </div>`;
       });
     }
@@ -1995,8 +1958,11 @@ function initDefaultData() {
 
   function renderObjectScale(road, container, historyContainer) {
     const typeLabel = { object: '📍 Объект', abz: '🏭 АБЗ', base: '🏢 База' }[road.type] || '📍 Объект';
-    const entries = State.get('entries');
+
+    // Унифицированный расчёт через calculateObjectProgress
+    const progress = calculateObjectProgress(road.name, State.getUI('currentFilter'));
     const objEntries = [];
+    const entries = State.get('entries');
     entries.forEach(e => {
       e.squads?.forEach(sq => {
         if (sq.objects?.includes(road.name)) {
@@ -2015,13 +1981,12 @@ function initDefaultData() {
     if (road.planWorks && road.planWorks.length) {
       html += `<div style="margin:8px 0;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
         <div style="font-weight:600;color:var(--primary);margin-bottom:6px;font-size:.85rem">📋 План работ</div>`;
-      const scaleProgress = calculateObjectProgress(road.name, State.getUI('currentFilter'));
-      scaleProgress.byWork.forEach(pw => {
+      progress.byWork.forEach(pw => {
         const pct = pw.pct;
         const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
         html += `<div style="margin-bottom:6px">
           <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:2px">
-            <span>${Utils.escapeHtml(pw.workName)}</span>
+            <span>${Utils.escapeHtml(pw.name)}</span>
             <span><b>${pw.done.toFixed(2)}</b> / ${pw.rawPlan} ${pw.unit} <b style="color:${bc}">(${pw.pct.toFixed(0)}%)</b></span>
           </div>
           <div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;border:1px solid var(--border)">
@@ -2037,15 +2002,17 @@ function initDefaultData() {
     if (objEntries.length === 0) {
       html += `<div class="empty-state">Нет данных по объекту</div>`;
     } else {
+      // Унифицированная агрегация через normalizeVolume
       const workSummary = {};
       objEntries.forEach(e => {
-        if (!workSummary[e.work]) workSummary[e.work] = { total: 0, unit: e.unit, count: 0 };
-        workSummary[e.work].total += e.volume;
+        const nv = normalizeVolume(e.volume, e.unit);
+        if (!workSummary[e.work]) workSummary[e.work] = { total: 0, unit: e.unit || 'ед.', count: 0 };
+        workSummary[e.work].total += nv.value;
         workSummary[e.work].count++;
       });
       html += `<div style="margin-top:8px"><b>Выполнено:</b></div>`;
       for (let w in workSummary) {
-        html += `<div style="margin:4px 0;padding:6px;background:var(--bg);border-radius:8px"><span class="text-info">${Utils.escapeHtml(w)}</span> — <b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit || 'ед.'} <span style="font-size:.75rem;color:var(--text-secondary)">(${workSummary[w].count} раз)</span></div>`;
+        html += `<div style="margin:4px 0;padding:6px;background:var(--bg);border-radius:8px"><span class="text-info">${Utils.escapeHtml(w)}</span> — <b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit} <span style="font-size:.75rem;color:var(--text-secondary)">(${workSummary[w].count} раз)</span></div>`;
       }
       html += `<div style="margin-top:12px;font-size:.8rem;color:var(--text-secondary)">История:</div>`;
       objEntries.slice().sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10).forEach(e => {
@@ -2304,9 +2271,10 @@ function initDefaultData() {
     let totalLaborNorm = 0, totalWorkerCost = 0, totalToolCost = 0, totalFuel = 0, totalMachineCost = 0;
 
     (sq.works || []).forEach(w => {
-      if (w.laborCost) totalLaborNorm += w.laborCost * (normalizeVolume(w.volume, w.unit).value / 1000);
+      const nv = normalizeVolume(w.volume, w.unit);
+      if (w.laborCost) totalLaborNorm += w.laborCost * (nv.value / 1000);
       const wc = (w.directCost || 0) - (w.toolCost || 0);
-      totalWorkerCost += wc * w.volume;
+      totalWorkerCost += wc * w.volume; // стоимость берём из исходного объёма
       totalToolCost += (w.toolCost || 0) * w.volume;
       totalFuel += w.fuelLiters || 0;
       const tool = tools.find(t => t.id === w.toolId);
@@ -2788,7 +2756,7 @@ function initDefaultData() {
     if (!id) return;
     if (State.getUI('formSquads').length && !confirm('Заменить текущие наряды шаблоном?')) return;
     const templates = State.get('templates');
-    const t = templates.find(x => x.id === parseInt(id));
+    const t = templates.find(x => x.id == id);
     if (!t) return;
     State.setUI('formSquads', JSON.parse(JSON.stringify(t.squads)));
     renderSquads();
@@ -2881,20 +2849,11 @@ function initDefaultData() {
       }
     }
 
+    // Собираем объекты из сегодняшних записей
     const objectsSet = new Set();
-    const objectStats = {};
     todayEntries.forEach(e => {
       e.squads?.forEach(s => {
-        s.objects?.forEach(o => {
-          objectsSet.add(o);
-          if (!objectStats[o]) objectStats[o] = { norm: 0, fact: 0 };
-          s.works?.forEach(w => { if (w.laborCost && isWorkForObject(w, o, s.objects)) objectStats[o].norm += w.laborCost * (normalizeVolume(w.volume, w.unit).value / 1000); });
-          const normPeople = s.people?.filter(p => {
-            const w = workers.find(x => x.name === p.name);
-            return !w || (CATEGORIES[w.category] && CATEGORIES[w.category].norm);
-          }) || [];
-          objectStats[o].fact += normPeople.reduce((sum, p) => sum + (parseFloat(p.hours) || 8), 0);
-        });
+        s.objects?.forEach(o => objectsSet.add(o));
       });
     });
 
@@ -2902,8 +2861,9 @@ function initDefaultData() {
     if (Utils.$('statObjectsNorm')) {
       if (objectsSet.size > 0) {
         Utils.$('statObjectsNorm').innerHTML = Array.from(objectsSet).map(o => {
-          const st = objectStats[o];
-          const pct = st.fact > 0 ? (st.norm / st.fact) * 100 : 0;
+          // Унифицированный расчёт через calculateObjectProgress
+          const progress = calculateObjectProgress(o, 'today');
+          const pct = progress.totalPlan > 0 ? progress.pct : 0;
           const cls = pct >= 90 && pct <= 110 ? 'ok' : (pct < 90 ? 'warn' : 'bad');
           return `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
             <span style="font-size:.7rem">${Utils.escapeHtml(o)}</span>
@@ -3094,11 +3054,11 @@ function initDefaultData() {
     // === План работ (для объектов и дорог) ===
     if (obj.planWorks && obj.planWorks.length) {
       html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--primary);margin-bottom:8px;font-size:1rem">📋 План работ</div>`;
-      const detailProgress = calculateObjectProgress(name, 'all');
+      const detailProgress = calculateObjectProgress(name, State.getUI('currentFilter') || 'all');
       detailProgress.byWork.forEach(pw => {
         const pct = pw.pct;
         const bc = pct >= 100 ? 'var(--success)' : (pct > 50 ? 'var(--primary)' : 'var(--accent)');
-        const rem = Math.max(0, pw.volume - pw.done);
+        const rem = Math.max(0, pw.plan - pw.done);
         html += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
             <span style="font-weight:600">${Utils.escapeHtml(pw.workName)}</span>
@@ -3494,11 +3454,12 @@ function initDefaultData() {
         totalPeople += sq.people?.length || 0;
         sq.works?.forEach(w => {
           totalWorks++;
-          totalVolume += w.volume;
-          totalLabor += (w.laborCost || 0) * w.volume;
-          totalCost += ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
+          const nv = normalizeVolume(w.volume, w.unit);
+          totalVolume += nv.value;
+          totalLabor += (w.laborCost || 0) * (nv.value / 1000);
+          totalCost += ((w.directCost || 0) - (w.toolCost || 0)) * w.volume; // стоимость из исходного объёма
           if (!workStats[w.name]) workStats[w.name] = { volume: 0, unit: w.unit || 'ед.' };
-          workStats[w.name].volume += w.volume;
+          workStats[w.name].volume += nv.value;
         });
         sq.people?.forEach(p => {
           const h = parseFloat(p.hours) || 8;
@@ -3579,29 +3540,36 @@ function initDefaultData() {
       return true;
     });
 
-    const objectStats = {};
+    const objectNames = new Set();
     filtered.forEach(e => {
       e.squads?.forEach(sq => {
-        sq.objects?.forEach(o => {
-          if (!objectStats[o]) objectStats[o] = { name: o, works: 0, volume: 0, hours: 0, people: 0 };
-          objectStats[o].works += sq.works?.length || 0;
-          objectStats[o].people += sq.people?.length || 0;
-          sq.works?.forEach(w => { if (isWorkForObject(w, o, sq.objects)) { const nv = normalizeVolume(w.volume, w.unit); objectStats[o].volume += nv.value; objectStats[o].hours += (w.laborCost || 0) * (nv.value / 1000); } });
-        });
+        sq.objects?.forEach(o => objectNames.add(o));
       });
     });
 
-    if (!Object.keys(objectStats).length) {
+    if (!objectNames.size) {
       Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных</div>';
       Utils.$('reportExports').style.display = 'none';
       return;
     }
 
-    let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам</div><table class="report-table"><tr><th>Объект</th><th>Работ</th><th>Людей</th><th>Объём</th><th>Норма чел-ч</th></tr>';
-    Object.values(objectStats).sort((a, b) => b.volume - a.volume).forEach(os => {
-      html += `<tr><td><b>${Utils.escapeHtml(os.name)}</b></td><td>${os.works}</td><td>${os.people}</td><td>${os.volume.toFixed(2)}</td><td>${os.hours.toFixed(1)}</td></tr>`;
+    // Унифицированный расчёт через calculateObjectProgress
+    let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам</div>';
+    Array.from(objectNames).sort().forEach(name => {
+      const progress = calculateObjectProgress(name, 'all');
+      html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;color:var(--primary);margin-bottom:8px">${Utils.escapeHtml(name)}</div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+          <span>Выполнено: <b>${progress.totalDone.toFixed(1)}</b> из <b>${progress.totalPlan.toFixed(1)}</b></span>
+          <span style="color:${progress.pct >= 100 ? 'var(--success)' : 'var(--primary)'};font-weight:700">${progress.pct.toFixed(1)}%</span>
+        </div>
+        <div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;border:1px solid var(--border)">
+          <div style="width:${progress.pct}%;height:100%;background:${progress.pct >= 100 ? 'var(--success)' : 'var(--primary)'};transition:width .3s"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Записей: ${progress.entryCount}</div>
+      </div>`;
     });
-    html += '</table></div>';
+    html += '</div>';
     Utils.$('reportResult').innerHTML = html;
     Utils.$('reportExports').style.display = 'flex';
   }
@@ -3967,7 +3935,7 @@ function initDefaultData() {
     const out = [];
     rows.forEach(r => {
       const n = r.querySelector('.pwn')?.value.trim();
-      const v = parseFloat(String(r.querySelector('.pwv')?.value || '').replace(/,/g, '.'));
+      const v = parseFloat(String(r.querySelector('.pwv')?.value || '').replace(/[,\s]/g, ''));
       const u = r.querySelector('.pwu')?.value.trim() || 'м²';
       const wid = r.querySelector('.pwid')?.value;
       if (n && !isNaN(v) && v > 0) {
@@ -4293,18 +4261,8 @@ function initDefaultData() {
     reader.onload = async function(e) {
       try {
         const data = JSON.parse(e.target.result);
-        // FIX: sanitize imported strings to prevent XSS
-        function sanitize(obj) {
-          if (typeof obj === 'string') return obj.replace(/[<>&"']/g, '');
-          if (Array.isArray(obj)) return obj.map(sanitize);
-          if (obj && typeof obj === 'object') {
-            const out = {};
-            for (let k in obj) out[k] = sanitize(obj[k]);
-            return out;
-          }
-          return obj;
-        }
-        State.setAllFromImport(sanitize(data));
+        // FIX: НЕ портим данные — экранирование при выводе (Utils.escapeHtml)
+        State.setAllFromImport(data);
         await Storage.saveAll(State.getAllForSave());
         applyTheme();
         renderEntries();
@@ -4342,21 +4300,10 @@ function initDefaultData() {
     reader.onload = async function(e) {
       try {
         const data = JSON.parse(e.target.result);
-        // FIX: sanitize
-        function sanitize(obj) {
-          if (typeof obj === 'string') return obj.replace(/[<>&"']/g, '');
-          if (Array.isArray(obj)) return obj.map(sanitize);
-          if (obj && typeof obj === 'object') {
-            const out = {};
-            for (let k in obj) out[k] = sanitize(obj[k]);
-            return out;
-          }
-          return obj;
-        }
-        const clean = sanitize(data);
-        if (Array.isArray(clean.works)) State.set('works', clean.works);
-        if (Array.isArray(clean.tools)) State.set('tools', clean.tools);
-        if (Array.isArray(clean.tmc)) State.set('tmc', clean.tmc);
+        // FIX: НЕ портим данные — экранирование при выводе
+        if (Array.isArray(data.works)) State.set('works', data.works);
+        if (Array.isArray(data.tools)) State.set('tools', data.tools);
+        if (Array.isArray(data.tmc)) State.set('tmc', data.tmc);
         await Storage.saveAll(State.getAllForSave());
         renderCatalogs();
         Utils.showToast('Нормативы загружены');
@@ -4424,8 +4371,9 @@ function initDefaultData() {
     html += `</div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th><th>Участки (км)</th></tr>`;
     const workSummary = {};
     segments.forEach(s => {
-      if (!workSummary[s.workName]) workSummary[s.workName] = { total: 0, unit: s.unit, ranges: [] };
-      workSummary[s.workName].total += s.volume;
+      const nv = normalizeVolume(s.volume, s.unit);
+      if (!workSummary[s.workName]) workSummary[s.workName] = { total: 0, unit: s.unit || 'ед.', ranges: [] };
+      workSummary[s.workName].total += nv.value;
       workSummary[s.workName].ranges.push(`${s.kmFrom}-${s.kmTo}`);
     });
     for (let w in workSummary) html += `<tr><td class="text-info">${Utils.escapeHtml(w)}</td><td><b>${workSummary[w].total.toFixed(2)}</b> ${workSummary[w].unit}</td><td>${workSummary[w].ranges.join(', ')}</td></tr>`;
@@ -4468,7 +4416,7 @@ function initDefaultData() {
       if (!cb || !cb.checked) return;
       const volInp = item.querySelector('.rwork-vol');
       const unitInp = item.querySelector('.rwork-unit');
-      const vol = volInp ? parseFloat(String(volInp.value).replace(/,/g, '.')) : NaN;
+      const vol = volInp ? parseFloat(String(volInp.value).replace(/[,\s]/g, '')) : NaN;
       const unit = unitInp ? unitInp.value.trim() : (cb.dataset.unit || 'м²');
       if (!isNaN(vol) && vol > 0) {
         items.push({ workName: cb.dataset.name, volume: vol, unit: unit });
