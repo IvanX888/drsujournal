@@ -666,6 +666,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
         <div id="writeOffStockList"></div>
         <div class="row-btns" style="margin-top:12px">
           <button class="btn btn-secondary btn-small" onclick="App.exportStockWriteOffCSV()">📄 CSV</button>
+          <button class="btn btn-warning btn-small" onclick="App.recalcStock()">🔄 Пересчитать склад</button>
         </div>
       </div>
       <div class="card">
@@ -2612,6 +2613,57 @@ function rollbackWriteOff(entryId){
   State.set('stockWriteOffHistory', stockWriteOffHistory.filter(h => h.entryId !== entryId));
 }
 
+// Полный пересчёт склада списаний по всем записям
+async function recalcStock(){
+  if(!confirm('Пересчитать весь склад списаний заново?\n\nЭто сбросит все текущие списания и пересчитает их по нормам из всех записей журнала.\n\nРучные поступления останутся без изменений.')) return;
+
+  // Сохраняем бэкап текущего состояния
+  const backup = {
+    stockWriteOff: JSON.parse(JSON.stringify(State.get('stockWriteOff'))),
+    stockWriteOffHistory: JSON.parse(JSON.stringify(State.get('stockWriteOffHistory')))
+  };
+
+  try {
+    // Полный сброс списаний
+    State.set('stockWriteOff', []);
+    State.set('stockWriteOffHistory', []);
+
+    // Пересчёт по всем записям
+    const entries = State.get('entries');
+    let processed = 0, skipped = 0;
+
+    entries.forEach(entry => {
+      // Проверяем, есть ли наряды с работами
+      const hasWorks = entry.squads?.some(sq => sq.works?.length > 0);
+      if(!hasWorks){ skipped++; return; }
+
+      try {
+        applyWriteOff(entry);
+        processed++;
+      } catch(err) {
+        console.error('Ошибка пересчёта записи', entry.id, err);
+        skipped++;
+      }
+    });
+
+    // Сохраняем
+    await Storage.saveAll(State.getAllForSave());
+
+    // Перерисовываем
+    renderStock();
+
+    Utils.showToast(`✅ Пересчёт завершён: ${processed} записей обработано, ${skipped} пропущено`);
+
+  } catch(err) {
+    // Откат при ошибке
+    State.set('stockWriteOff', backup.stockWriteOff);
+    State.set('stockWriteOffHistory', backup.stockWriteOffHistory);
+    await Storage.saveAll(State.getAllForSave());
+    renderStock();
+    Utils.showToast('❌ Ошибка пересчёта: ' + err.message);
+  }
+}
+
 // Основная функция сохранения с поддержкой сквозного scope
 let _pendingSaveEvent = null;
 
@@ -3826,7 +3878,7 @@ window.App = {
   generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   renderCatalogs, addCatalogItem, saveCatalogItem, closeCatalogModal, editCatalogItem, deleteCatalogItem, importCatalogCSV,
   renderTasks, addTask, toggleTask, deleteTask, setTaskFilter,
-  renderStock, addStockRow, editStockQty,
+  renderStock, addStockRow, editStockQty, recalcStock,
   saveAppSettings, setTheme, exportAllData, importAllData, clearAllData, importNormsData, exportNormsTemplate,
   selectRoadForScale, generateRoadKmReport, toggleEntry, toggleMonth, deleteMonth,
   generateMachinesCost,
