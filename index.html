@@ -771,7 +771,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <div style="margin-bottom:10px"><label class="checkbox-row" style="border:none;padding:4px 0;"><input type="checkbox" id="swSelectAll" onchange="App.selectAllWorkers(this.checked)"> Выбрать всех</label></div>
       <div id="swList"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.applySw()">✅ Добавить</button><button type="button" class="btn btn-secondary" onclick="App.closeSwModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -783,7 +783,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.</b></div>
       <div id="sWorksList"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button type="button" class="btn btn-secondary" onclick="App.closeSWorksModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -794,7 +794,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-body">
       <div id="sTmcList"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button type="button" class="btn btn-secondary" onclick="App.closeSTmcModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -803,7 +803,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal" style="max-height:90vh">
     <div class="modal-header"><span id="objectDetailTitle">📍 Объект</span><button class="close-modal" onclick="App.closeDetailModal()">×</button></div>
     <div class="modal-body" id="objectDetailContent"></div>
-    <div class="modal-footer"><button class="btn btn-primary" onclick="App.closeDetailModal()">Закрыть</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.closeDetailModal()">Закрыть</button></div>
   </div>
 </div>
 
@@ -813,9 +813,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-header"><span id="dayModalTitle">📅 День</span><button class="close-modal" onclick="App.closeDayModal()">×</button></div>
     <div class="modal-body" id="dayModalContent"></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" style="min-height:48px;font-size:1.05rem" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
-      <button class="btn btn-accent" style="min-height:48px;font-size:1.05rem" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
-      <button class="btn btn-secondary" style="min-height:48px;font-size:1.05rem" onclick="App.closeDayModal()">Закрыть</button>
+      <button type="button" class="btn btn-primary" style="min-height:48px;font-size:1.05rem" onclick="App.addEntryFromCalendar()">➕ Добавить наряд</button>
+      <button type="button" class="btn btn-accent" style="min-height:48px;font-size:1.05rem" onclick="App.addTaskFromCalendar()">➕ Добавить задачу</button>
+      <button type="button" class="btn btn-secondary" style="min-height:48px;font-size:1.05rem" onclick="App.closeDayModal()">Закрыть</button>
     </div>
   </div>
 </div>
@@ -825,7 +825,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
   <div class="modal">
     <div class="modal-header"><span id="catalogModalTitle">Добавить</span><button class="close-modal" onclick="App.closeCatalogModal()">×</button></div>
     <div class="modal-body" id="catalogForm"></div>
-    <div class="modal-footer"><button class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" id="catalogSaveBtn" onclick="App.saveCatalogItem()">💾 Сохранить</button><button type="button" class="btn btn-secondary" onclick="App.closeCatalogModal()">Отмена</button></div>
   </div>
 </div>
 
@@ -835,8 +835,8 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <div class="modal-header"><span>✏️ Редактировать работу</span><button class="close-modal" onclick="App.closeWorkEditModal()">×</button></div>
     <div class="modal-body" id="workEditForm"></div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="App.saveWorkEdit()">💾 Сохранить</button>
-      <button class="btn btn-secondary" onclick="App.closeWorkEditModal()">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="App.saveWorkEdit()">💾 Сохранить</button>
+      <button type="button" class="btn btn-secondary" onclick="App.closeWorkEditModal()">Отмена</button>
     </div>
   </div>
 </div>
@@ -850,8 +850,8 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <div id="roadWorksList"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="App.applyRoadWorks()">✅ Добавить выбранные</button>
-      <button class="btn btn-secondary" onclick="App.closeRoadWorksModal()">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="App.applyRoadWorks()">✅ Добавить выбранные</button>
+      <button type="button" class="btn btn-secondary" onclick="App.closeRoadWorksModal()">Отмена</button>
     </div>
   </div>
 </div>
@@ -886,9 +886,9 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="App.saveTsEdit()">💾 Сохранить</button>
-      <button class="btn btn-secondary" onclick="App.closeTsEditModal()">Отмена</button>
-      <button class="btn btn-danger btn-small" onclick="App.clearTsEditCell()">🗑️</button>
+      <button type="button" class="btn btn-primary" onclick="App.saveTsEdit()">💾 Сохранить</button>
+      <button type="button" class="btn btn-secondary" onclick="App.closeTsEditModal()">Отмена</button>
+      <button type="button" class="btn btn-danger btn-small" onclick="App.clearTsEditCell()">🗑️</button>
     </div>
   </div>
 </div>
@@ -913,8 +913,8 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       </label>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-primary" onclick="App.confirmSaveScope()">✅ Подтвердить</button>
-      <button class="btn btn-secondary" onclick="App.closeSaveScopeModal()">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="App.confirmSaveScope()">✅ Подтвердить</button>
+      <button type="button" class="btn btn-secondary" onclick="App.closeSaveScopeModal()">Отмена</button>
     </div>
   </div>
 </div>
@@ -2352,12 +2352,26 @@ function removeTmc(sid, idx){ const s = State.getUI('formSquads').find(x => x.id
 function updateWorkerHours(sid, pidx, val){ const s = State.getUI('formSquads').find(x => x.id === sid); if(s && s.people[pidx]){ s.people[pidx].hours = parseFloat(val) || 8; renderSquads(); scheduleDraftSave(); } }
 
 // Редактирование работы (модалка)
-let currentEditWorkSquadId = null, currentEditWorkIdx = null;
-function editWorkVolume(sid, idx){
+let currentEditWorkSquadId = null, currentEditWorkIdx = null, currentEditWorkObj = null, currentEditSquadObj = null;
+function editWorkVolume(sid, workIdOrIdx){
   const s = State.getUI('formSquads').find(x => x.id === sid);
-  if(!s || !s.works[idx]) return;
-  const w = s.works[idx];
-  currentEditWorkSquadId = sid; currentEditWorkIdx = idx;
+  if(!s || !s.works || !s.works.length){ Utils.showToast('❌ Наряд пуст'); return; }
+  let w = null, idx = -1;
+  const strId = String(workIdOrIdx || '');
+  const isWorkId = /[a-z_]/.test(strId.toLowerCase());
+  if(isWorkId){
+    idx = s.works.findIndex(x => x.workId === strId);
+    if(idx >= 0) w = s.works[idx];
+  } else {
+    idx = parseInt(strId, 10);
+    if(!isNaN(idx) && idx >= 0 && idx < s.works.length) w = s.works[idx];
+  }
+  if(!w){ Utils.showToast('❌ Работа не найдена'); console.error('editWorkVolume fail:', {sid, workIdOrIdx, strId, isWorkId, works: s.works.map(x=>({name:x.name, workId:x.workId}))}); return; }
+  // Сохраняем прямую ссылку на объект работы и наряда
+  currentEditWorkSquadId = sid;
+  currentEditWorkIdx = idx;
+  currentEditWorkObj = w;  // прямая ссылка
+  currentEditSquadObj = s;  // прямая ссылка на наряд
   const modal = Utils.$('workEditModal');
   const form = Utils.$('workEditForm');
   const fmt = (v) => (v !== undefined && v !== null && !isNaN(v)) ? String(v).replace(/,/g, '.') : '';
@@ -2374,25 +2388,39 @@ function editWorkVolume(sid, idx){
 }
 function saveWorkEdit(){
   try {
-    const sid = currentEditWorkSquadId; const idx = currentEditWorkIdx;
-    const s = State.getUI('formSquads').find(x => x.id === sid);
-    if(!s || !s.works || idx === undefined || !s.works[idx]){ Utils.showToast('❌ Работа не найдена'); return; }
-    const w = s.works[idx];
+    let w = currentEditWorkObj;
+    let s = currentEditSquadObj;
+    if(!w || !s){
+      const sid = currentEditWorkSquadId; const idx = currentEditWorkIdx;
+      s = State.getUI('formSquads').find(x => x.id === sid);
+      if(s && idx >= 0 && idx < s.works.length) w = s.works[idx];
+    }
+    if(!s){ Utils.showToast('❌ Наряд не найден'); console.error('saveWorkEdit: squad lost'); return; }
+    if(!w){ Utils.showToast('❌ Работа не найдена'); console.error('saveWorkEdit: work lost', {squadId: s.id, works: s.works.map(x=>({name:x.name, workId:x.workId}))}); return; }
+
     const newVol = Utils.parseNum(Utils.$('editWorkVolume')?.value);
     const newHours = Utils.parseNum(Utils.$('editWorkHours')?.value);
     const roadEl = Utils.$('editWorkRoad');
     const newKmFrom = Utils.parseNum(Utils.$('editWorkKmFrom')?.value);
     const newKmTo = Utils.parseNum(Utils.$('editWorkKmTo')?.value);
+
+    console.log('saveWorkEdit BEFORE:', {name: w.name, volume: w.volume, workId: w.workId, squadId: s.id});
+    console.log('saveWorkEdit INPUTS:', {newVol, newHours, road: roadEl?.value, newKmFrom, newKmTo});
+
     if(!isNaN(newVol) && newVol >= 0) w.volume = newVol;
     if(!isNaN(newHours) && newHours >= 0){ w.toolHours = newHours; const tool = State.get('tools').find(t => t.id === w.toolId); if(tool && tool.fuelConsumption) w.fuelLiters = Math.round(tool.fuelConsumption * newHours * 100) / 100; }
     if(roadEl && roadEl.value.trim()) w.road = roadEl.value.trim();
     if(!isNaN(newKmFrom)) w.kmFrom = newKmFrom;
     if(!isNaN(newKmTo)) w.kmTo = newKmTo;
+
+    console.log('saveWorkEdit AFTER:', {name: w.name, volume: w.volume, workId: w.workId});
+    console.log('saveWorkEdit FORMSQUADS:', State.getUI('formSquads').map(sq => ({id: sq.id, works: sq.works.map(w => ({name: w.name, volume: w.volume, workId: w.workId}))})));
+
     renderSquads(); scheduleDraftSave(); closeWorkEditModal();
     Utils.showToast('✅ Сохранено: ' + w.name + ' = ' + w.volume + ' ' + (w.unit || ''));
-  } catch(err){ Utils.showToast('❌ Ошибка: ' + err.message); }
+  } catch(err){ Utils.showToast('❌ Ошибка: ' + err.message); console.error('saveWorkEdit error:', err); }
 }
-function closeWorkEditModal(){ Utils.$('workEditModal').classList.remove('active'); currentEditWorkSquadId = null; currentEditWorkIdx = null; }
+function closeWorkEditModal(){ Utils.$('workEditModal').classList.remove('active'); currentEditWorkSquadId = null; currentEditWorkIdx = null; currentEditWorkObj = null; currentEditSquadObj = null; }
 
 function scheduleDraftSave(){ const draftTimer = State.getUI('draftTimer'); if(draftTimer) clearTimeout(draftTimer); State.setUI('draftTimer', setTimeout(saveDraft, 2000)); }
 function saveDraft(){
@@ -2409,7 +2437,12 @@ async function loadDraft(){
     Utils.$('inpWeather').value = draft.weather;
     Utils.$('inpWeatherCond').value = draft.weatherCond;
     Utils.$('inpNotes').value = draft.notes;
-    State.setUI('formSquads', draft.squads);
+    const loadedSquads = draft.squads || [];
+  loadedSquads.forEach(sq => {
+    sq.works = sq.works || [];
+    sq.works.forEach(w => { if(!w.workId) w.workId = Utils.generateId(); });
+  });
+  State.setUI('formSquads', loadedSquads);
     renderSquads();
     Utils.$('draftBadge').style.display = 'block';
     return true;
@@ -2491,7 +2524,7 @@ function renderSquads(){
         const machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
         const workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
         const kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined && !isNaN(w.kmFrom) && !isNaN(w.kmTo)) ? `<span style="display:inline-block;background:var(--brand);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px">${w.kmFrom}–${w.kmTo} км</span>` : '';
-        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${Utils.escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span>${machineCost ? ' | <span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span>' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${Utils.jsAttr(sq.id)}',${wi})">✏️</button><button class="del-btn" onclick="App.removeWork('${Utils.jsAttr(sq.id)}',${wi})">🗑️</button></div>`;
+        worksHtml += `<div class="preview-item"><div class="preview-item-name"><span class="text-info">${Utils.escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmBadge}<div style="font-size:.75rem;color:var(--text-secondary)">${w.laborCost ? (w.laborCost * w.volume).toFixed(1) + ' чел-ч | ' : ''}<span class="text-success">${workerCost.toFixed(2)} руб.</span>${machineCost ? ' | <span class="text-secondary">🛠️ ' + machineCost.toFixed(2) + ' руб.</span>' : ''}</div></div><button class="del-btn" onclick="App.editWorkVolume('${Utils.jsAttr(sq.id)}','${Utils.jsAttr(w.workId || w.idx)}')">✏️</button><button class="del-btn" onclick="App.removeWork('${Utils.jsAttr(sq.id)}',${w.idx})">🗑️</button></div>`;
       });
       worksHtml += '</div>';
     });
@@ -2602,7 +2635,7 @@ function applySWorks(){
     if(tool) fuelLiters = Math.round(tool.fuelConsumption * toolHours * 100) / 100;
     // Разрешаем множественные записи одного вида работ на одном километре
     // с разными диапазонами, сторонами, датами, объёмами
-    sq.works.push({ id, name, unit, laborCost, directCost, toolCost, volume, road, toolId: id, toolHours, fuelLiters, kmFrom, kmTo });
+    sq.works.push({ workId: Utils.generateId(), id, name, unit, laborCost, directCost, toolCost, volume, road, toolId: id, toolHours, fuelLiters, kmFrom, kmTo });
   });
   renderSquads(); closeSWorksModal(); scheduleDraftSave();
 }
@@ -2889,7 +2922,12 @@ function editEntry(idx){
   Utils.$('inpWeather').value = e.weather || '';
   Utils.$('inpWeatherCond').value = e.weatherCond || '';
   Utils.$('inpNotes').value = e.notes || '';
-  State.setUI('formSquads', JSON.parse(JSON.stringify(e.squads || [])));
+  const loadedSquads = JSON.parse(JSON.stringify(e.squads || []));
+  loadedSquads.forEach(sq => {
+    sq.works = sq.works || [];
+    sq.works.forEach(w => { if(!w.workId) w.workId = Utils.generateId(); });
+  });
+  State.setUI('formSquads', loadedSquads);
   renderSquads();
   Utils.$('editBadge').style.display = 'block';
   Utils.$('editId').textContent = e.id;
@@ -2946,7 +2984,12 @@ function loadTemplate(id){
   const templates = State.get('templates');
   const t = templates.find(x => x.id == id);
   if(!t) return;
-  State.setUI('formSquads', JSON.parse(JSON.stringify(t.squads)));
+  const loadedSquads = JSON.parse(JSON.stringify(t.squads));
+  loadedSquads.forEach(sq => {
+    sq.works = sq.works || [];
+    sq.works.forEach(w => { if(!w.workId) w.workId = Utils.generateId(); });
+  });
+  State.setUI('formSquads', loadedSquads);
   renderSquads(); scheduleDraftSave();
   Utils.showToast('Шаблон загружен');
   Utils.$('templateSelect').value = '';
@@ -3495,29 +3538,65 @@ async function saveCatalogItem(){
   const name = Utils.$('catInp1')?.value.trim();
   if(!name){ Utils.showToast('Введите название'); return; }
   const type = State.getUI('catalogType');
-  let item;
+  const catalogEditingId = State.getUI('catalogEditingId');
+  let item, oldName = null, oldId = null;
+
+  // Получаем старое имя для отслеживания переименования
+  if(catalogEditingId !== null){
+    const oldArr = type === 'worker' ? State.get('workers') : type === 'work' ? State.get('works') : type === 'tool' ? State.get('tools') : State.get('roads');
+    const old = oldArr[catalogEditingId];
+    if(old){ oldName = old.name || old.id || null; oldId = old.id || null; }
+  }
+
   if(type === 'worker'){
     item = { name, category: Utils.$('catInp2').value, grade: parseInt(Utils.$('catInp3').value) || 0, rate: parseFloat(Utils.$('catInp4').value) || 0 };
   } else if(type === 'work'){
-    item = { id: Utils.generateId(), name, unit: Utils.$('catInp2').value.trim(), laborCost: parseFloat(Utils.$('catInp3').value) || 0, directCost: parseFloat(Utils.$('catInp4').value) || 0, toolCost: parseFloat(Utils.$('catInp5').value) || 0 };
+    item = { id: oldId || Utils.generateId(), name, unit: Utils.$('catInp2').value.trim(), laborCost: parseFloat(Utils.$('catInp3').value) || 0, directCost: parseFloat(Utils.$('catInp4').value) || 0, toolCost: parseFloat(Utils.$('catInp5').value) || 0 };
     const norms = getWorkNorms();
     if(norms.length) item.materialNorms = norms;
   } else if(type === 'tool'){
-    item = { id: Utils.generateId(), name, fuelConsumption: parseFloat(Utils.$('catInp2').value) || 0, machineCostPerHour: parseFloat(Utils.$('catInp3').value) || 0, salaryPerHour: parseFloat(Utils.$('catInp4').value) || 0 };
+    item = { id: oldId || Utils.generateId(), name, fuelConsumption: parseFloat(Utils.$('catInp2').value) || 0, machineCostPerHour: parseFloat(Utils.$('catInp3').value) || 0, salaryPerHour: parseFloat(Utils.$('catInp4').value) || 0 };
   } else if(type === 'road'){
     const roadType = Utils.$('catInp2').value || 'road';
     const len = parseFloat(Utils.$('catInp3').value) || 0;
     const plan = Utils.$('catInp4')?.value.trim() || '';
     const pu = Utils.$('catInpPu')?.value || '';
     const pw = getPlanWorks();
-    const catalogEditingId = State.getUI('catalogEditingId');
-    let oldId = null;
-    if(catalogEditingId !== null){ const old = State.get('roads')[catalogEditingId]; if(old) oldId = old.id; }
     item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan, pu: pu };
     if(pw.length) item.planWorks = pw;
   }
 
-  const catalogEditingId = State.getUI('catalogEditingId');
+  // Единый алгоритм: если имя изменилось — обновляем все старые записи
+  if(oldName && oldName !== name){
+    const entries = State.get('entries');
+    let updatedCount = 0;
+    entries.forEach(e => {
+      e.squads?.forEach(sq => {
+        if(type === 'worker'){
+          // Обновляем имя работника в people
+          sq.people?.forEach(p => { if(p.name === oldName){ p.name = name; updatedCount++; } });
+        } else if(type === 'work'){
+          // Обновляем имя вида работы в works
+          sq.works?.forEach(w => { if(w.name === oldName){ w.name = name; updatedCount++; } });
+        } else if(type === 'tool'){
+          // Обновляем toolId по имени (инструменты связаны по id, но имя может отображаться)
+          // Инструменты в работах связаны через toolId, имя не хранится отдельно — обновляем только если есть прямые ссылки
+          sq.works?.forEach(w => {
+            const tools = State.get('tools');
+            const oldTool = tools.find(t => t.id === oldId);
+            if(oldTool && w.toolId === oldId){ w.toolId = item.id; updatedCount++; }
+          });
+        } else if(type === 'road'){
+          // Обновляем objects и work.road
+          const objIdx = sq.objects ? sq.objects.indexOf(oldName) : -1;
+          if(objIdx >= 0){ sq.objects[objIdx] = name; updatedCount++; }
+          sq.works?.forEach(w => { if(w.road === oldName){ w.road = name; updatedCount++; } });
+        }
+      });
+    });
+    if(updatedCount > 0) Utils.showToast('Обновлено в ' + updatedCount + ' местах старых записей');
+  }
+
   if(catalogEditingId !== null){
     if(type === 'worker') State.get('workers')[catalogEditingId] = item;
     else if(type === 'work') State.get('works')[catalogEditingId] = item;
@@ -3531,35 +3610,44 @@ async function saveCatalogItem(){
   }
 
   await Storage.saveAll(State.getAllForSave());
-  closeCatalogModal(); renderCatalogs();
+  closeCatalogModal(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Сохранено');
 }
 
 async function deleteCatalogItem(type, idx){
-  if(type === 'worker'){
-    const worker = State.get('workers')[idx];
-    if(!worker) return;
-    const usedInEntries = [];
-    State.get('entries').forEach((e, eIdx) => { e.squads?.forEach(sq => { if(sq.people?.some(p => p.name === worker.name)) usedInEntries.push(`${Utils.formatDate(e.date)} (запись #${eIdx + 1})`); }); });
-    let msg = `Удалить работника "${worker.name}"?`;
-    if(usedInEntries.length) msg += `\n\n⚠️ Работник есть в ${usedInEntries.length} наряде(ах):\n${usedInEntries.slice(0, 5).join('\n')}${usedInEntries.length > 5 ? '\n...и др.' : ''}\n\nПосле удаления он останется в старых записях.`;
-    if(!confirm(msg)) return;
-    State.get('workers').splice(idx, 1);
-  } else if(type === 'work'){
-    if(!confirm('Удалить вид работы? Это не удалит работу из существующих нарядов.')) return;
-    State.get('works').splice(idx, 1);
-  } else if(type === 'tool'){
-    if(!confirm('Удалить инструмент?')) return;
-    State.get('tools').splice(idx, 1);
-  } else if(type === 'road'){
-    const road = State.get('roads')[idx];
-    const used = State.get('entries').some(e => e.squads?.some(sq => sq.objects?.includes(road?.name)));
-    let msg = `Удалить "${road?.name || ''}"?`; if(used) msg += '\n\n⚠️ Используется в нарядах!';
-    if(!confirm(msg)) return;
-    State.get('roads').splice(idx, 1);
+  const arr = type === 'worker' ? State.get('workers') : type === 'work' ? State.get('works') : type === 'tool' ? State.get('tools') : State.get('roads');
+  const item = arr[idx];
+  if(!item) return;
+  const itemName = item.name || item.id || '';
+
+  // Единый алгоритм: собираем где используется в записях
+  const usedEntries = [];
+  State.get('entries').forEach((e, eIdx) => {
+    e.squads?.forEach(sq => {
+      let used = false;
+      if(type === 'worker'){
+        if(sq.people?.some(p => p.name === itemName)) used = true;
+      } else if(type === 'work'){
+        if(sq.works?.some(w => w.name === itemName)) used = true;
+      } else if(type === 'tool'){
+        if(sq.works?.some(w => w.toolId === item.id)) used = true;
+      } else if(type === 'road'){
+        if(sq.objects?.includes(itemName) || sq.works?.some(w => w.road === itemName)) used = true;
+      }
+      if(used) usedEntries.push(`${Utils.formatDate(e.date)} (запись #${eIdx + 1})`);
+    });
+  });
+
+  const typeLabel = { worker: 'работника', work: 'вид работы', tool: 'инструмент', road: 'дорогу/объект' }[type];
+  let msg = `Удалить ${typeLabel} "${itemName}"?`;
+  if(usedEntries.length){
+    msg += `\n\n⚠️ Используется в ${usedEntries.length} наряде(ах):\n${usedEntries.slice(0, 5).join('\n')}${usedEntries.length > 5 ? '\n...и др.' : ''}\n\n❗ После удаления из справочника элемент останется в старых записях как текст.\nРекомендуется не удалять, а редактировать название — тогда все записи обновятся автоматически.`;
   }
+  if(!confirm(msg)) return;
+
+  arr.splice(idx, 1);
   await Storage.saveAll(State.getAllForSave());
-  renderCatalogs();
+  renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Удалено');
 }
 function closeCatalogModal(){ Utils.$('catalogModal').classList.remove('active'); State.setUI('catalogType', ''); State.setUI('catalogEditingId', null); }
