@@ -378,8 +378,6 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -539,6 +537,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
     <button class="subtab" onclick="App.showReportTab('repMachines',this)">🚜 Стоимость машин</button>
     <button class="subtab" onclick="App.showReportTab('repSalary',this)">💰 Зарплата по часовой</button>
     <button class="subtab" onclick="App.showReportTab('repNorms',this)">📏 Нормы выполнения</button>
+    <button class="subtab" onclick="App.showReportTab('repPU',this)">🏭 Отчёт по ПУ</button>
   </div>
   <div class="subpanel active" id="repAnalytics">
     <div class="card">
@@ -609,6 +608,17 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
       <div class="form-group"><label>Объект/дорога</label><select id="normRoad"><option value="all">Все объекты</option></select></div>
       <button class="btn btn-primary" onclick="App.generateNormsReport()">Сформировать отчёт</button>
       <div id="normsResult" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <!-- 🏭 Отчёт по ПУ -->
+  <div class="subpanel" id="repPU">
+    <div class="card">
+      <div class="card-title">🏭 Отчёт по производственному участку (ПУ)</div>
+      <div class="form-group"><label>Месяц</label><input type="month" id="puMonth"></div>
+      <div class="form-group"><label>Производственный участок</label><select id="puSelect"><option value="">— Выберите ПУ —</option><option value="ПУ-1">ПУ-1</option><option value="ПУ-2">ПУ-2</option><option value="ПУ-3">ПУ-3</option></select></div>
+      <button class="btn btn-primary" onclick="App.generatePUReport()">Сформировать отчёт по ПУ</button>
+      <div id="puResult" style="margin-top:16px"></div>
     </div>
   </div>
 </div>
@@ -935,6 +945,9 @@ const CATEGORIES = {
   maz:     { name: 'Водители МАЗ',     color: '#6a1b9a', norm: false },
   other:   { name: 'Прочие',           color: '#616161', norm: false }
 };
+const PU_LIST = ['ПУ-1', 'ПУ-2', 'ПУ-3'];
+const PU_COLORS = { 'ПУ-1': '#1565c0', 'ПУ-2': '#2e7d32', 'ПУ-3': '#6a1b9a' };
+
 const MONTH_NAMES = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const DAY_NAMES_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WORK_PALETTE = ['#e65100','#2e7d32','#1565c0','#6a1b9a','#c62828','#00796b','#f9a825','#5e35b1'];
@@ -1324,10 +1337,10 @@ function initDefaultData(){
   }
   if(roads.length === 0){
     State.set('roads', [
-      { id: Utils.generateId(), name: "а/д ПУ-3", length: 45.2, type: 'road' },
-      { id: Utils.generateId(), name: "Н-6002", length: 32.0, type: 'road' },
-      { id: Utils.generateId(), name: "Н-6270", length: 28.5, type: 'road' },
-      { id: Utils.generateId(), name: "Н-6380", length: 15.0, type: 'road' }
+      { id: Utils.generateId(), name: "а/д ПУ-3", length: 45.2, type: 'road', pu: 'ПУ-3' },
+      { id: Utils.generateId(), name: "Н-6002", length: 32.0, type: 'road', pu: 'ПУ-1' },
+      { id: Utils.generateId(), name: "Н-6270", length: 28.5, type: 'road', pu: 'ПУ-2' },
+      { id: Utils.generateId(), name: "Н-6380", length: 15.0, type: 'road', pu: 'ПУ-1' }
     ]);
     changed = true;
   }
@@ -1370,6 +1383,7 @@ async function init(){
   if(Utils.$('salaryTo')) Utils.$('salaryTo').value = Utils.todayStr();
   if(Utils.$('normFrom')) Utils.$('normFrom').value = Utils.todayStr().slice(0, 7) + '-01';
   if(Utils.$('normTo')) Utils.$('normTo').value = Utils.todayStr();
+  if(Utils.$('puMonth')) Utils.$('puMonth').value = Utils.todayStr().slice(0, 7);
 
   const settings = State.get('settings');
   if(Utils.$('settingOrg')) Utils.$('settingOrg').value = settings.org || '';
@@ -3319,9 +3333,10 @@ function renderCatalogs(){
     const realIdx = roads.indexOf(r);
     const typeLabel = {road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[r.type] || '📍 Объект';
     const typeInfo = r.type === 'road' ? (r.length ? r.length + ' км' : '') : (r.plan ? Utils.escapeHtml(r.plan) : '');
+    const puBadge = r.pu ? `<span style="display:inline-block;margin-left:6px;padding:2px 8px;background:${PU_COLORS[r.pu] || 'var(--brand)'};color:#fff;border-radius:8px;font-size:.7rem;font-weight:600">${Utils.escapeHtml(r.pu)}</span>` : '<span style="display:inline-block;margin-left:6px;padding:2px 8px;background:var(--danger);color:#fff;border-radius:8px;font-size:.7rem;font-weight:600">⚠️ Без ПУ</span>';
     let pwHtml = '';
     if(r.planWorks && r.planWorks.length){ pwHtml = '<div style="margin-top:4px">' + r.planWorks.map(pw => `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:var(--bg);border-radius:8px;border:1.5px solid var(--border);font-size:.75rem"><span style="color:var(--text-secondary)">${Utils.escapeHtml(pw.workName)}</span> <b style="color:var(--brand)">${pw.volume}${pw.unit || 'м²'}</b></span>`).join('') + '</div>'; }
-    return `<div class="catalog-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="width:100%;display:flex;justify-content:space-between;align-items:center"><div><b>${Utils.escapeHtml(r.name)}</b><div style="font-size:.8rem;color:var(--text-secondary)">${typeLabel}${typeInfo ? ' | ' + typeInfo : ''}</div></div><div style="display:flex;gap:6px"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${realIdx})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${realIdx})">🗑️</button></div></div>${pwHtml}</div>`;
+    return `<div class="catalog-item" style="flex-direction:column;align-items:flex-start;gap:2px"><div style="width:100%;display:flex;justify-content:space-between;align-items:center"><div><b>${Utils.escapeHtml(r.name)}</b>${puBadge}<div style="font-size:.8rem;color:var(--text-secondary)">${typeLabel}${typeInfo ? ' | ' + typeInfo : ''}</div></div><div style="display:flex;gap:6px"><button class="btn btn-small btn-secondary" onclick="App.editCatalogItem('road',${realIdx})">✏️</button><button class="btn btn-small btn-danger" onclick="App.deleteCatalogItem('road',${realIdx})">🗑️</button></div></div>${pwHtml}</div>`;
   }).join('') || '<div class="empty-state">Нет дорог/объектов</div>';
   Utils.$('roadsCatalogList').innerHTML = rHtml;
 
@@ -3360,6 +3375,7 @@ function addCatalogItem(type){
       <div class="form-group"><label>Зарплата машиниста (руб/ч)</label><input type="number" id="catInp4" step="0.01" placeholder="0"></div>`;
   } else if(type === 'road'){
     html = `<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div>
+      <div class="form-group"><label>Производственный участок (ПУ)</label><select id="catInpPu"><option value="">— Выберите ПУ —</option><option value="ПУ-1">ПУ-1</option><option value="ПУ-2">ПУ-2</option><option value="ПУ-3">ПУ-3</option></select></div>
       <div class="form-group"><label>Тип</label><select id="catInp2" onchange="App.togglePlanWorksUI()"><option value="road">🛣️ Дорога (есть км)</option><option value="object">📍 Объект (без км)</option><option value="abz">🏭 АБЗ</option><option value="base">🏢 База</option></select></div>
       <div class="form-group"><label>Протяжённость (км) — только для дорог</label><input type="number" id="catInp3" step="0.1" placeholder="0"></div>
       <div id="planWorksBox" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
@@ -3392,6 +3408,7 @@ function editCatalogItem(type, idx){
     if(type === 'worker') Utils.$('catInp4').value = item.rate || '';
     else if(item.plan) Utils.$('catInp4').value = item.plan;
   }
+  if(Utils.$('catInpPu')) Utils.$('catInpPu').value = item.pu || '';
   if(type === 'work' && item.materialNorms){
     item.materialNorms.forEach(n => addWorkNormRow(n));
   }
@@ -3491,11 +3508,12 @@ async function saveCatalogItem(){
     const roadType = Utils.$('catInp2').value || 'road';
     const len = parseFloat(Utils.$('catInp3').value) || 0;
     const plan = Utils.$('catInp4')?.value.trim() || '';
+    const pu = Utils.$('catInpPu')?.value || '';
     const pw = getPlanWorks();
     const catalogEditingId = State.getUI('catalogEditingId');
     let oldId = null;
     if(catalogEditingId !== null){ const old = State.get('roads')[catalogEditingId]; if(old) oldId = old.id; }
-    item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan };
+    item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan, pu: pu };
     if(pw.length) item.planWorks = pw;
   }
 
@@ -4151,6 +4169,245 @@ function generateNormsReport(){
   Utils.$('normsResult').innerHTML = out;
 }
 
+/* ==============================================
+   ОТЧЁТ: ПО ПРОИЗВОДСТВЕННОМУ УЧАСТКУ (ПУ)
+   ============================================== */
+function generatePUReport(){
+  const month = Utils.$('puMonth')?.value;
+  const pu = Utils.$('puSelect')?.value;
+  if(!month){ Utils.showToast('Укажите месяц'); return; }
+  if(!pu){ Utils.showToast('Выберите ПУ'); return; }
+
+  const entries = State.get('entries');
+  const roads = State.get('roads');
+  const workers = State.get('workers');
+
+  // Get all roads/objects for this ПУ
+  const puRoads = roads.filter(r => r.pu === pu);
+  const puRoadNames = new Set(puRoads.map(r => r.name));
+
+  // Filter entries for this month and roads belonging to this ПУ
+  const filtered = entries.filter(e => {
+    if(!e.date.startsWith(month)) return false;
+    // Check if any squad in this entry works on a road/object belonging to this ПУ
+    return e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o)));
+  });
+
+  if(!filtered.length){
+    Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
+    return;
+  }
+
+  // Collect data by road/object
+  const roadData = {};
+  const workData = {};
+  const workerData = {};
+  let totalVolumeAll = 0;
+  let totalLaborAll = 0;
+  let totalPeopleDays = 0;
+  let totalHoursAll = 0;
+
+  filtered.forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.objects?.forEach(objName => {
+        if(!puRoadNames.has(objName)) return;
+        if(!roadData[objName]){
+          const roadInfo = roads.find(r => r.name === objName);
+          roadData[objName] = { name: objName, type: roadInfo?.type || 'road', entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
+        }
+        roadData[objName].entries++;
+        roadData[objName].days.add(e.date);
+
+        sq.works?.forEach(w => {
+          const wkey = w.name + '|' + (w.unit || 'ед.');
+          if(!workData[wkey]){
+            workData[wkey] = { name: w.name, unit: w.unit || 'ед.', totalVolume: 0, totalLabor: 0, roads: new Set() };
+          }
+          const nv = normalizeVolume(w.volume, w.unit);
+          workData[wkey].totalVolume += nv.value;
+          workData[wkey].totalLabor += (w.laborCost || 0) * (nv.value / 1000);
+          workData[wkey].roads.add(objName);
+          roadData[objName].works[wkey] = (roadData[objName].works[wkey] || 0) + nv.value;
+          roadData[objName].totalVolume += nv.value;
+          roadData[objName].totalLabor += (w.laborCost || 0) * (nv.value / 1000);
+          totalVolumeAll += nv.value;
+          totalLaborAll += (w.laborCost || 0) * (nv.value / 1000);
+        });
+
+        sq.people?.forEach(p => {
+          const hours = parseFloat(p.hours) || 8;
+          if(!workerData[p.name]){
+            const wInfo = workers.find(x => x.name === p.name);
+            workerData[p.name] = { name: p.name, category: wInfo?.category || 'other', grade: wInfo?.grade || 0, rate: wInfo?.rate || 0, totalHours: 0, days: new Set(), roads: new Set() };
+          }
+          workerData[p.name].totalHours += hours;
+          workerData[p.name].days.add(e.date);
+          workerData[p.name].roads.add(objName);
+          roadData[objName].workers[p.name] = (roadData[objName].workers[p.name] || 0) + hours;
+          roadData[objName].totalHours += hours;
+          totalHoursAll += hours;
+          totalPeopleDays++;
+        });
+      });
+    });
+  });
+
+  const puColor = PU_COLORS[pu] || 'var(--brand)';
+
+  let out = `<div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px;border:2px solid ${puColor}">
+    <div style="font-size:1.3rem;font-weight:700;color:${puColor};margin-bottom:8px">🏭 ${pu} — ${MONTH_NAMES[parseInt(month.split('-')[1])-1]} ${month.split('-')[0]}</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;font-size:.9rem">
+      <div>📍 Объектов/дорог: <b>${Object.keys(roadData).length}</b></div>
+      <div>📋 Записей: <b>${filtered.length}</b></div>
+      <div>👷 Работников: <b>${Object.keys(workerData).length}</b></div>
+      <div>📅 Рабочих дней: <b>${new Set(filtered.map(e => e.date)).size}</b></div>
+      <div>⏱️ Всего часов: <b>${totalHoursAll.toFixed(1)}</b></div>
+      <div>🔧 Объём работ: <b>${totalVolumeAll.toFixed(2)}</b></div>
+    </div>
+  </div>`;
+
+  // Section 1: By Road/Object
+  out += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">📍 По объектам/дорогам ${pu}</div>`;
+  Object.values(roadData).sort((a,b) => b.totalVolume - a.totalVolume).forEach(rd => {
+    const typeLabel = {road:'🛣️',object:'📍',abz:'🏭',base:'🏢'}[rd.type] || '📍';
+    out += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-weight:700;font-size:1rem">${typeLabel} ${Utils.escapeHtml(rd.name)}</span>
+        <span style="font-size:.8rem;color:var(--text-secondary)">${rd.days.size} дн. | ${rd.entries} нарядов</span>
+      </div>
+      <div style="font-size:.85rem;margin-bottom:4px">⏱️ <b>${rd.totalHours.toFixed(1)}</b> ч | 🔧 Объём: <b>${rd.totalVolume.toFixed(2)}</b> | Норма: <b>${rd.totalLabor.toFixed(1)}</b> чел-ч</div>`;
+
+    // Works breakdown
+    if(Object.keys(rd.works).length > 0){
+      out += `<div style="margin-top:6px;font-size:.8rem"><b>Виды работ:</b></div>`;
+      for(let wk in rd.works){
+        const [wname, wunit] = wk.split('|');
+        out += `<div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed var(--border);font-size:.78rem">
+          <span class="text-info">${Utils.escapeHtml(wname)}</span>
+          <span><b>${rd.works[wk].toFixed(2)}</b> ${wunit}</span>
+        </div>`;
+      }
+    }
+
+    // Workers on this road
+    if(Object.keys(rd.workers).length > 0){
+      out += `<div style="margin-top:6px;font-size:.8rem"><b>Работники:</b></div>`;
+      for(let wn in rd.workers){
+        out += `<span style="display:inline-block;margin:2px 4px 2px 0;padding:2px 8px;background:var(--info-bg);border-radius:8px;font-size:.75rem">${Utils.escapeHtml(wn)}: <b>${rd.workers[wn].toFixed(1)}</b>ч</span>`;
+      }
+    }
+    out += `</div>`;
+  });
+  out += `</div>`;
+
+  // Section 2: By Work Type (summary across all roads)
+  out += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">🔧 Сводка по видам работ (все объекты ${pu})</div>`;
+  out += `<table class="report-table"><thead><tr>
+    <th>Вид работы</th><th>Ед.</th><th>Общий объём</th><th>Норма чел-ч</th><th>Объектов</th>
+  </tr></thead><tbody>`;
+  Object.values(workData).sort((a,b) => b.totalVolume - a.totalVolume).forEach(wd => {
+    out += `<tr>
+      <td><b class="text-info">${Utils.escapeHtml(wd.name)}</b></td>
+      <td>${wd.unit}</td>
+      <td><b>${wd.totalVolume.toFixed(2)}</b></td>
+      <td>${wd.totalLabor.toFixed(1)}</td>
+      <td>${wd.roads.size}</td>
+    </tr>`;
+  });
+  out += `</tbody></table></div>`;
+
+  // Section 3: By Worker
+  out += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">👷 Работники на ${pu}</div>`;
+  out += `<table class="report-table"><thead><tr>
+    <th>ФИО</th><th>Категория</th><th>Разр.</th><th>Ставка</th><th>Дней</th><th>Часов</th><th>Объектов</th>
+  </tr></thead><tbody>`;
+  Object.values(workerData).sort((a,b) => b.totalHours - a.totalHours).forEach(wd => {
+    const catName = (CATEGORIES[wd.category] || CATEGORIES.other).name;
+    out += `<tr>
+      <td><b>${Utils.escapeHtml(wd.name)}</b></td>
+      <td>${catName}</td>
+      <td>${wd.grade || '-'}</td>
+      <td>${wd.rate ? wd.rate.toFixed(2) : '-'}</td>
+      <td>${wd.days.size}</td>
+      <td><b>${wd.totalHours.toFixed(1)}</b></td>
+      <td>${wd.roads.size}</td>
+    </tr>`;
+  });
+  out += `</tbody></table></div>`;
+
+  // Export buttons
+  out += `<div class="row-btns" style="margin-top:12px">
+    <button class="btn btn-secondary" onclick="App.exportPUCSV()">📥 Экспорт CSV</button>
+    <button class="btn btn-success" onclick="App.exportPUExcel()">📊 Экспорт Excel</button>
+  </div>`;
+
+  Utils.$('puResult').innerHTML = out;
+}
+
+function exportPUCSV(){
+  const month = Utils.$('puMonth')?.value;
+  const pu = Utils.$('puSelect')?.value;
+  if(!month || !pu) return;
+
+  const entries = State.get('entries');
+  const roads = State.get('roads');
+  const workers = State.get('workers');
+  const puRoads = roads.filter(r => r.pu === pu);
+  const puRoadNames = new Set(puRoads.map(r => r.name));
+  const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
+
+  let csv = '\uFEFFДата;Объект;Вид работы;Объём;Ед.;Км от;Км до;Работник;Часы;Категория;ПУ\n';
+  filtered.forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.objects?.forEach(objName => {
+        if(!puRoadNames.has(objName)) return;
+        sq.works?.forEach(w => {
+          sq.people?.forEach(p => {
+            const wInfo = workers.find(x => x.name === p.name);
+            csv += `${e.date};${objName};${w.name};${w.volume};${w.unit || ''};${w.kmFrom !== undefined ? w.kmFrom : ''};${w.kmTo !== undefined ? w.kmTo : ''};${p.name};${p.hours || 8};${wInfo?.category || ''};${pu}\n`;
+          });
+        });
+      });
+    });
+  });
+
+  Utils.downloadFile(csv, `PU_${pu}_${month}.csv`, 'text/csv;charset=utf-8');
+}
+
+function exportPUExcel(){
+  const month = Utils.$('puMonth')?.value;
+  const pu = Utils.$('puSelect')?.value;
+  if(!month || !pu) return;
+
+  const entries = State.get('entries');
+  const roads = State.get('roads');
+  const workers = State.get('workers');
+  const puRoads = roads.filter(r => r.pu === pu);
+  const puRoadNames = new Set(puRoads.map(r => r.name));
+  const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
+
+  const wb = XLSX.utils.book_new();
+  const data = [['Дата','Объект','Вид работы','Объём','Ед.изм.','Км от','Км до','Работник','Часы','Категория','ПУ']];
+  filtered.forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.objects?.forEach(objName => {
+        if(!puRoadNames.has(objName)) return;
+        sq.works?.forEach(w => {
+          sq.people?.forEach(p => {
+            const wInfo = workers.find(x => x.name === p.name);
+            data.push([e.date, objName, w.name, w.volume, w.unit || '', w.kmFrom !== undefined ? w.kmFrom : '', w.kmTo !== undefined ? w.kmTo : '', p.name, p.hours || 8, wInfo?.category || '', pu]);
+          });
+        });
+      });
+    });
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  XLSX.utils.book_append_sheet(wb, ws, pu + '_' + month);
+  XLSX.writeFile(wb, `PU_${pu}_${month}.xlsx`);
+}
+
+
 function exportNormsCSV(){
   const from = Utils.$('normFrom')?.value;
   const to = Utils.$('normTo')?.value;
@@ -4208,6 +4465,7 @@ window.App = {
   openSWorksModal, closeSWorksModal, applySWorks,
   openSTmcModal, closeSTmcModal, applySTmc,
   generateSalaryReport, exportSalaryCSV, generateNormsReport, exportNormsCSV,
+  generatePUReport, exportPUCSV, exportPUExcel,
   saveEntry, clearForm, cancelEdit, editEntry, deleteEntry, duplicateEntry,
   saveTemplate, loadTemplate, renderTemplates,
   renderTimesheet, addTimesheetWorker, exportTimesheetCSV, exportTimesheetExcel, clearTimesheetOverrides, editTimesheetCell, clearTimesheetCell,
