@@ -461,11 +461,6 @@ body.dark-mode .kpi-item{color:var(--text) !important}
 
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -836,7 +831,11 @@ body.dark-mode .kpi-item{color:var(--text) !important}
       <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
         <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📋 История изменений</div>
         <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.6">
-          <b>v18.11</b> (24.05.2026) — 📊 Отчёт по ПУ: АБЗ, Базы и единые единицы измерения:
+          <b>v18.16</b> (24.05.2026) — 🐛 Исправлен отчёт АБЗ и оптимизация экспорта:
+  • Исправлен баг в `generatePUReport`: отчёт АБЗ считал все 31 день месяца вместо реальных дней с кодом «АБЗ» — теперь перебираются только ключи `timesheetLetters` с фильтром по коду
+  • В `exportPUExcel` вызов `groupPuDataByType` вынесен за цикл `forEach` — устранено лишнее 4-кратное выполнение
+  • Убраны дублирующие теги `<base target="_blank">` в `<head>`<br>
+<b>v18.11</b> (24.05.2026) — 📊 Отчёт по ПУ: АБЗ, Базы и единые единицы измерения:
   • Отчёт по ПУ теперь разделяет данные на 4 секции: Дороги, Объекты, АБЗ, Базы — с цветовой индикацией
   • Единое форматирование объёмов: `formatVolumeForReport` нормализует 1000м² → "1.4 тыс. м²", убирая путаницу "1400.00"
   • CSV и Excel экспорты содержат ОБА формата: исходный (1.4) и нормализованный (1400 м²)
@@ -4854,48 +4853,46 @@ function generatePUReport(){
     let totalDays = 0;
     const daysSet = new Set();
 
-    // Проходим по всем дням месяца
-    const [year, mon] = month.split('-').map(Number);
-    const daysInMonth = new Date(year, mon, 0).getDate();
+    // Правильно: перебираем ВСЕ ключи табеля, фильтруем по месяцу и коду
+    // Ключ имеет формат: "YYYY-MM|ФИО|день"
+    Object.keys(timesheetLetters).forEach(key => {
+      if(!key.startsWith(month + '|')) return;
+      if(timesheetLetters[key] !== letterCode) return;
 
-    for(let day = 1; day <= daysInMonth; day++){
+      const parts = key.split('|');
+      const workerName = parts[1];
+      const day = parseInt(parts[2], 10);
+      if(!workerName || isNaN(day)) return;
+
       const dateStr = month + '-' + String(day).padStart(2, '0');
-      const dayKeyPrefix = month + '|';
+      daysSet.add(dateStr);
 
-      // Ищем работников с буквенным кодом АБЗ/База в табеле
-      Object.keys(timesheetLetters).forEach(key => {
-        if(key.startsWith(dayKeyPrefix) && timesheetLetters[key] === letterCode){
-          const parts = key.split('|');
-          const workerName = parts[1];
-          if(!workerName) return;
+      // Часы из табеля: если есть override — берём его, иначе 8 (стандартный день)
+      const hours = parseFloat(timesheetOverrides[key]) || 8;
 
-          daysSet.add(dateStr);
-
-          // Часы из табеля (override или по умолчанию 8)
-          const hours = parseFloat(timesheetOverrides[key]) || 8;
-
-          if(!workerData[workerName]){
-            const wInfo = workers.find(x => x.name === workerName);
-            workerData[workerName] = { 
-              name: workerName, 
-              category: wInfo?.category || 'other', 
-              grade: wInfo?.grade || 0, 
-              rate: wInfo?.rate || 0, 
-              totalHours: 0, 
-              days: new Set() 
-            };
-          }
-          workerData[workerName].totalHours += hours;
-          workerData[workerName].days.add(dateStr);
-          totalHours += hours;
-        }
-      });
-    }
+      if(!workerData[workerName]){
+        const wInfo = workers.find(x => x.name === workerName);
+        workerData[workerName] = { 
+          name: workerName, 
+          category: wInfo?.category || 'other', 
+          grade: wInfo?.grade || 0, 
+          rate: wInfo?.rate || 0, 
+          totalHours: 0, 
+          days: new Set() 
+        };
+      }
+      workerData[workerName].totalHours += hours;
+      workerData[workerName].days.add(dateStr);
+      totalHours += hours;
+      totalDays++;
+    });
 
     if(!Object.keys(workerData).length){
       Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
       return;
     }
+
+    const [year, mon] = month.split('-').map(Number);
 
     let out = `<div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px;border:2px solid ${puColor}">
       <div style="font-size:1.3rem;font-weight:700;color:${puColor};margin-bottom:8px">🏭 ${pu} — ${MONTH_NAMES[mon-1]} ${year}</div>
@@ -4946,9 +4943,7 @@ function generatePUReport(){
 
     Utils.$('puResult').innerHTML = out;
     return;
-  }
-
-  // ========== ПУ-1/2/3: стандартная логика с нарядами ==========
+  }// ========== ПУ-1/2/3: стандартная логика с нарядами ==========
   const puRoads = roads.filter(r => r.pu === pu);
   const puRoadNames = new Set(puRoads.map(r => r.name));
 
@@ -5218,13 +5213,12 @@ function exportPUExcel(){
   });
 
   // Группировка по типам
-  
+  const groups = App.groupPuDataByType(roadData, roads);
 
   // Sheet 1: Summary by type
   const summary1 = [['Тип', 'Объект / дорога', 'Записей', 'Рабочих дней', 'Общий объём работ', 'Норма чел-ч', 'Всего часов']];
   ['roads','objects','abz','base'].forEach(t => {
     const label = {roads:'Дороги',objects:'Объекты',abz:'АБЗ',base:'Базы'}[t];
-  const groups = App.groupPuDataByType(roadData, roads);
     groups[t].forEach(rd => {
       summary1.push([label, rd.name, rd.entries, rd.days.size, rd.totalVolume.toFixed(2), rd.totalLabor.toFixed(1), rd.totalHours.toFixed(1)]);
     });
