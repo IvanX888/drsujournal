@@ -462,6 +462,7 @@ body.dark-mode .kpi-item{color:var(--text) !important}
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -1033,6 +1034,10 @@ const DAY_NAMES_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 const WORK_PALETTE = ['#e65100','#2e7d32','#1565c0','#6a1b9a','#c62828','#00796b','#f9a825','#5e35b1'];
 const LETTER_CODES = { 'Б': true, 'П': true, 'АБЗ': true, 'ОТП': true, 'У': true, 'В': true, 'А': true, 'ОТ': true };
 const CONFIG = { PREFIX: 'drsu_v18_', VERSION: '18.0', DEBOUNCE_DELAY: 300 };
+
+/* Counter for unique datalist IDs in plan work rows */
+let _planWorkDlCounter = 0;
+
 
 /* ==============================================
    УТИЛИТЫ
@@ -1778,6 +1783,20 @@ function renderRoadsKmSummary(){
   const roadItems = roads.filter(r => !r.type || r.type === 'road');
   const objectItems = roads.filter(r => r.type && r.type !== 'road');
 
+  // Deduplicate by name — keep first occurrence to prevent duplicate cards
+  const seenRoadNames = new Set();
+  const uniqueRoadItems = roadItems.filter(r => {
+    if(seenRoadNames.has(r.name)) return false;
+    seenRoadNames.add(r.name);
+    return true;
+  });
+  const seenObjNames = new Set();
+  const uniqueObjectItems = objectItems.filter(r => {
+    if(seenObjNames.has(r.name)) return false;
+    seenObjNames.add(r.name);
+    return true;
+  });
+
   function calcCoverage(name, filterType){
     const lanes = getRoadKmLanes(name, filterType);
     const road = roads.find(r => r.name === name);
@@ -1798,13 +1817,13 @@ function renderRoadsKmSummary(){
 
   const allProgress = {};
   const filterProgress = {};
-  roadItems.forEach(road => {
+  uniqueRoadItems.forEach(road => {
     allProgress[road.name] = calcCoverage(road.name, 'all');
     filterProgress[road.name] = calcCoverage(road.name, currentFilter);
   });
 
   let html = '';
-  const sortedRoads = roadItems.sort((a,b) => (allProgress[b.name]?.pct||0) - (allProgress[a.name]?.pct||0));
+  const sortedRoads = uniqueRoadItems.sort((a,b) => (allProgress[b.name]?.pct||0) - (allProgress[a.name]?.pct||0));
 
   if(sortedRoads.length > 0){
     html += `<div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:10px">🛣️ Дороги | <b>${filterLabel}</b></div>`;
@@ -1831,7 +1850,7 @@ function renderRoadsKmSummary(){
   }
 
   let activeObjects = [];
-  objectItems.forEach(obj => {
+  uniqueObjectItems.forEach(obj => {
     const progress = calculateObjectProgress(obj.name, 'all');
     const filterProgress2 = calculateObjectProgress(obj.name, currentFilter);
     if(progress.entryCount > 0 || (obj.planWorks && obj.planWorks.length)){
@@ -3769,13 +3788,15 @@ function getWorkNorms(){
 
 function addPlanWork(data){
   const list = Utils.$('planWorksList');
-  if(!list) return;
+ if(!list) return;
   const works = State.get('works');
   const opts = works.map(w => `<option value="${Utils.escapeHtml(w.name)}" data-id="${w.id}" data-unit="${Utils.escapeHtml(w.unit || 'м²')}">`).join('');
+  // Unique datalist ID per row to avoid ID collisions
+  const dlId = 'pwDatalist_' + (++_planWorkDlCounter);
   const row = document.createElement('div');
   row.className = 'plan-work-row';
   row.style.cssText = 'display:flex;gap:4px;margin-bottom:4px;align-items:center';
-  row.innerHTML = `<div style="flex:3;position:relative"><input type="text" class="pwn" list="pwDatalist" placeholder="Выберите или введите работу" value="${data ? Utils.escapeHtml(data.workName) : ''}" style="width:100%;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem" onchange="App.fillPlanWorkUnit(this)"><datalist id="pwDatalist">${opts}</datalist></div>
+  row.innerHTML = `<div style="flex:3;position:relative"><input type="text" class="pwn" list="${dlId}" placeholder="Выберите или введите работу" value="${data ? Utils.escapeHtml(data.workName) : ''}" style="width:100%;padding:6px 8px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem" onchange="App.fillPlanWorkUnit(this)"><datalist id="${dlId}">${opts}</datalist></div>
     <input type="text" class="pwv" placeholder="Объём" inputmode="decimal" value="${data ? String(data.volume).replace(/,/g, '.') : ''}" style="flex:1;padding:6px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem">
     <input type="text" class="pwu" placeholder="Ед." value="${data ? Utils.escapeHtml(data.unit) : 'м²'}" style="flex:1;padding:6px;border-radius:6px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:.8rem">
     <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()" style="padding:4px 8px;font-size:.75rem;min-height:32px">×</button>`;
@@ -4258,16 +4279,67 @@ async function importAllData(input){
     try {
       const data = JSON.parse(e.target.result);
       if(!confirm('Заменить все текущие данные импортированными?')) return;
-      // Миграция с v17: если есть stockOrder/manual, конвертируем? Пользователь сказал не нужно.
+
+      // ========== DEDUPLICATION: merge duplicates by name, keep last ==========
+      const dedupMsgs = [];
+
+      // Workers: merge by name, keep last occurrence
+      if(Array.isArray(data.workers)){
+        const origCount = data.workers.length;
+        const seen = new Map();
+        data.workers.forEach(w => { if(w && w.name) seen.set(w.name, w); });
+        data.workers = Array.from(seen.values());
+        if(data.workers.length < origCount) dedupMsgs.push('работников: -' + (origCount - data.workers.length));
+      }
+
+      // Roads/Objects: merge by name, keep last occurrence
+      if(Array.isArray(data.roads)){
+        const origCount = data.roads.length;
+        const seen = new Map();
+        data.roads.forEach(r => { if(r && r.name) seen.set(r.name, r); });
+        data.roads = Array.from(seen.values());
+        if(data.roads.length < origCount) dedupMsgs.push('дорог/объектов: -' + (origCount - data.roads.length));
+      }
+
+      // Works: merge by name, keep last occurrence (updated norms)
+      if(Array.isArray(data.works)){
+        const origCount = data.works.length;
+        const seen = new Map();
+        data.works.forEach(w => { if(w && w.name) seen.set(w.name, w); });
+        data.works = Array.from(seen.values());
+        if(data.works.length < origCount) dedupMsgs.push('видов работ: -' + (origCount - data.works.length));
+      }
+
+      // TMC: merge by name
+      if(Array.isArray(data.tmc)){
+        const origCount = data.tmc.length;
+        const seen = new Map();
+        data.tmc.forEach(t => { if(t && t.name) seen.set(t.name, t); });
+        data.tmc = Array.from(seen.values());
+        if(data.tmc.length < origCount) dedupMsgs.push('ТМЦ: -' + (origCount - data.tmc.length));
+      }
+
+      // Tools: merge by name
+      if(Array.isArray(data.tools)){
+        const origCount = data.tools.length;
+        const seen = new Map();
+        data.tools.forEach(t => { if(t && t.name) seen.set(t.name, t); });
+        data.tools = Array.from(seen.values());
+        if(data.tools.length < origCount) dedupMsgs.push('инструментов: -' + (origCount - data.tools.length));
+      }
+
       State.setAllFromImport(data);
       await Storage.saveAll(State.getAllForSave());
       applyTheme(); renderEntries(); renderCatalogs(); renderStock(); renderTasks(); renderTemplates(); renderCalendar(); renderRoadSelector(); renderTimesheet();
-      Utils.showToast('Данные импортированы');
+
+      const msg = dedupMsgs.length 
+        ? 'Импорт завершён (объединены дубли: ' + dedupMsgs.join(', ') + '). Теперь при редактировании ФИО или дороги дублей не создаётся.'
+        : 'Данные импортированы';
+      Utils.showToast(msg);
     } catch(err){ Utils.showToast('Ошибка импорта: ' + err.message); }
   };
   reader.readAsText(file); input.value = '';
-}
-async function clearAllData(){
+}async function clearAllData(){
   if(!confirm('ВНИМАНИЕ! Все данные будут удалены безвозвратно. Продолжить?')) return;
   Storage.clearAll(); State.reset();
   renderEntries(); renderCatalogs(); renderStock(); renderTasks(); Utils.showToast('Все данные очищены');
@@ -4407,7 +4479,7 @@ function exportSalaryCSV(){
     const catName = (CATEGORIES[w.category] || CATEGORIES.other).name;
     csv += `${w.name};${catName};${w.grade || '-'};${w.rate.toFixed(2)};${w.days};${w.hours.toFixed(1)};${w.earnings.toFixed(2)}\n`;
   });
-  Utils.downloadText(csv, `zarplata_${fromDate}_${toDate}.csv`, 'text/csv');
+  Utils.downloadFile(csv, `zarplata_${fromDate}_${toDate}.csv`, 'text/csv;charset=utf-8');
 }
 
 /* ==============================================
@@ -4739,7 +4811,90 @@ function exportPUExcel(){
   const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
 
   const wb = XLSX.utils.book_new();
-  const data = [['Дата','Объект','Вид работы','Объём','Ед.изм.','Км от','Км до','Работник','Часы','Категория','ПУ']];
+
+  // ========== Sheet 1: Summary by Road/Object ==========
+  const roadData = {};
+  const workData = {};
+  const workerData = {};
+  let totalVolumeAll = 0;
+  let totalLaborAll = 0;
+  let totalHoursAll = 0;
+
+  filtered.forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.objects?.forEach(objName => {
+        if(!puRoadNames.has(objName)) return;
+        if(!roadData[objName]){
+          roadData[objName] = { name: objName, entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
+        }
+        roadData[objName].entries++;
+        roadData[objName].days.add(e.date);
+
+        sq.works?.forEach(w => {
+          const wkey = w.name + '|' + (w.unit || 'ед.');
+          if(!workData[wkey]){
+            workData[wkey] = { name: w.name, unit: w.unit || 'ед.', totalVolume: 0, totalLabor: 0 };
+          }
+          const nv = normalizeVolume(w.volume, w.unit);
+          workData[wkey].totalVolume += nv.value;
+          workData[wkey].totalLabor += (w.laborCost || 0) * (nv.value / 1000);
+          roadData[objName].works[wkey] = (roadData[objName].works[wkey] || 0) + nv.value;
+          roadData[objName].totalVolume += nv.value;
+          roadData[objName].totalLabor += (w.laborCost || 0) * (nv.value / 1000);
+          totalVolumeAll += nv.value;
+          totalLaborAll += (w.laborCost || 0) * (nv.value / 1000);
+        });
+
+        sq.people?.forEach(p => {
+          const hours = parseFloat(p.hours) || 8;
+          if(!workerData[p.name]){
+            const wInfo = workers.find(x => x.name === p.name);
+            workerData[p.name] = { name: p.name, category: wInfo?.category || 'other', grade: wInfo?.grade || 0, rate: wInfo?.rate || 0, totalHours: 0, days: new Set(), earnings: 0 };
+          }
+          workerData[p.name].totalHours += hours;
+          workerData[p.name].days.add(e.date);
+          const rate = parseFloat(workerData[p.name].rate) || 0;
+          workerData[p.name].earnings += hours * rate;
+          roadData[objName].workers[p.name] = (roadData[objName].workers[p.name] || 0) + hours;
+          roadData[objName].totalHours += hours;
+          totalHoursAll += hours;
+        });
+      });
+    });
+  });
+
+  // Sheet 1: Summary by Road
+  const summary1 = [['Объект / дорога', 'Записей', 'Рабочих дней', 'Общий объём работ', 'Норма чел-ч', 'Всего часов']];
+  Object.values(roadData).sort((a,b) => b.totalVolume - a.totalVolume).forEach(rd => {
+    summary1.push([rd.name, rd.entries, rd.days.size, rd.totalVolume.toFixed(2), rd.totalLabor.toFixed(1), rd.totalHours.toFixed(1)]);
+  });
+  summary1.push(['ИТОГО ПО ' + pu, filtered.length, new Set(filtered.map(e => e.date)).size, totalVolumeAll.toFixed(2), totalLaborAll.toFixed(1), totalHoursAll.toFixed(1)]);
+  const ws1 = XLSX.utils.aoa_to_sheet(summary1);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Сводка по объектам');
+
+  // Sheet 2: Summary by Work Type
+  const summary2 = [['Вид работы', 'Ед.изм.', 'Общий объём', 'Норма чел-ч']];
+  Object.values(workData).sort((a,b) => b.totalVolume - a.totalVolume).forEach(wd => {
+    summary2.push([wd.name, wd.unit, wd.totalVolume.toFixed(2), wd.totalLabor.toFixed(1)]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(summary2);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Сводка по работам');
+
+  // Sheet 3: Summary by Worker with Salary
+  const summary3 = [['ФИО', 'Категория', 'Разряд', 'Ставка (руб/ч)', 'Дней', 'Часов', 'Начислено (руб)']];
+  const workerList = Object.values(workerData).sort((a,b) => b.earnings - a.earnings);
+  let totalEarnings = 0;
+  workerList.forEach(wd => {
+    const catName = (CATEGORIES[wd.category] || CATEGORIES.other).name;
+    summary3.push([wd.name, catName, wd.grade || '-', wd.rate ? wd.rate.toFixed(2) : '-', wd.days.size, wd.totalHours.toFixed(1), wd.earnings.toFixed(2)]);
+    totalEarnings += wd.earnings;
+  });
+  summary3.push(['ИТОГО ЗАРПЛАТА ПО ' + pu, '', '', '', '', totalHoursAll.toFixed(1), totalEarnings.toFixed(2)]);
+  const ws3 = XLSX.utils.aoa_to_sheet(summary3);
+  XLSX.utils.book_append_sheet(wb, ws3, 'Сводка по людям');
+
+  // Sheet 4: Detail lines (original)
+  const data4 = [['Дата','Объект','Вид работы','Объём','Ед.изм.','Км от','Км до','Работник','Часы','Категория','ПУ']];
   filtered.forEach(e => {
     e.squads?.forEach(sq => {
       sq.objects?.forEach(objName => {
@@ -4747,19 +4902,17 @@ function exportPUExcel(){
         sq.works?.forEach(w => {
           sq.people?.forEach(p => {
             const wInfo = workers.find(x => x.name === p.name);
-            data.push([e.date, objName, w.name, w.volume, w.unit || '', w.kmFrom !== undefined ? w.kmFrom : '', w.kmTo !== undefined ? w.kmTo : '', p.name, p.hours || 8, wInfo?.category || '', pu]);
+            data4.push([e.date, objName, w.name, w.volume, w.unit || '', w.kmFrom !== undefined ? w.kmFrom : '', w.kmTo !== undefined ? w.kmTo : '', p.name, p.hours || 8, wInfo?.category || '', pu]);
           });
         });
       });
     });
   });
+  const ws4 = XLSX.utils.aoa_to_sheet(data4);
+  XLSX.utils.book_append_sheet(wb, ws4, 'Детали');
 
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  XLSX.utils.book_append_sheet(wb, ws, pu + '_' + month);
   XLSX.writeFile(wb, `PU_${pu}_${month}.xlsx`);
-}
-
-function exportNormsCSV(){
+}function exportNormsCSV(){
   const from = Utils.$('normFrom')?.value;
   const to = Utils.$('normTo')?.value;
   const roadFilter = Utils.$('normRoad')?.value || 'all';
@@ -4803,7 +4956,7 @@ function exportNormsCSV(){
   wList.forEach(w => {
     csv += `${w.name};${w.hours.toFixed(1)};${w.normHours.toFixed(1)};${w.pct.toFixed(1)}\n`;
   });
-  Utils.downloadText(csv, `normy_${fromDate}_${toDate}.csv`, 'text/csv');
+  Utils.downloadFile(csv, `normy_${fromDate}_${toDate}.csv`, 'text/csv;charset=utf-8');
 }
 
 window.App = {
