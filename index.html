@@ -290,7 +290,7 @@ body{background:var(--bg);color:var(--text);line-height:1.5;padding-bottom:90px;
 .task-item.done{opacity:.7}
 .task-check{width:22px;height:22px;accent-color:var(--success)}
 
-.worker-report-card{background:var(--card);border-radius:var(--radius);padding:12px;margin-bottom:10px;border-left:4px solid var(--brand);color:var(--text)}
+.worker-report-card{background:var(--card);border-radius:var(--radius);padding:12px;margin-bottom:10px;border-left:4px solid var(--brand);color:var(--text) !important}.worker-report-card b{color:var(--text) !important}.worker-report-card .text-secondary{color:var(--text-secondary) !important}
 
 .road-block{background:var(--bg);border-radius:10px;padding:10px;margin:6px 0;border:1px solid var(--border);color:var(--text)}
 .road-title{font-weight:700;color:var(--brand);margin-bottom:8px;font-size:.9rem}
@@ -410,57 +410,11 @@ body.dark-mode .entry-details a{color:#64b5f6}
 
 
 
-/* ==============================================
-   DARK MODE TEXT COLORS - DIRECT OVERRIDES
-   ============================================== */
-body.dark-mode .text-info,
-body.dark-mode .entry-details .text-info,
-body.dark-mode .road-block .text-info,
-body.dark-mode .preview-item .text-info,
-body.dark-mode .plan-box .text-info,
-body.dark-mode .squad-card .text-info,
-body.dark-mode .worker-report-card .text-info,
-body.dark-mode .catalog-item .text-info,
-body.dark-mode .month-content .text-info{color:#64b5f6 !important}
-
-body.dark-mode .text-success,
-body.dark-mode .entry-details .text-success,
-body.dark-mode .road-block .text-success,
-body.dark-mode .preview-item .text-success,
-body.dark-mode .plan-box .text-success,
-body.dark-mode .squad-card .text-success,
-body.dark-mode .worker-report-card .text-success,
-body.dark-mode .catalog-item .text-success,
-body.dark-mode .month-content .text-success{color:#81c784 !important}
-
-body.dark-mode .text-primary,
-body.dark-mode .entry-details .text-primary,
-body.dark-mode .road-block .text-primary,
-body.dark-mode .preview-item .text-primary,
-body.dark-mode .plan-box .text-primary,
-body.dark-mode .squad-card .text-primary,
-body.dark-mode .worker-report-card .text-primary{color:#ff9800 !important}
-
-body.dark-mode .text-accent,
-body.dark-mode .entry-details .text-accent,
-body.dark-mode .road-block .text-accent{color:#ce93d8 !important}
-
-body.dark-mode .text-danger{color:#ef5350 !important}
-body.dark-mode .text-edit{color:#4db6ac !important}
-body.dark-mode .text-warning{color:#ffd54f !important}
-
-/* Ensure card text is visible */
-body.dark-mode .card,
-body.dark-mode .report-table,
-body.dark-mode .worker-report-card,
-body.dark-mode .plan-box,
-body.dark-mode .road-block,
-body.dark-mode .kpi-item{color:var(--text) !important}
 
 </style>
 
+
   <base target="_blank">
-<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -622,6 +576,15 @@ body.dark-mode .kpi-item{color:var(--text) !important}
       <div class="form-group"><label>Период с</label><input type="date" id="reportFrom"></div>
       <div class="form-group"><label>Период по</label><input type="date" id="reportTo"></div>
       <div class="form-group"><label>Категория</label><select id="reportCategory"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
+      <div class="form-group" id="objectSelectGroup">
+        <label>Объекты для отчёта</label>
+        <div class="hint">Выберите объекты или оставьте пустым для всех</div>
+        <div id="objectCheckboxes" style="max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--card);"></div>
+        <div style="margin-top:8px">
+          <button class="btn btn-small btn-secondary" onclick="App.toggleAllObjects(true)">☑️ Все</button>
+          <button class="btn btn-small btn-secondary" onclick="App.toggleAllObjects(false)">⬜️ Снять</button>
+        </div>
+      </div>
       <div class="row-btns">
         <button class="btn btn-primary" onclick="App.generateSummaryReport()">📊 Сводный</button>
         <button class="btn btn-accent" onclick="App.generateWorkersReport()">👷 По людям</button>
@@ -693,14 +656,22 @@ body.dark-mode .kpi-item{color:var(--text) !important}
     <div class="card">
       <div class="card-title">🏭 Отчёт по производственному участку (ПУ)</div>
       <div class="form-group"><label>Месяц</label><input type="month" id="puMonth"></div>
-      <div class="form-group"><label>Производственный участок</label><select id="puSelect" onchange="App.updatePuFilterVisibility()"><option value="">— Выберите ПУ / проект —</option></select></div>
+      <div class="form-group"><label>Производственный участок</label><select id="puSelect" onchange="App.updatePuFilterVisibility()"><option value="">— Выберите ПУ / проект —</option><optgroup label="Содержание"><option value="ПУ-1">ПУ-1 — Содержание</option><option value="ПУ-2">ПУ-2 — Содержание</option><option value="ПУ-3">ПУ-3 — Содержание</option></optgroup><optgroup label="Прочие"><option value="АБЗ">🏭 АБЗ</option><option value="База">🏢 База</option></optgroup></select></div>
       <div class="form-group" id="puFilterGroup" style="display:none"><label>Фильтр объектов</label>
         <div class="filter-bar" id="puFilterBar" style="margin-bottom:8px">
           <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
           <button class="filter-chip" onclick="App.setPuFilter('roads',this)">🛣️ Дороги</button>
-          <button class="filter-chip" onclick="App.setPuFilter('repair',this)">🚧 ТР</button>
           <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
         </div>
+      <div class="form-group" id="puItemsSelectGroup">
+        <label>Дороги / объекты для отчёта</label>
+        <div class="hint">Выберите конкретные дороги/объекты или оставьте пустым для всех</div>
+        <div id="puItemsCheckboxes" style="max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--card);"></div>
+        <div style="margin-top:8px">
+          <button class="btn btn-small btn-secondary" onclick="App.toggleAllPuItems(true)">☑️ Все</button>
+          <button class="btn btn-small btn-secondary" onclick="App.toggleAllPuItems(false)">⬜️ Снять</button>
+        </div>
+      </div>
       </div>
       <button class="btn btn-primary" onclick="App.generatePUReport()">Сформировать отчёт по ПУ</button>
       <div id="puResult" style="margin-top:16px"></div>
@@ -836,55 +807,23 @@ body.dark-mode .kpi-item{color:var(--text) !important}
     </div>
     <div class="card">
       <div class="card-title">ℹ️ О приложении</div>
-      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v18.20</b> (май 2026)<br>Все данные хранятся локально в браузере. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».<br><br><b style="color:var(--danger)">⚠️ ВАЖНО:</b> Если данные не сохраняются — проверьте, не отключены ли куки/хранилище в браузере, и не используете ли вы режим инкогнито.</p>
+      <p style="font-size:.9rem;color:var(--text-secondary)"><b>Журнал производства работ ДРСУ v19.0</b> (май 2026)<br>Все данные хранятся локально в браузере. Работает офлайн.<br>При проблемах с сохранением используйте «Экспорт всех данных».</p>
       <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
-        <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📋 История изменений</div>
+        <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📖 Краткая инструкция</div>
         <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.6">
-          <b>v18.20</b> (25.05.2026) — 🔧 Исправления ТР-объектов и фильтра "Сегодня": и фильтра "Сегодня":
-  • Исправлена фильтрация ТР-объектов в отчётах ПУ: теперь учитываются объекты с `contentType === 'repair'` ИЛИ с ПУ, начинающимся на "ТР"
-  • Исправлено отображение выполненных объектов (100%+) при фильтре "Сегодня": теперь завершённые объекты всегда видны, даже если сегодня по ним не работали
-<br>
-<b>v18.18</b> (24.05.2026) — 🚧 Объекты исключены из отчётов ПУ:
-  • В `generatePUReport`, `exportPUCSV`, `exportPUExcel` фильтр дорог по ПУ теперь включает условие `r.type === 'road'`
-  • Объекты (`type !== 'road'`) остаются привязанными к ПУ в справочнике, но не попадают в отчёты ПУ-1/2/3/4
-  • Отчёты ПУ теперь отображают только дороги — зарплата по содержанию и текущему ремонту разделяется корректно<br>
-<b>v18.18</b> (24.05.2026) — 🏗️ Разделение дорог и объектов в отчётах ПУ:
-  • Селект ПУ теперь содержит группы: «Содержание» (ПУ-1/2/3), «Текущий ремонт (ТР)» (Н-6172), «Прочие» (АБЗ, База)
-  • В отчётах ПУ-1/2/3 показываются только дороги (`type === 'road'`), объекты (`type === 'object'`) исключены — зарплата по содержанию и ТР закрывается отдельно
-  • Добавлено поле `contentType` у дороги/объекта: «Содержание» или «Текущий ремонт (ТР)» — для фильтрации отчёта ТР Н-6172
-  • В форму добавления/редактирования дороги добавлен селект «Вид работ» (contentType)<br>
-<b>v18.17</b> (24.05.2026) — 🔧 Исправлен расчёт норм чел-ч для нестандартных единиц:
-  • Добавлена функция `getUnitBase(unit)` — извлекает числовое основание из единицы измерения (1000 м² → 1000, 100 крон → 100, крона → 1, Вагон → 1)
-  • Во всех формулах расчёта норм `laborCost × (volume / 1000)` заменено на `laborCost × (volume / getUnitBase(unit))`
-  • Исправлены заниженные нормы для работ: «Обрезка крон» (ЕУ01-40-1, 32-10, 32-11), «Разгрузка вагонов», «погрузка дров» и других с единицами ≠ 1000<br>
-<b>v18.16</b> (24.05.2026) — 🐛 Исправлен отчёт АБЗ и оптимизация экспорта:
-  • Исправлен баг в `generatePUReport`: отчёт АБЗ считал все 31 день месяца вместо реальных дней с кодом «АБЗ» — теперь перебираются только ключи `timesheetLetters` с фильтром по коду
-  • В `exportPUExcel` вызов `groupPuDataByType` вынесен за цикл `forEach` — устранено лишнее 4-кратное выполнение
-  • Убраны дублирующие теги `<base target="_blank">` в `<head>`<br>
-<b>v18.11</b> (24.05.2026) — 📊 Отчёт по ПУ: АБЗ, Базы и единые единицы измерения:
-  • Отчёт по ПУ теперь разделяет данные на 4 секции: Дороги, Объекты, АБЗ, Базы — с цветовой индикацией
-  • Единое форматирование объёмов: `formatVolumeForReport` нормализует 1000м² → "1.4 тыс. м²", убирая путаницу "1400.00"
-  • CSV и Excel экспорты содержат ОБА формата: исходный (1.4) и нормализованный (1400 м²)
-  • Утилита `groupPuDataByType` группирует объекты ПУ по типам для всех отчётов<br>
-<b>v18.10</b> (24.05.2026) — 🎯 Исправлены оставшиеся нюансы v18.9:
-  • `duplicateEntry` теперь перегенерирует `workId` у всех работ — копия записи полностью независима
-  • `saveTsEdit` (сквозное редактирование табеля) проверяет буквенные коды — не перезаписывает наряд при наличии кода
-  • `renderRoadsKmSummary` и `generateRoadKmReport` полностью переписаны на `ProgressCalculator` — убрано дублирование логики<br>
-<b>v18.9</b> (24.05.2026) — 🔧 Рефакторинг и унификация логики:
-  • Исправлено дублирование ID работ при копировании нарядов — теперь каждая работа получает уникальный workId
-  • Унифицирован калькулятор прогресса (ProgressCalculator) — единый интерфейс для дорог и объектов
-  • Добавлена единая валидация наряда (validateSquad) — используется во всех сценариях
-  • Улучшена синхронизация табеля и нарядов — чёткий приоритет: буквенные коды > ручные корректировки > часы из наряда
-  • Автоматический пересчёт склада после массовых операций (импорт, удаление месяца)
-  • Добавлен модуль DateUtils для унификации работы с датами
-  • Убраны ненадёжные fallback-механизмы при редактировании работ (поиск только по workId)<br>
-<b>v18.8</b> (23.05.2026) — 🎨 Исправлены цвета в тёмной теме: работы и ссылки теперь читаемы (светло-синие/зелёные вместо тёмных). 🗑️ Убрано дублирование в аккордеоне километража: сводка и детали теперь разделены — сводка показывает компактный список, детали только для выбранной дороги. ⚡ Оптимизированы расчёты прогресса (единый калькулятор покрытия).<br>
-<b>v18.7</b> (23.05.2026) — Аккордеон километража дорог теперь со скроллом (max-height: 80vh). Выполненные дороги и объекты (100%+) теперь всегда видны во всех фильтрах с зелёной рамкой и значком ✅. В модалке редактирования работы теперь отображается нормативная информация (норма трудозатрат, расценка, нормы ТМЦ) и план объекта (сколько выполнено, сколько осталось).<br>
-          <b>v18.4</b> (23.05.2026) — Исправлено редактирование объёма работ в наряде: теперь используется надёжный механизм с трёхуровневым fallback (по ID → по индексу → по имени работы) через скрытые поля модалки вместо глобальных переменных. Исправлен белый текст на белом фоне в отчётах при тёмной теме: добавлены явные цвета var(--text) для .card, .report-table, .worker-report-card, .plan-box, .road-block, .kpi-item.<br>
-          <b>v18.3</b> (20.05.2026) — Два новых отчёта: зарплата по часовой тарифной ставке и выполнение норм выработки. В справочнике работников добавлено поле «Тарифная ставка (руб/ч)» с рекомендуемыми значениями по разрядам (3р=2.11, 4р=2.46, 5р=2.93, 6р=3.47, 7р=4.12).<br>
-          <b>v18.2</b> (20.05.2026) — Новые буквы табеля: А (за свой счёт), ОТ (переработка). Актуализирован PWA-манифест. Исправлено редактирование работ в наряде. Прогресс объектов теперь показывает детали по каждому нормативу.<br>
-          <b>v18.1</b> (20.05.2026) — Исправлено суммирование часов в табеле при редактировании. Разрешены множественные записи одного вида работ на один объект. Добавлен прогресс объектов (план/выполнено/остаток) в модалку и карточку наряда.<br>
-          <b>v18.0</b> (май 2026) — Полная переработка интерфейса, тёмная тема, PWA, календарь, планирование работ по объектам, склад ТМЦ, табель, отчёты.
+          <b>Журнал</b> — создавайте ежедневные записи о работах: выбирайте бригаду, объекты/дороги, виды работ и объёмы. Система автоматически считает нормы, стоимость и расход ТМЦ.<br><br>
+          <b>Запись</b> — быстрое добавление наряда на сегодня. Выберите рабочих, объекты и работы — всё остальное посчитается автоматически.<br><br>
+          <b>Календарь</b> — просматривайте и редактируйте записи по датам. Переходите к любому дню в один клик.<br><br>
+          <b>Табель</b> — сводка рабочих часов по людям за период. Удобно для расчёта зарплаты.<br><br>
+          <b>Отчёт</b> — аналитика: объекты, ПУ, зарплата, нормы, сводка по видам работ. Экспорт в Excel и CSV.<br><br>
+          <b>Справочник</b> — управление дорогами, объектами, работниками, видами работ, ТМЦ и ПУ. Всё редактируется вручную.<br><br>
+          <b>Склад</b> — учёт поступления и расхода материалов. Приход/расход по накладным, остатки в реальном времени.
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+        <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📋 Предыдущая версия</div>
+        <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.6">
+          <b>v18.20</b> (25.05.2026) — ТР теперь обычные объекты, исправлен фильтр "Сегодня" для завершённых объектов.
         </div>
       </div>
     </div>
@@ -1322,6 +1261,7 @@ const UI = {
     const panel = document.getElementById(id);
     if(panel) panel.classList.add('active');
     btn.classList.add('active');
+    if(id === 'repAnalytics') renderObjectCheckboxes();
   },
   renderCalendarGrid(containerId, year, month, options){
     const container = document.getElementById(containerId);
@@ -1554,7 +1494,6 @@ async function init(){
   applyTheme();
   renderEntries();
   renderCalendar();
-  renderPuSelect();
   renderCatalogs();
   renderStock();
   renderTasks();
@@ -1926,8 +1865,7 @@ function renderRoadsKmSummary(){
     html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">';
     activeObjects.sort((a,b) => b.progress.pct - a.progress.pct);
     activeObjects.forEach(({obj, progress, filterProgress}) => {
-      const typeLabel = obj.contentType === 'repair' ? '🚧' : 
-        ({road:'🛣️',object:'📍',abz:'🏭',base:'🏢'}[obj.type] || '📍');
+      const typeLabel = ({road:'🛣️',object:'📍',abz:'🏭',base:'🏢'}[obj.type] || '📍');
       const isCompleted = progress.pct >= 100;
       const safeName = obj.name.replace(/[^a-zA-Z0-9\u0400-\u04FF]/g, '_');
       html += `<div style="padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid ${isCompleted?'var(--success)':'var(--border)'};cursor:pointer" onclick="App.toggleObjectDetail('${Utils.jsAttr(obj.name)}')">
@@ -1979,12 +1917,6 @@ function toggleObjectDetail(objName){
 function renderRoadDetailContent(roadName, container){
   const road = State.get('roads').find(r => r.name === roadName);
   if(!road) return;
-
-  // Если это ТР (ремонт) — показываем план работ вместо километража
-  if(road.contentType === 'repair'){
-    renderObjectDetailContent(roadName, container);
-    return;
-  }
 
   // Используем единый калькулятор
   const calc = ProgressCalculator.forRoad(roadName, State.getUI('currentFilter'));
@@ -2041,9 +1973,7 @@ function renderRoadDetailContent(roadName, container){
 function renderObjectDetailContent(objName, container){
   const obj = State.get('roads').find(r => r.name === objName);
   if(!obj) return;
-  const isRepair = obj.contentType === 'repair';
-  const typeLabel = isRepair ? '🚧 ТР' : 
-        ({object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type] || '📍 Объект');
+  const typeLabel = ({object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type] || '📍 Объект');
   // Используем единый калькулятор
   const progress = ProgressCalculator.forObject(objName, State.getUI('currentFilter'));
   const objEntries = [];
@@ -2101,7 +2031,7 @@ function renderObjectDetailContent(objName, container){
    ЕДИНАЯ ФУНКЦИЯ ФИЛЬТРАЦИИ ПУ
    ============================================== */
 function getPuRoads(pu, roads, filterType){
-  // filterType: 'all' | 'roads' | 'repair' | 'objects' | 'abz' | 'base'
+  // filterType: 'all' | 'roads' | 'objects' | 'abz' | 'base'
   filterType = filterType || 'all';
   let result;
 
@@ -2109,20 +2039,14 @@ function getPuRoads(pu, roads, filterType){
     result = roads.filter(r => r.type === 'abz');
   } else if(pu === 'База'){
     result = roads.filter(r => r.type === 'base');
-  } else if(pu.startsWith('ПУ-')){
-    // ПУ-1/2/3: ВСЕ объекты с pu=pu
-    result = roads.filter(r => r.pu === pu);
   } else {
-    // For ТР objects: pu is now the OBJECT NAME (e.g., "ТР Н-6172")
-    // Find the specific object by name
-    result = roads.filter(r => r.name === pu);
+    // Любое ПУ: ВСЕ дороги/объекты с этим ПУ
+    result = roads.filter(r => r.pu === pu);
   }
 
   // Дополнительная фильтрация по типу
   if(filterType === 'roads'){
     result = result.filter(r => r.type === 'road' || !r.type);
-  } else if(filterType === 'repair'){
-    result = result.filter(r => r.contentType === 'repair');
   } else if(filterType === 'objects'){
     result = result.filter(r => r.type && r.type !== 'road');
   } else if(filterType === 'abz'){
@@ -2178,17 +2102,12 @@ function formatVolumeForReport(volume, unit){
 }
 
 function groupPuDataByType(roadData, roads){
-  const groups = { roads: [], objects: [], repair: [], abz: [], base: [] };
+  const groups = { roads: [], objects: [], abz: [], base: [] };
   Object.values(roadData).forEach(rd => {
     const roadInfo = roads.find(r => r.name === rd.name);
-    // Приоритет: contentType='repair' важнее type
-    if(roadInfo?.contentType === 'repair'){
-      groups.repair.push(rd);
-    } else {
-      const t = roadInfo?.type || 'road';
-      if(groups[t]) groups[t].push(rd);
-      else groups.roads.push(rd);
-    }
+    const t = roadInfo?.type || 'road';
+    if(groups[t]) groups[t].push(rd);
+    else groups.roads.push(rd);
   });
   Object.keys(groups).forEach(k => groups[k].sort((a,b) => b.totalVolume - a.totalVolume));
   return groups;
@@ -2540,11 +2459,9 @@ function showDetailModal(name){
   const content = Utils.$('objectDetailContent');
   const obj = State.get('roads').find(r => r.name === name);
   if(!obj) return;
-  const isRoad = (obj.type === 'road' || !obj.type) && obj.contentType !== 'repair';
-  const isRepair = obj.contentType === 'repair';
+  const isRoad = (obj.type === 'road' || !obj.type);
   title.textContent = (isRoad ? '🛣️ ' : '📍 ') + name;
-  const typeLabel = obj.contentType === 'repair' ? '🚧 ТР' : 
-        ({road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type] || '📍 Объект');
+  const typeLabel = ({road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type] || '📍 Объект');
 
   const entries = State.get('entries');
   const objEntries = [];
@@ -3921,73 +3838,6 @@ function exportTimesheetExcel(){
 /* ==============================================
    СПРАВОЧНИКИ (с нормами расхода ТМЦ)
    ============================================== */
-function renderPuSelect(){
-  const sel = Utils.$('puSelect');
-  if(!sel) return;
-  const roads = State.get('roads');
-
-  // Collect unique PU values from roads
-  const puSet = new Set();
-  const trObjects = []; // Individual ТР objects (grouped by name)
-
-  roads.forEach(r => {
-    if(r.pu) {
-      if(r.pu.startsWith('ТР') || r.contentType === 'repair') {
-        // For ТР objects, use the object name as the project identifier
-        // This allows each ТР object to be selected separately
-        trObjects.push({name: r.name, pu: r.pu, type: r.type, contentType: r.contentType});
-      } else {
-        puSet.add(r.pu);
-      }
-    }
-  });
-
-  // Build options
-  let html = '<option value="">— Выберите ПУ / проект —</option>';
-
-  // Содержание group (ПУ-1, ПУ-2, ПУ-3)
-  const contentPUs = Array.from(puSet).filter(p => p.startsWith('ПУ-')).sort();
-  if(contentPUs.length){
-    html += '<optgroup label="Содержание">';
-    contentPUs.forEach(pu => {
-      html += `<option value="${Utils.escapeHtml(pu)}">${Utils.escapeHtml(pu)} — Содержание</option>`;
-    });
-    html += '</optgroup>';
-  }
-
-  // ТР group - each object is a separate project
-  if(trObjects.length){
-    html += '<optgroup label="Текущий ремонт (ТР)">';
-    // Group by object name to avoid duplicates
-    const seen = new Set();
-    trObjects.sort((a,b) => a.name.localeCompare(b.name)).forEach(obj => {
-      if(!seen.has(obj.name)){
-        seen.add(obj.name);
-        // Use object name as value for exact filtering
-        html += `<option value="${Utils.escapeHtml(obj.name)}">${Utils.escapeHtml(obj.name)}</option>`;
-      }
-    });
-    html += '</optgroup>';
-  }
-
-  // Прочие group (АБЗ, База)
-  const otherPUs = Array.from(puSet).filter(p => !p.startsWith('ПУ-')).sort();
-  if(otherPUs.length || puSet.has('АБЗ') || puSet.has('База')){
-    html += '<optgroup label="Прочие">';
-    if(puSet.has('АБЗ') || roads.some(r => r.type === 'abz'))
-      html += '<option value="АБЗ">🏭 АБЗ</option>';
-    if(puSet.has('База') || roads.some(r => r.type === 'base'))
-      html += '<option value="База">🏢 База</option>';
-    otherPUs.forEach(pu => {
-      if(pu !== 'АБЗ' && pu !== 'База')
-        html += `<option value="${Utils.escapeHtml(pu)}">${Utils.escapeHtml(pu)}</option>`;
-    });
-    html += '</optgroup>';
-  }
-
-  sel.innerHTML = html;
-}
-
 function renderCatalogs(){
   const search = (Utils.$('catSearch')?.value.trim().toLowerCase()) || '';
   const workers = State.get('workers');
@@ -4055,9 +3905,9 @@ function addCatalogItem(type){
       <div class="form-group"><label>Зарплата машиниста (руб/ч)</label><input type="number" id="catInp4" step="0.01" placeholder="0"></div>`;
   } else if(type === 'road'){
     html = `<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div>
-      <div class="form-group"><label>Производственный участок (ПУ)</label><select id="catInpPu"><option value="">— Выберите ПУ —</option><optgroup label="Содержание"><option value="ПУ-1">ПУ-1</option><option value="ПУ-2">ПУ-2</option><option value="ПУ-3">ПУ-3</option></optgroup><optgroup label="Текущий ремонт (ТР)"><option value="ТР Н-6172">ТР Н-6172</option><option value="ТР">ТР (общий)</option></optgroup><optgroup label="Прочие"><option value="АБЗ">АБЗ</option><option value="База">База</option></optgroup></select></div>
+      <div class="form-group"><label>Производственный участок (ПУ)</label><input type="text" id="catInpPu" list="puList" placeholder="— Выберите или введите ПУ —" style="width:100%"><datalist id="puList"><option value="ПУ-1"><option value="ПУ-2"><option value="ПУ-3"><option value="ТР Н-6172"><option value="АБЗ"><option value="База"></datalist></div>
       <div class="form-group"><label>Тип</label><select id="catInp2" onchange="App.togglePlanWorksUI()"><option value="road">🛣️ Дорога (есть км)</option><option value="object">📍 Объект (без км)</option><option value="abz">🏭 АБЗ</option><option value="base">🏢 База</option></select></div>
-      <div class="form-group"><label>Вид работ</label><select id="catInpContentType"><option value="content">🔧 Содержание</option><option value="repair">🚧 Текущий ремонт (ТР)</option></select></div>
+      <div class="form-group"></div>
       <div class="form-group"><label>Протяжённость (км) — только для дорог</label><input type="number" id="catInp3" step="0.1" placeholder="0"></div>
       <div id="planWorksBox" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
         <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📋 План работ (объём)</div>
@@ -4202,9 +4052,8 @@ async function saveCatalogItem(){
     const len = parseFloat(Utils.$('catInp3').value) || 0;
     const plan = Utils.$('catInp4')?.value.trim() || '';
     const pu = Utils.$('catInpPu')?.value || '';
-    const contentType = Utils.$('catInpContentType')?.value || 'content';
     const pw = getPlanWorks();
-    item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan, pu: pu, contentType: contentType };
+    item = { id: oldId || Utils.generateId(), name, length: len, type: roadType, plan: plan, pu: pu };
     if(pw.length) item.planWorks = pw;
   }
 
@@ -4252,7 +4101,7 @@ async function saveCatalogItem(){
   }
 
   await Storage.saveAll(State.getAllForSave());
-  closeCatalogModal(); renderPuSelect(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
+  closeCatalogModal(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Сохранено');
 }
 
@@ -4289,7 +4138,7 @@ async function deleteCatalogItem(type, idx){
 
   arr.splice(idx, 1);
   await Storage.saveAll(State.getAllForSave());
-  renderPuSelect(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
+  renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Удалено');
 }
 function closeCatalogModal(){ Utils.$('catalogModal').classList.remove('active'); State.setUI('catalogType', ''); State.setUI('catalogEditingId', null); }
@@ -4429,11 +4278,16 @@ function generateObjectsReport(){
   const from = Utils.$('reportFrom').value, to = Utils.$('reportTo').value;
   const entries = State.get('entries');
   let filtered = entries.filter(e => { if(from && e.date < from) return false; if(to && e.date > to) return false; return true; });
+  const selectedObjects = getSelectedObjects();
   const objectNames = new Set();
   filtered.forEach(e => { e.squads?.forEach(sq => { sq.objects?.forEach(o => objectNames.add(o)); }); });
-  if(!objectNames.size){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных</div>'; Utils.$('reportExports').style.display = 'none'; return; }
-  let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам</div>';
-  Array.from(objectNames).sort().forEach(name => {
+  let targetObjects = Array.from(objectNames).sort();
+  if(selectedObjects.length > 0){
+    targetObjects = targetObjects.filter(name => selectedObjects.includes(name));
+  }
+  if(!targetObjects.length){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных</div>'; Utils.$('reportExports').style.display = 'none'; return; }
+  let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам' + (selectedObjects.length ? ` (${selectedObjects.length} выбрано)` : ' (все)') + '</div>';
+  targetObjects.forEach(name => {
     const progress = calculateObjectProgress(name, 'all');
     html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
       <div style="font-weight:700;color:var(--brand);margin-bottom:8px">${Utils.escapeHtml(name)}</div>
@@ -4443,6 +4297,56 @@ function generateObjectsReport(){
   });
   html += '</div>';
   Utils.$('reportResult').innerHTML = html; Utils.$('reportExports').style.display = 'flex';
+}
+
+function renderObjectCheckboxes(){
+  const container = document.getElementById('objectCheckboxes');
+  if(!container) return;
+  const roads = State.get('roads');
+  const objects = roads.filter(r => r.type && r.type !== 'road').sort((a,b) => a.name.localeCompare(b.name));
+  if(!objects.length){ container.innerHTML = '<div class="hint">Нет объектов в справочнике</div>'; return; }
+  container.innerHTML = objects.map(obj => 
+    `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" class="obj-report-chk" value="${Utils.escapeHtml(obj.name)}" style="width:18px;height:18px;accent-color:var(--brand)">
+      <span>${Utils.escapeHtml(obj.name)}</span>
+      <span style="margin-left:auto;font-size:.75rem;color:var(--text-secondary)">${({object:'Объект',abz:'АБЗ',base:'База'}[obj.type] || 'Объект')}</span>
+    </label>`
+  ).join('');
+}
+
+function getSelectedObjects(){
+  const checks = document.querySelectorAll('.obj-report-chk:checked');
+  return Array.from(checks).map(c => c.value);
+}
+
+function toggleAllObjects(select){
+  document.querySelectorAll('.obj-report-chk').forEach(c => c.checked = select);
+}
+
+function renderPuItemsCheckboxes(){
+  const container = document.getElementById('puItemsCheckboxes');
+  if(!container) return;
+  const pu = document.getElementById('puSelect')?.value;
+  if(!pu){ container.innerHTML = '<div class="hint">Сначала выберите ПУ</div>'; return; }
+  const roads = State.get('roads');
+  const puRoads = getPuRoads(pu, roads, 'all');
+  if(!puRoads.length){ container.innerHTML = '<div class="hint">Нет дорог/объектов в этом ПУ</div>'; return; }
+  container.innerHTML = puRoads.map(rd => 
+    `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:.9rem">
+      <input type="checkbox" class="pu-item-chk" value="${Utils.escapeHtml(rd.name)}" style="width:18px;height:18px;accent-color:var(--brand)">
+      <span>${Utils.escapeHtml(rd.name)}</span>
+      <span style="margin-left:auto;font-size:.75rem;color:var(--text-secondary)">${({road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[rd.type] || '📍 Объект')}</span>
+    </label>`
+  ).join('');
+}
+
+function getSelectedPuItems(){
+  const checks = document.querySelectorAll('.pu-item-chk:checked');
+  return Array.from(checks).map(c => c.value);
+}
+
+function toggleAllPuItems(select){
+  document.querySelectorAll('.pu-item-chk').forEach(c => c.checked = select);
 }
 
 function exportCSV(){
@@ -5045,11 +4949,10 @@ function generatePUReport(){
       totalDays++;
     });
 
-    // Show report even if no worker data (will show empty tables)
-  // if(!Object.keys(workerData).length){
-  //   Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
-  //   return;
-  // }
+    if(!Object.keys(workerData).length){
+      Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
+      return;
+    }
 
     const [year, mon] = month.split('-').map(Number);
 
@@ -5104,36 +5007,26 @@ function generatePUReport(){
     return;
   }// ========== ПУ-1/2/3: стандартная логика с нарядами ==========
   const puFilterType = State.getUI('puFilterType') || 'all';
-  const puRoads = getPuRoads(pu, roads, puFilterType);
+  let puRoads = getPuRoads(pu, roads, puFilterType);
+  // Фильтрация по выбранным дорогам/объектам
+  const selectedItems = getSelectedPuItems();
+  if(selectedItems.length > 0){
+    const selectedSet = new Set(selectedItems);
+    puRoads = puRoads.filter(r => selectedSet.has(r.name));
+  }
   const puRoadNames = new Set(puRoads.map(r => r.name));
-
-  // Initialize roadData for ALL puRoads (even those without entries yet)
-  const roadData = {};
-  puRoads.forEach(r => {
-    roadData[r.name] = {
-      name: r.name,
-      type: r.type || 'road',
-      contentType: r.contentType || '',
-      entries: 0,
-      works: {},
-      workers: {},
-      totalVolume: 0,
-      totalLabor: 0,
-      totalHours: 0,
-      days: new Set()
-    };
-  });
 
   const filtered = entries.filter(e => {
     if(!e.date.startsWith(month)) return false;
     return e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o)));
   });
 
-  // Don't return early if no entries - show all objects with zero data
-  // if(!filtered.length){
-  //   Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
-  //   return;
-  // }
+  if(!filtered.length){
+    Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
+    return;
+  }
+
+  const roadData = {};
   const workData = {};
   const workerData = {};
   let totalVolumeAll = 0;
@@ -5147,7 +5040,7 @@ function generatePUReport(){
         if(!puRoadNames.has(objName)) return;
         if(!roadData[objName]){
           const roadInfo = roads.find(r => r.name === objName);
-          roadData[objName] = { name: objName, type: roadInfo?.type || 'road', contentType: roadInfo?.contentType || '', entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
+          roadData[objName] = { name: objName, type: roadInfo?.type || 'road', entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
         }
         roadData[objName].entries++;
         roadData[objName].days.add(e.date);
@@ -5198,12 +5091,10 @@ function generatePUReport(){
 
   // Отображаем все объекты ПУ единым списком с указанием типа
   const allRoads = Object.values(roadData).sort((a,b) => b.totalVolume - a.totalVolume);
-  // Always show all objects, even with zero data (for new objects)
-  if(allRoads.length > 0 || puRoads.length > 0){
+  if(allRoads.length > 0){
     out += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">📍 Объекты ${pu} (${allRoads.length})</div>`;
     allRoads.forEach(rd => {
-      const typeLabel = rd.contentType === 'repair' ? '🚧 ТР' : 
-        ({road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[rd.type] || '📍 Объект');
+      const typeLabel = ({road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[rd.type] || '📍 Объект');
       const volDisplay = rd.totalVolume >= 1000 ? (rd.totalVolume/1000).toFixed(2) + ' тыс.' : rd.totalVolume.toFixed(2);
       out += `<div style="margin-bottom:10px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -5288,7 +5179,13 @@ function exportPUCSV(){
   const workers = State.get('workers');
   // Единая фильтрация ПУ
   const puFilterType = State.getUI('puFilterType') || 'all';
-  const puRoads = getPuRoads(pu, roads, puFilterType);
+  let puRoads = getPuRoads(pu, roads, puFilterType);
+  // Фильтрация по выбранным дорогам/объектам
+  const selectedItems = getSelectedPuItems();
+  if(selectedItems.length > 0){
+    const selectedSet = new Set(selectedItems);
+    puRoads = puRoads.filter(r => selectedSet.has(r.name));
+  }
   const puRoadNames = new Set(puRoads.map(r => r.name));
   const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
 
@@ -5320,7 +5217,13 @@ function exportPUExcel(){
   const workers = State.get('workers');
   // Единая фильтрация ПУ
   const puFilterType = State.getUI('puFilterType') || 'all';
-  const puRoads = getPuRoads(pu, roads, puFilterType);
+  let puRoads = getPuRoads(pu, roads, puFilterType);
+  // Фильтрация по выбранным дорогам/объектам
+  const selectedItems = getSelectedPuItems();
+  if(selectedItems.length > 0){
+    const selectedSet = new Set(selectedItems);
+    puRoads = puRoads.filter(r => selectedSet.has(r.name));
+  }
   const puRoadNames = new Set(puRoads.map(r => r.name));
   const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
 
@@ -5340,7 +5243,7 @@ function exportPUExcel(){
         if(!puRoadNames.has(objName)) return;
         const roadInfo = roads.find(r => r.name === objName);
         if(!roadData[objName]){
-          roadData[objName] = { name: objName, type: roadInfo?.type || 'road', contentType: roadInfo?.contentType || '', entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
+          roadData[objName] = { name: objName, type: roadInfo?.type || 'road', entries: 0, works: {}, workers: {}, totalVolume: 0, totalLabor: 0, totalHours: 0, days: new Set() };
         }
         roadData[objName].entries++;
         roadData[objName].days.add(e.date);
@@ -5421,8 +5324,7 @@ function exportPUExcel(){
       sq.objects?.forEach(objName => {
         if(!puRoadNames.has(objName)) return;
         const roadInfo = roads.find(r => r.name === objName);
-        const typeLabel = roadInfo?.contentType === 'repair' ? 'ТР' : 
-        ({road:'Дорога',object:'Объект',abz:'АБЗ',base:'База'}[roadInfo?.type] || 'Объект');
+        const typeLabel = ({road:'Дорога',object:'Объект',abz:'АБЗ',base:'База'}[roadInfo?.type] || 'Объект');
         sq.works?.forEach(w => {
           const nv = App.formatVolumeForReport(w.volume, w.unit);
           sq.people?.forEach(p => {
@@ -5493,7 +5395,7 @@ window.App = {
   openSwModal, closeSwModal, selectAllWorkers, applySw,
   openSWorksModal, closeSWorksModal, applySWorks,
   openSTmcModal, closeSTmcModal, applySTmc,
-  generateSalaryReport, exportSalaryCSV, generateNormsReport, exportNormsCSV,
+  generateSalaryReport, exportSalaryCSV, generateNormsReport, renderObjectCheckboxes, getSelectedObjects, toggleAllObjects, renderPuItemsCheckboxes, getSelectedPuItems, toggleAllPuItems, exportNormsCSV,
   generatePUReport, exportPUCSV, exportPUExcel,
   saveEntry, clearForm, cancelEdit, editEntry, deleteEntry, duplicateEntry,
   saveTemplate, loadTemplate, renderTemplates,
@@ -5633,35 +5535,19 @@ window.App = {
     const pu = document.getElementById('puSelect')?.value;
     const filterGroup = document.getElementById('puFilterGroup');
     if(!filterGroup) return;
-    // Показываем фильтры только для ПУ-1/2/3 (где может быть смешанный контент: дороги + объекты)
-    // Для ТР показываем тоже, но с другими опциями
-    const showFilter = pu && (pu.startsWith('ПУ-') || pu.startsWith('ТР'));
+    // Показываем фильтры только для ПУ-1/2/3 (где может быть смешанный контент)
+    const showFilter = pu && pu.startsWith('ПУ-');
     filterGroup.style.display = showFilter ? 'block' : 'none';
-
-    // Обновляем опции фильтра в зависимости от типа ПУ
-    const filterBar = document.getElementById('puFilterBar');
-    if(filterBar && pu){
-      if(pu.startsWith('ТР')){
-        // Для ТР: только "Все" и "Объекты" (ремонтные объекты)
-        filterBar.innerHTML = `
-          <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
-          <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
-        `;
-      } else {
-        // Для ПУ-1/2/3: стандартные фильтры
-        filterBar.innerHTML = `
-          <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
-          <button class="filter-chip" onclick="App.setPuFilter('roads',this)">🛣️ Дороги</button>
-          <button class="filter-chip" onclick="App.setPuFilter('repair',this)">🚧 ТР</button>
-          <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
-        `;
-      }
-    }
-
     // Сбрасываем фильтр при смене ПУ
     if(showFilter){
       State.setUI('puFilterType', 'all');
+      const filterBar = document.getElementById('puFilterBar');
+      if(filterBar){
+        filterBar.querySelectorAll('.filter-chip').forEach((c, i) => c.classList.toggle('active', i === 0));
+      }
     }
+    // Обновляем список дорог/объектов для выбора
+    renderPuItemsCheckboxes();
   },
   recalcStockCurrentMonth: async function(){
     const currentMonth = Utils.todayStr().slice(0,7);
