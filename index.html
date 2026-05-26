@@ -461,6 +461,7 @@ body.dark-mode .kpi-item{color:var(--text) !important}
 
   <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -692,7 +693,7 @@ body.dark-mode .kpi-item{color:var(--text) !important}
     <div class="card">
       <div class="card-title">🏭 Отчёт по производственному участку (ПУ)</div>
       <div class="form-group"><label>Месяц</label><input type="month" id="puMonth"></div>
-      <div class="form-group"><label>Производственный участок</label><select id="puSelect" onchange="App.updatePuFilterVisibility()"><option value="">— Выберите ПУ / проект —</option><optgroup label="Содержание"><option value="ПУ-1">ПУ-1 — Содержание</option><option value="ПУ-2">ПУ-2 — Содержание</option><option value="ПУ-3">ПУ-3 — Содержание</option></optgroup><optgroup label="Текущий ремонт (ТР)"><option value="ТР Н-6172">ТР Н-6172</option></optgroup><optgroup label="Прочие"><option value="АБЗ">🏭 АБЗ</option><option value="База">🏢 База</option></optgroup></select></div>
+      <div class="form-group"><label>Производственный участок</label><select id="puSelect" onchange="App.updatePuFilterVisibility()"><option value="">— Выберите ПУ / проект —</option></select></div>
       <div class="form-group" id="puFilterGroup" style="display:none"><label>Фильтр объектов</label>
         <div class="filter-bar" id="puFilterBar" style="margin-bottom:8px">
           <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
@@ -1553,6 +1554,7 @@ async function init(){
   applyTheme();
   renderEntries();
   renderCalendar();
+  renderPuSelect();
   renderCatalogs();
   renderStock();
   renderTasks();
@@ -2039,6 +2041,7 @@ function renderRoadDetailContent(roadName, container){
 function renderObjectDetailContent(objName, container){
   const obj = State.get('roads').find(r => r.name === objName);
   if(!obj) return;
+  const isRepair = obj.contentType === 'repair';
   const typeLabel = isRepair ? '🚧 ТР' : 
         ({object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База'}[obj.type] || '📍 Объект');
   // Используем единый калькулятор
@@ -2106,12 +2109,13 @@ function getPuRoads(pu, roads, filterType){
     result = roads.filter(r => r.type === 'abz');
   } else if(pu === 'База'){
     result = roads.filter(r => r.type === 'base');
-  } else if(pu === 'ТР Н-6172' || pu.startsWith('ТР')){
-    // ТР: ВСЕ объекты с contentType='repair' ИЛИ pu начинается на 'ТР'
-    result = roads.filter(r => r.contentType === 'repair' || (r.pu && r.pu.startsWith('ТР')));
-  } else {
-    // ПУ-1/2/3: ВСЕ объекты с pu=pu (любой тип — road, object, repair и т.д.)
+  } else if(pu.startsWith('ПУ-')){
+    // ПУ-1/2/3: ВСЕ объекты с pu=pu
     result = roads.filter(r => r.pu === pu);
+  } else {
+    // For ТР objects: pu is now the OBJECT NAME (e.g., "ТР Н-6172")
+    // Find the specific object by name
+    result = roads.filter(r => r.name === pu);
   }
 
   // Дополнительная фильтрация по типу
@@ -3917,6 +3921,73 @@ function exportTimesheetExcel(){
 /* ==============================================
    СПРАВОЧНИКИ (с нормами расхода ТМЦ)
    ============================================== */
+function renderPuSelect(){
+  const sel = Utils.$('puSelect');
+  if(!sel) return;
+  const roads = State.get('roads');
+
+  // Collect unique PU values from roads
+  const puSet = new Set();
+  const trObjects = []; // Individual ТР objects (grouped by name)
+
+  roads.forEach(r => {
+    if(r.pu) {
+      if(r.pu.startsWith('ТР') || r.contentType === 'repair') {
+        // For ТР objects, use the object name as the project identifier
+        // This allows each ТР object to be selected separately
+        trObjects.push({name: r.name, pu: r.pu, type: r.type, contentType: r.contentType});
+      } else {
+        puSet.add(r.pu);
+      }
+    }
+  });
+
+  // Build options
+  let html = '<option value="">— Выберите ПУ / проект —</option>';
+
+  // Содержание group (ПУ-1, ПУ-2, ПУ-3)
+  const contentPUs = Array.from(puSet).filter(p => p.startsWith('ПУ-')).sort();
+  if(contentPUs.length){
+    html += '<optgroup label="Содержание">';
+    contentPUs.forEach(pu => {
+      html += `<option value="${Utils.escapeHtml(pu)}">${Utils.escapeHtml(pu)} — Содержание</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  // ТР group - each object is a separate project
+  if(trObjects.length){
+    html += '<optgroup label="Текущий ремонт (ТР)">';
+    // Group by object name to avoid duplicates
+    const seen = new Set();
+    trObjects.sort((a,b) => a.name.localeCompare(b.name)).forEach(obj => {
+      if(!seen.has(obj.name)){
+        seen.add(obj.name);
+        // Use object name as value for exact filtering
+        html += `<option value="${Utils.escapeHtml(obj.name)}">${Utils.escapeHtml(obj.name)}</option>`;
+      }
+    });
+    html += '</optgroup>';
+  }
+
+  // Прочие group (АБЗ, База)
+  const otherPUs = Array.from(puSet).filter(p => !p.startsWith('ПУ-')).sort();
+  if(otherPUs.length || puSet.has('АБЗ') || puSet.has('База')){
+    html += '<optgroup label="Прочие">';
+    if(puSet.has('АБЗ') || roads.some(r => r.type === 'abz'))
+      html += '<option value="АБЗ">🏭 АБЗ</option>';
+    if(puSet.has('База') || roads.some(r => r.type === 'base'))
+      html += '<option value="База">🏢 База</option>';
+    otherPUs.forEach(pu => {
+      if(pu !== 'АБЗ' && pu !== 'База')
+        html += `<option value="${Utils.escapeHtml(pu)}">${Utils.escapeHtml(pu)}</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  sel.innerHTML = html;
+}
+
 function renderCatalogs(){
   const search = (Utils.$('catSearch')?.value.trim().toLowerCase()) || '';
   const workers = State.get('workers');
@@ -4181,7 +4252,7 @@ async function saveCatalogItem(){
   }
 
   await Storage.saveAll(State.getAllForSave());
-  closeCatalogModal(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
+  closeCatalogModal(); renderPuSelect(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Сохранено');
 }
 
@@ -4218,7 +4289,7 @@ async function deleteCatalogItem(type, idx){
 
   arr.splice(idx, 1);
   await Storage.saveAll(State.getAllForSave());
-  renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
+  renderPuSelect(); renderCatalogs(); renderEntries(); renderRoadSelector(); renderReportRoadSelect();
   Utils.showToast('Удалено');
 }
 function closeCatalogModal(){ Utils.$('catalogModal').classList.remove('active'); State.setUI('catalogType', ''); State.setUI('catalogEditingId', null); }
@@ -4974,10 +5045,11 @@ function generatePUReport(){
       totalDays++;
     });
 
-    if(!Object.keys(workerData).length){
-      Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
-      return;
-    }
+    // Show report even if no worker data (will show empty tables)
+  // if(!Object.keys(workerData).length){
+  //   Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
+  //   return;
+  // }
 
     const [year, mon] = month.split('-').map(Number);
 
@@ -5035,17 +5107,33 @@ function generatePUReport(){
   const puRoads = getPuRoads(pu, roads, puFilterType);
   const puRoadNames = new Set(puRoads.map(r => r.name));
 
+  // Initialize roadData for ALL puRoads (even those without entries yet)
+  const roadData = {};
+  puRoads.forEach(r => {
+    roadData[r.name] = {
+      name: r.name,
+      type: r.type || 'road',
+      contentType: r.contentType || '',
+      entries: 0,
+      works: {},
+      workers: {},
+      totalVolume: 0,
+      totalLabor: 0,
+      totalHours: 0,
+      days: new Set()
+    };
+  });
+
   const filtered = entries.filter(e => {
     if(!e.date.startsWith(month)) return false;
     return e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o)));
   });
 
-  if(!filtered.length){
-    Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
-    return;
-  }
-
-  const roadData = {};
+  // Don't return early if no entries - show all objects with zero data
+  // if(!filtered.length){
+  //   Utils.$('puResult').innerHTML = '<div class="empty-state">Нет данных за ' + month + ' для ' + pu + '</div>';
+  //   return;
+  // }
   const workData = {};
   const workerData = {};
   let totalVolumeAll = 0;
@@ -5110,7 +5198,8 @@ function generatePUReport(){
 
   // Отображаем все объекты ПУ единым списком с указанием типа
   const allRoads = Object.values(roadData).sort((a,b) => b.totalVolume - a.totalVolume);
-  if(allRoads.length > 0){
+  // Always show all objects, even with zero data (for new objects)
+  if(allRoads.length > 0 || puRoads.length > 0){
     out += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">📍 Объекты ${pu} (${allRoads.length})</div>`;
     allRoads.forEach(rd => {
       const typeLabel = rd.contentType === 'repair' ? '🚧 ТР' : 
@@ -5544,16 +5633,34 @@ window.App = {
     const pu = document.getElementById('puSelect')?.value;
     const filterGroup = document.getElementById('puFilterGroup');
     if(!filterGroup) return;
-    // Показываем фильтры только для ПУ-1/2/3 и ТР (где может быть смешанный контент)
+    // Показываем фильтры только для ПУ-1/2/3 (где может быть смешанный контент: дороги + объекты)
+    // Для ТР показываем тоже, но с другими опциями
     const showFilter = pu && (pu.startsWith('ПУ-') || pu.startsWith('ТР'));
     filterGroup.style.display = showFilter ? 'block' : 'none';
+
+    // Обновляем опции фильтра в зависимости от типа ПУ
+    const filterBar = document.getElementById('puFilterBar');
+    if(filterBar && pu){
+      if(pu.startsWith('ТР')){
+        // Для ТР: только "Все" и "Объекты" (ремонтные объекты)
+        filterBar.innerHTML = `
+          <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
+          <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
+        `;
+      } else {
+        // Для ПУ-1/2/3: стандартные фильтры
+        filterBar.innerHTML = `
+          <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
+          <button class="filter-chip" onclick="App.setPuFilter('roads',this)">🛣️ Дороги</button>
+          <button class="filter-chip" onclick="App.setPuFilter('repair',this)">🚧 ТР</button>
+          <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
+        `;
+      }
+    }
+
     // Сбрасываем фильтр при смене ПУ
     if(showFilter){
       State.setUI('puFilterType', 'all');
-      const filterBar = document.getElementById('puFilterBar');
-      if(filterBar){
-        filterBar.querySelectorAll('.filter-chip').forEach((c, i) => c.classList.toggle('active', i === 0));
-      }
     }
   },
   recalcStockCurrentMonth: async function(){
