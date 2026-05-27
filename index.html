@@ -416,6 +416,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
 
   <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -4209,6 +4210,19 @@ function applyRoadWorks(){
 /* ==============================================
    ОТЧЁТЫ
    ============================================== */
+/* ==============================================
+   УТИЛИТЫ ТИПОВ (дороги vs объекты)
+   ============================================== */
+function getItemType(name){
+  const road = State.get('roads').find(r => r.name === name);
+  if(!road) return 'unknown';
+  return road.type || 'road';
+}
+function isRoadItem(name){ return getItemType(name) === 'road'; }
+function isObjectItem(name){ const t = getItemType(name); return t === 'object' || t === 'abz' || t === 'base'; }
+function getTypeLabel(type){ return {road:'🛣️ Дорога',object:'📍 Объект',abz:'🏭 АБЗ',base:'🏢 База',unknown:'❓ Неизвестно'}[type] || '📍 Объект'; }
+function getItemFromCatalog(name){ return State.get('roads').find(r => r.name === name); }
+
 function generateSummaryReport(){
   const from = Utils.$('reportFrom').value, to = Utils.$('reportTo').value, cat = Utils.$('reportCategory').value;
   const entries = State.get('entries');
@@ -4216,39 +4230,94 @@ function generateSummaryReport(){
   if(cat !== 'all') filtered = filtered.filter(e => e.squads?.some(s => s.category === cat));
   if(!filtered.length){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных за период</div>'; Utils.$('reportExports').style.display = 'none'; return; }
 
-  let totalEntries = 0, totalSquads = 0, totalPeople = 0, totalWorks = 0, totalVolume = 0, totalLabor = 0, totalCost = 0;
-  const workStats = {}, workerStats = {};
+  const roadStats = { entries: 0, squads: 0, people: 0, works: 0, volume: 0, labor: 0, cost: 0, workStats: {}, workerStats: {} };
+  const objectStats = { entries: 0, squads: 0, people: 0, works: 0, volume: 0, labor: 0, cost: 0, workStats: {}, workerStats: {} };
+
   filtered.forEach(e => {
-    totalEntries++;
+    let entryHasRoad = false, entryHasObject = false;
     e.squads?.forEach(sq => {
-      totalSquads++; totalPeople += sq.people?.length || 0;
+      const hasRoad = sq.objects?.some(o => isRoadItem(o));
+      const hasObject = sq.objects?.some(o => isObjectItem(o));
+      if(hasRoad) entryHasRoad = true;
+      if(hasObject) entryHasObject = true;
+
       sq.works?.forEach(w => {
-        totalWorks++;
-        const nv = normalizeVolume(w.volume, w.unit); totalVolume += nv.value;
-        totalLabor += (w.laborCost || 0) * (nv.value / getUnitBase(w.unit));
-        totalCost += ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
-        if(!workStats[w.name]) workStats[w.name] = { volume: 0, unit: w.unit || 'ед.' }; workStats[w.name].volume += nv.value;
+        const targetRoad = w.road || (sq.objects ? sq.objects[0] : '');
+        const isRoadWork = isRoadItem(targetRoad);
+        const nv = normalizeVolume(w.volume, w.unit);
+        if(isRoadWork){
+          roadStats.works++; roadStats.volume += nv.value;
+          roadStats.labor += (w.laborCost || 0) * (nv.value / getUnitBase(w.unit));
+          roadStats.cost += ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
+          if(!roadStats.workStats[w.name]) roadStats.workStats[w.name] = { volume: 0, unit: w.unit || 'ед.' };
+          roadStats.workStats[w.name].volume += nv.value;
+        } else {
+          objectStats.works++; objectStats.volume += nv.value;
+          objectStats.labor += (w.laborCost || 0) * (nv.value / getUnitBase(w.unit));
+          objectStats.cost += ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
+          if(!objectStats.workStats[w.name]) objectStats.workStats[w.name] = { volume: 0, unit: w.unit || 'ед.' };
+          objectStats.workStats[w.name].volume += nv.value;
+        }
       });
+
       sq.people?.forEach(p => {
         const h = parseFloat(p.hours) || 8;
-        if(!workerStats[p.name]) workerStats[p.name] = { hours: 0, days: 0 };
-        workerStats[p.name].hours += h; workerStats[p.name].days++;
+        if(hasRoad){
+          roadStats.people++;
+          if(!roadStats.workerStats[p.name]) roadStats.workerStats[p.name] = { hours: 0, days: 0 };
+          roadStats.workerStats[p.name].hours += h; roadStats.workerStats[p.name].days++;
+        }
+        if(hasObject){
+          objectStats.people++;
+          if(!objectStats.workerStats[p.name]) objectStats.workerStats[p.name] = { hours: 0, days: 0 };
+          objectStats.workerStats[p.name].hours += h; objectStats.workerStats[p.name].days++;
+        }
       });
+
+      if(hasRoad) roadStats.squads++;
+      if(hasObject) objectStats.squads++;
     });
+    if(entryHasRoad) roadStats.entries++;
+    if(entryHasObject) objectStats.entries++;
   });
 
   let html = '<div class="card"><div class="card-title">📊 Сводный отчёт</div>';
-  html += `<div class="kpi-row"><div class="kpi-item"><div class="kpi-value">${totalEntries}</div><div class="kpi-label">Записей</div></div><div class="kpi-item"><div class="kpi-value">${totalSquads}</div><div class="kpi-label">Нарядов</div></div><div class="kpi-item"><div class="kpi-value">${totalPeople}</div><div class="kpi-label">Человеко-смен</div></div></div>`;
-  html += `<div style="margin:12px 0;font-size:.9rem"><b>Всего работ:</b> ${totalWorks} | <b>Объём:</b> ${totalVolume.toFixed(2)} | <b>Трудозатраты:</b> ${totalLabor.toFixed(1)} чел-ч | <b>Зарплата:</b> ${totalCost.toFixed(2)} руб.</div>`;
-  html += '<div style="margin-top:12px"><b>🔧 По видам работ:</b></div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th></tr>';
-  for(let w in workStats) html += `<tr><td class="text-info">${Utils.escapeHtml(w)}</td><td>${workStats[w].volume.toFixed(2)} ${workStats[w].unit}</td></tr>`;
-  html += '</table>';
-  html += '<div style="margin-top:12px"><b>👷 По работникам:</b></div><table class="report-table"><tr><th>ФИО</th><th>Дней</th><th>Часов</th></tr>';
-  for(let w in workerStats) html += `<tr><td>${Utils.escapeHtml(w)}</td><td>${workerStats[w].days}</td><td>${workerStats[w].hours.toFixed(1)}</td></tr>`;
-  html += '</table></div>';
+
+  html += `<div style="margin:16px 0;padding:12px;background:var(--bg);border-radius:12px;border-left:4px solid var(--road-color)">`;
+  html += `<div style="font-size:1.1rem;font-weight:700;color:var(--road-color);margin-bottom:10px">🛣️ Дороги</div>`;
+  html += `<div class="kpi-row"><div class="kpi-item"><div class="kpi-value">${roadStats.entries}</div><div class="kpi-label">Записей</div></div><div class="kpi-item"><div class="kpi-value">${roadStats.squads}</div><div class="kpi-label">Нарядов</div></div><div class="kpi-item"><div class="kpi-value">${roadStats.people}</div><div class="kpi-label">Человеко-смен</div></div></div>`;
+  html += `<div style="margin:12px 0;font-size:.9rem"><b>Всего работ:</b> ${roadStats.works} | <b>Объём:</b> ${roadStats.volume.toFixed(2)} | <b>Трудозатраты:</b> ${roadStats.labor.toFixed(1)} чел-ч | <b>Зарплата:</b> ${roadStats.cost.toFixed(2)} руб.</div>`;
+  if(Object.keys(roadStats.workStats).length > 0){
+    html += '<div style="margin-top:8px"><b>🔧 По видам работ:</b></div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th></tr>';
+    for(let w in roadStats.workStats) html += `<tr><td class="text-info">${Utils.escapeHtml(w)}</td><td>${roadStats.workStats[w].volume.toFixed(2)} ${roadStats.workStats[w].unit}</td></tr>`;
+    html += '</table>';
+  }
+  if(Object.keys(roadStats.workerStats).length > 0){
+    html += '<div style="margin-top:8px"><b>👷 По работникам:</b></div><table class="report-table"><tr><th>ФИО</th><th>Дней</th><th>Часов</th></tr>';
+    for(let w in roadStats.workerStats) html += `<tr><td>${Utils.escapeHtml(w)}</td><td>${roadStats.workerStats[w].days}</td><td>${roadStats.workerStats[w].hours.toFixed(1)}</td></tr>`;
+    html += '</table>';
+  }
+  html += `</div>`;
+
+  html += `<div style="margin:16px 0;padding:12px;background:var(--bg);border-radius:12px;border-left:4px solid var(--object-color)">`;
+  html += `<div style="font-size:1.1rem;font-weight:700;color:var(--object-color);margin-bottom:10px">📍 Объекты / АБЗ / База</div>`;
+  html += `<div class="kpi-row"><div class="kpi-item"><div class="kpi-value">${objectStats.entries}</div><div class="kpi-label">Записей</div></div><div class="kpi-item"><div class="kpi-value">${objectStats.squads}</div><div class="kpi-label">Нарядов</div></div><div class="kpi-item"><div class="kpi-value">${objectStats.people}</div><div class="kpi-label">Человеко-смен</div></div></div>`;
+  html += `<div style="margin:12px 0;font-size:.9rem"><b>Всего работ:</b> ${objectStats.works} | <b>Объём:</b> ${objectStats.volume.toFixed(2)} | <b>Трудозатраты:</b> ${objectStats.labor.toFixed(1)} чел-ч | <b>Зарплата:</b> ${objectStats.cost.toFixed(2)} руб.</div>`;
+  if(Object.keys(objectStats.workStats).length > 0){
+    html += '<div style="margin-top:8px"><b>🔧 По видам работ:</b></div><table class="report-table"><tr><th>Вид работы</th><th>Объём</th></tr>';
+    for(let w in objectStats.workStats) html += `<tr><td class="text-info">${Utils.escapeHtml(w)}</td><td>${objectStats.workStats[w].volume.toFixed(2)} ${objectStats.workStats[w].unit}</td></tr>`;
+    html += '</table>';
+  }
+  if(Object.keys(objectStats.workerStats).length > 0){
+    html += '<div style="margin-top:8px"><b>👷 По работникам:</b></div><table class="report-table"><tr><th>ФИО</th><th>Дней</th><th>Часов</th></tr>';
+    for(let w in objectStats.workerStats) html += `<tr><td>${Utils.escapeHtml(w)}</td><td>${objectStats.workerStats[w].days}</td><td>${objectStats.workerStats[w].hours.toFixed(1)}</td></tr>`;
+    html += '</table>';
+  }
+  html += `</div>`;
+
+  html += '</div>';
   Utils.$('reportResult').innerHTML = html; Utils.$('reportExports').style.display = 'flex';
 }
-
 function generateWorkersReport(){
   const from = Utils.$('reportFrom').value, to = Utils.$('reportTo').value, cat = Utils.$('reportCategory').value;
   const entries = State.get('entries');
@@ -4258,9 +4327,14 @@ function generateWorkersReport(){
   filtered.forEach(e => {
     e.squads?.forEach(sq => {
       sq.people?.forEach(p => {
-        if(!workerStats[p.name]) workerStats[p.name] = { name: p.name, hours: 0, days: 0, objects: new Set(), works: new Set() };
+        if(!workerStats[p.name]){
+          workerStats[p.name] = { name: p.name, hours: 0, days: 0, roadObjects: new Set(), otherObjects: new Set(), works: new Set() };
+        }
         workerStats[p.name].hours += parseFloat(p.hours) || 8; workerStats[p.name].days++;
-        sq.objects?.forEach(o => workerStats[p.name].objects.add(o));
+        sq.objects?.forEach(o => {
+          if(isRoadItem(o)) workerStats[p.name].roadObjects.add(o);
+          else workerStats[p.name].otherObjects.add(o);
+        });
         sq.works?.forEach(w => workerStats[p.name].works.add(w.name));
       });
     });
@@ -4268,52 +4342,163 @@ function generateWorkersReport(){
   if(!Object.keys(workerStats).length){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных</div>'; Utils.$('reportExports').style.display = 'none'; return; }
   let html = '<div class="card"><div class="card-title">👷 Отчёт по работникам</div>';
   Object.values(workerStats).sort((a, b) => b.hours - a.hours).forEach(ws => {
-    html += `<div class="worker-report-card"><b>${Utils.escapeHtml(ws.name)}</b><div class="text-secondary">${ws.days} смен, ${ws.hours.toFixed(1)} ч</div><div style="font-size:.8rem;margin-top:4px">📍 ${Array.from(ws.objects).map(Utils.escapeHtml).join(', ')}</div><div style="font-size:.8rem">🔧 ${Array.from(ws.works).map(Utils.escapeHtml).join(', ')}</div></div>`;
+    const roadList = Array.from(ws.roadObjects);
+    const otherList = Array.from(ws.otherObjects);
+    html += `<div class="worker-report-card">
+      <b>${Utils.escapeHtml(ws.name)}</b>
+      <div class="text-secondary">${ws.days} смен, ${ws.hours.toFixed(1)} ч</div>
+      ${roadList.length > 0 ? `<div style="font-size:.8rem;margin-top:4px">🛣️ <b>Дороги:</b> ${roadList.map(Utils.escapeHtml).join(', ')}</div>` : ''}
+      ${otherList.length > 0 ? `<div style="font-size:.8rem;margin-top:2px">📍 <b>Объекты:</b> ${otherList.map(Utils.escapeHtml).join(', ')}</div>` : ''}
+      <div style="font-size:.8rem;margin-top:2px">🔧 ${Array.from(ws.works).map(Utils.escapeHtml).join(', ')}</div>
+    </div>`;
   });
   html += '</div>';
   Utils.$('reportResult').innerHTML = html; Utils.$('reportExports').style.display = 'flex';
 }
-
 function generateObjectsReport(){
   const from = Utils.$('reportFrom').value, to = Utils.$('reportTo').value;
   const entries = State.get('entries');
-  let filtered = entries.filter(e => { if(from && e.date < from) return false; if(to && e.date > to) return false; return true; });
+  const roadsCatalog = State.get('roads');
+
+  // ===== БЕРЁМ ВСЕ ОБЪЕКТЫ ИЗ СПРАВОЧНИКА =====
+  let targetObjects = roadsCatalog.map(r => r.name).filter(n => n && n.trim());
+
+  // Фильтр по выбранным объектам (если пользователь что-то выбрал)
   const selectedObjects = getSelectedObjects();
-  const objectNames = new Set();
-  filtered.forEach(e => { e.squads?.forEach(sq => { sq.objects?.forEach(o => objectNames.add(o)); }); });
-  let targetObjects = Array.from(objectNames).sort();
   if(selectedObjects.length > 0){
     targetObjects = targetObjects.filter(name => selectedObjects.includes(name));
   }
-  if(!targetObjects.length){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет данных</div>'; Utils.$('reportExports').style.display = 'none'; return; }
-  let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам' + (selectedObjects.length ? ` (${selectedObjects.length} выбрано)` : ' (все)') + '</div>';
-  targetObjects.forEach(name => {
-    const progress = calculateObjectProgress(name, 'all');
-    html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
-      <div style="font-weight:700;color:var(--brand);margin-bottom:8px">${Utils.escapeHtml(name)}</div>
-      <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px"><span>Выполнено: <b>${progress.totalDone.toFixed(1)}</b> из <b>${progress.totalPlan.toFixed(1)}</b></span><span style="color:${progress.pct >= 100 ? 'var(--success)' : 'var(--brand)'};font-weight:700">${progress.pct.toFixed(1)}%</span></div>
-      <div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;border:1.5px solid var(--border)"><div style="width:${progress.pct}%;height:100%;background:${progress.pct >= 100 ? 'var(--success)' : 'var(--brand)'};transition:width .3s"></div></div>
-      <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Записей: ${progress.entryCount}</div></div>`;
+
+  if(!targetObjects.length){ Utils.$('reportResult').innerHTML = '<div class="empty-state">Нет объектов в справочнике</div>'; Utils.$('reportExports').style.display = 'none'; return; }
+
+  // ===== РАЗДЕЛЯЕМ: Дороги и Объекты =====
+  const roadObjects = targetObjects.filter(name => isRoadItem(name));
+  const otherObjects = targetObjects.filter(name => isObjectItem(name));
+
+  // Собираем данные из журнала за период
+  let filtered = entries.filter(e => { if(from && e.date < from) return false; if(to && e.date > to) return false; return true; });
+
+  // Считаем записи по каждому объекту
+  const entryCounts = {};
+  filtered.forEach(e => {
+    e.squads?.forEach(sq => {
+      sq.objects?.forEach(o => {
+        if(!entryCounts[o]) entryCounts[o] = 0;
+        entryCounts[o]++;
+      });
+    });
   });
+
+  let html = '<div class="card"><div class="card-title">📍 Отчёт по объектам' + (selectedObjects.length ? ` (${selectedObjects.length} выбрано)` : ' (все из справочника)') + '</div>';
+
+  // ===== СЕКЦИЯ: ДОРОГИ =====
+  if(roadObjects.length > 0){
+    html += `<div style="margin-bottom:20px"><div style="font-size:1.1rem;font-weight:700;color:var(--road-color);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--road-color)">🛣️ Дороги (${roadObjects.length})</div>`;
+    roadObjects.forEach(name => {
+      const road = getItemFromCatalog(name);
+      const hasEntries = entryCounts[name] > 0;
+      const progress = hasEntries ? ProgressCalculator.forRoad(name, 'all') : null;
+
+      html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+        <div style="font-weight:700;color:var(--road-color);margin-bottom:8px;font-size:1rem">${Utils.escapeHtml(name)} ${road?.length ? '(' + road.length + ' км)' : ''}</div>`;
+
+      if(!hasEntries){
+        html += `<div style="font-size:.85rem;color:var(--text-secondary);padding:8px;background:var(--card);border-radius:6px">📭 Нет записей за выбранный период</div>`;
+      } else {
+        html += `<div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px"><span>Покрытие: <b>${progress.coveredKm.toFixed(1)}</b> из <b>${progress.totalLength}</b> км</span><span style="color:${progress.pct >= 100 ? 'var(--success)' : 'var(--brand)'};font-weight:700">${progress.pct.toFixed(1)}%</span></div>
+        <div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;border:1.5px solid var(--border)"><div style="width:${progress.pct}%;height:100%;background:${progress.pct >= 100 ? 'var(--success)' : 'var(--brand)'};transition:width .3s"></div></div>
+        ${progress.uniqueRanges.length > 0 ? `<div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px"><b>Участки:</b> ${progress.uniqueRanges.map(r => r.from + '–' + r.to + ' км').join(', ')}</div>` : ''}
+        <div style="font-size:.75rem;color:var(--text-secondary);margin-top:4px">Записей за период: <b>${entryCounts[name] || 0}</b> | Участков: ${progress.uniqueRanges.length}</div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ===== СЕКЦИЯ: ОБЪЕКТЫ / АБЗ / БАЗА =====
+  if(otherObjects.length > 0){
+    html += `<div style="margin-bottom:20px"><div style="font-size:1.1rem;font-weight:700;color:var(--object-color);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--object-color)">📍 Объекты / АБЗ / База (${otherObjects.length})</div>`;
+    otherObjects.forEach(name => {
+      const obj = getItemFromCatalog(name);
+      const hasEntries = entryCounts[name] > 0;
+      const progress = hasEntries ? ProgressCalculator.forObject(name, 'all') : null;
+      const typeLabel = getTypeLabel(obj?.type || 'object');
+
+      html += `<div style="margin-bottom:12px;padding:12px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:700;color:var(--object-color);font-size:1rem">${typeLabel} ${Utils.escapeHtml(name)}</span>
+          ${!hasEntries ? '' : (progress.pct >= 100 ? '<span class="completed-badge">✅</span>' : `<span style="font-size:.85rem;color:var(--brand);font-weight:700">${progress.pct.toFixed(0)}%</span>`)}
+        </div>`;
+
+      if(!hasEntries){
+        html += `<div style="font-size:.85rem;color:var(--text-secondary);padding:8px;background:var(--card);border-radius:6px">📭 Нет записей за выбранный период</div>`;
+        if(obj?.planWorks && obj.planWorks.length){
+          html += `<div style="font-size:.8rem;color:var(--text-secondary);margin-top:6px"><b>📋 План работ:</b> ${obj.planWorks.map(pw => Utils.escapeHtml(pw.workName) + ' ' + pw.volume + pw.unit).join(', ')}</div>`;
+        }
+      } else {
+        if(progress.totalPlan > 0){
+          html += `<div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px"><span>Выполнено: <b>${progress.totalDone.toFixed(1)}</b> из <b>${progress.totalPlan.toFixed(1)}</b></span></div>
+          <div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:8px"><div style="width:${progress.pct}%;height:100%;background:${progress.pct >= 100 ? 'var(--success)' : 'var(--brand)'};transition:width .3s"></div></div>`;
+
+          if(progress.byWork.length > 0){
+            html += `<div style="font-size:.8rem;margin-top:6px"><b>По видам работ:</b></div>`;
+            progress.byWork.forEach(pw => {
+              const bc = pw.pct >= 100 ? 'var(--success)' : (pw.pct > 50 ? 'var(--brand)' : 'var(--warning)');
+              html += `<div style="margin:4px 0;padding:6px;background:var(--card);border-radius:6px;font-size:.78rem">
+                <div style="display:flex;justify-content:space-between"><span>${Utils.escapeHtml(pw.name)}</span><span style="color:${bc};font-weight:600">${pw.done.toFixed(1)}/${pw.rawPlan} ${pw.unit} (${pw.pct.toFixed(0)}%)</span></div>
+                <div style="height:4px;background:var(--bg);border-radius:2px;margin-top:3px;overflow:hidden"><div style="width:${pw.pct}%;height:100%;background:${bc}"></div></div>
+              </div>`;
+            });
+          }
+        } else {
+          html += `<div style="font-size:.85rem;color:var(--text-secondary)">План работ не задан</div>`;
+        }
+        html += `<div style="font-size:.75rem;color:var(--text-secondary);margin-top:6px">Записей за период: <b>${entryCounts[name] || 0}</b></div>`;
+      }
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
   html += '</div>';
   Utils.$('reportResult').innerHTML = html; Utils.$('reportExports').style.display = 'flex';
 }
-
 function renderObjectCheckboxes(){
   const container = document.getElementById('objectCheckboxes');
   if(!container) return;
   const roads = State.get('roads');
-  const objects = roads.filter(r => r.type && r.type !== 'road').sort((a,b) => a.name.localeCompare(b.name));
-  if(!objects.length){ container.innerHTML = '<div class="hint">Нет объектов в справочнике</div>'; return; }
-  container.innerHTML = objects.map(obj => 
-    `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:.9rem">
-      <input type="checkbox" class="obj-report-chk" value="${Utils.escapeHtml(obj.name)}" style="width:18px;height:18px;accent-color:var(--brand)">
-      <span>${Utils.escapeHtml(obj.name)}</span>
-      <span style="margin-left:auto;font-size:.75rem;color:var(--text-secondary)">${({object:'Объект',abz:'АБЗ',base:'База'}[obj.type] || 'Объект')}</span>
-    </label>`
-  ).join('');
-}
+  // Show ALL items from catalog, not just objects
+  if(!roads.length){ container.innerHTML = '<div class="hint">Нет объектов в справочнике</div>'; return; }
 
+  let html = '';
+  // Roads first
+  const roadItems = roads.filter(r => !r.type || r.type === 'road').sort((a,b) => a.name.localeCompare(b.name));
+  const otherItems = roads.filter(r => r.type && r.type !== 'road').sort((a,b) => a.name.localeCompare(b.name));
+
+  if(roadItems.length){
+    html += '<div style="font-weight:600;color:var(--road-color);margin:8px 0 4px;font-size:.8rem">🛣️ Дороги</div>';
+    html += roadItems.map(obj => 
+      `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:.9rem">
+        <input type="checkbox" class="obj-report-chk" value="${Utils.escapeHtml(obj.name)}" style="width:18px;height:18px;accent-color:var(--brand)">
+        <span>${Utils.escapeHtml(obj.name)}</span>
+        <span style="margin-left:auto;font-size:.75rem;color:var(--text-secondary)">${obj.length ? obj.length + ' км' : 'Дорога'}</span>
+      </label>`
+    ).join('');
+  }
+
+  if(otherItems.length){
+    html += '<div style="font-weight:600;color:var(--object-color);margin:12px 0 4px;font-size:.8rem">📍 Объекты / АБЗ / База</div>';
+    html += otherItems.map(obj => 
+      `<label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;font-size:.9rem">
+        <input type="checkbox" class="obj-report-chk" value="${Utils.escapeHtml(obj.name)}" style="width:18px;height:18px;accent-color:var(--brand)">
+        <span>${Utils.escapeHtml(obj.name)}</span>
+        <span style="margin-left:auto;font-size:.75rem;color:var(--text-secondary)">${({object:'Объект',abz:'АБЗ',base:'База'}[obj.type] || 'Объект')}</span>
+      </label>`
+    ).join('');
+  }
+
+  container.innerHTML = html;
+}
 function getSelectedObjects(){
   const checks = document.querySelectorAll('.obj-report-chk:checked');
   return Array.from(checks).map(c => c.value);
