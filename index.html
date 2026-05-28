@@ -416,7 +416,6 @@ body.dark-mode .entry-details a{color:#64b5f6}
 
   <base target="_blank">
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -1006,6 +1005,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
 
 <script>
 
+
 /* ==============================================
    ГЛОБАЛЬНЫЕ КОНСТАНТЫ И ПАЛИТРА
    ============================================== */
@@ -1398,6 +1398,13 @@ const Charts = {
 /* ==============================================
    ИНИЦИАЛИЗАЦИЯ ПО УМОЛЧАНИЮ
    ============================================== */
+
+/* ==============================================
+   APPLICATION MODULE (Revealing Module Pattern)
+   ============================================== */
+window.App = (function() {
+'use strict';
+
 function initDefaultData(){
   let changed = false;
   const works = State.get('works');
@@ -5740,7 +5747,138 @@ window.App = {
   }
 };
 
+
+
+/* ==============================================
+   PUBLIC API
+   ============================================== */
+return {
+    addCatalogItem: addCatalogItem,
+    addEntryFromCalendar: addEntryFromCalendar,
+    addObject: addObject,
+    addPlanWork: addPlanWork,
+    addSquad: addSquad,
+    addStockRow: addStockRow,
+    addTask: addTask,
+    addTaskFromCalendar: addTaskFromCalendar,
+    addTimesheetWorker: addTimesheetWorker,
+    addWorkNormRow: addWorkNormRow,
+    applyRoadWorks: applyRoadWorks,
+    applySTmc: applySTmc,
+    applySWorks: applySWorks,
+    applySw: applySw,
+    cancelEdit: cancelEdit,
+    changeDynamicMonth: changeDynamicMonth,
+    changeSquadCategory: changeSquadCategory,
+    changeStaticMonth: changeStaticMonth,
+    clearAllData: clearAllData,
+    clearForm: clearForm,
+    clearTimesheetOverrides: clearTimesheetOverrides,
+    clearTsEditCell: clearTsEditCell,
+    closeCatalogModal: closeCatalogModal,
+    closeDayModal: closeDayModal,
+    closeDetailModal: closeDetailModal,
+    closeRoadWorksModal: closeRoadWorksModal,
+    closeSTmcModal: closeSTmcModal,
+    closeSWorksModal: closeSWorksModal,
+    closeSaveScopeModal: closeSaveScopeModal,
+    closeSwModal: closeSwModal,
+    closeTsEditModal: closeTsEditModal,
+    closeWorkEditModal: closeWorkEditModal,
+    confirmSaveScope: confirmSaveScope,
+    deleteCatalogItem: deleteCatalogItem,
+    deleteEntry: deleteEntry,
+    deleteMonth: deleteMonth,
+    deleteTask: deleteTask,
+    duplicateEntry: duplicateEntry,
+    duplicateSquad: duplicateSquad,
+    editCatalogItem: editCatalogItem,
+    editEntry: editEntry,
+    editStockQty: editStockQty,
+    editTimesheetCell: editTimesheetCell,
+    editWorkVolume: editWorkVolume,
+    exportAllData: exportAllData,
+    exportCSV: exportCSV,
+    exportEntryExcel: exportEntryExcel,
+    exportJSON: exportJSON,
+    exportNormsCSV: exportNormsCSV,
+    exportNormsTemplate: exportNormsTemplate,
+    exportPUCSV: exportPUCSV,
+    exportPUExcel: exportPUExcel,
+    exportSalaryCSV: exportSalaryCSV,
+    exportStockReceiptCSV: exportStockReceiptCSV,
+    exportStockWriteOffCSV: exportStockWriteOffCSV,
+    exportTimesheetCSV: exportTimesheetCSV,
+    exportTimesheetExcel: exportTimesheetExcel,
+    fillPlanWorkUnit: fillPlanWorkUnit,
+    formatVolumeForReport: formatVolumeForReport,
+    generateMachinesCost: generateMachinesCost,
+    generateNormsReport: generateNormsReport,
+    generateObjectsReport: generateObjectsReport,
+    generateOrderDoc: generateOrderDoc,
+    generatePUReport: generatePUReport,
+    generateRoadKmReport: generateRoadKmReport,
+    generateS29Doc: generateS29Doc,
+    generateSalaryReport: generateSalaryReport,
+    generateSummaryReport: generateSummaryReport,
+    generateTimesheetDoc: generateTimesheetDoc,
+    generateWorkersReport: generateWorkersReport,
+    groupPuDataByType: groupPuDataByType,
+    importAllData: importAllData,
+    importCatalogCSV: importCatalogCSV,
+    importNormsData: importNormsData,
+    init: init,
+    loadTemplate: loadTemplate,
+    openRoadWorksModal: openRoadWorksModal,
+    openSTmcModal: openSTmcModal,
+    openSWorksModal: openSWorksModal,
+    openSwModal: openSwModal,
+    recalcStockByMonth: recalcStockByMonth,
+    recalcStockCurrentMonth: recalcStockCurrentMonth,
+    recalcTimesheetFull: recalcTimesheetFull,
+    removeObject: removeObject,
+    removeSquad: removeSquad,
+    removeTmc: removeTmc,
+    removeWork: removeWork,
+    renderCatalogs: renderCatalogs,
+    renderEntries: renderEntries,
+    renderTimesheet: renderTimesheet,
+    saveAppSettings: saveAppSettings,
+    saveCatalogItem: saveCatalogItem,
+    saveEntry: saveEntry,
+    saveTemplate: saveTemplate,
+    saveTsEdit: saveTsEdit,
+    saveWorkEdit: saveWorkEdit,
+    selectAllWorkers: selectAllWorkers,
+    setFilter: setFilter,
+    setPuFilter: setPuFilter,
+    setTaskFilter: setTaskFilter,
+    setTheme: setTheme,
+    showCatalog: showCatalog,
+    showDayDetails: showDayDetails,
+    showPage: showPage,
+    showReportTab: showReportTab,
+    showStockTab: showStockTab,
+    showSubtab: showSubtab,
+    toggleAccordion: toggleAccordion,
+    toggleAllObjects: toggleAllObjects,
+    toggleAllPuItems: toggleAllPuItems,
+    toggleEntry: toggleEntry,
+    toggleKpiChart: toggleKpiChart,
+    toggleMonth: toggleMonth,
+    toggleObjectDetail: toggleObjectDetail,
+    togglePlanWorksUI: togglePlanWorksUI,
+    toggleRoadDetail: toggleRoadDetail,
+    toggleTask: toggleTask,
+    updatePuFilterVisibility: updatePuFilterVisibility,
+    updateSquadField: updateSquadField,
+    updateWorkerHours: updateWorkerHours
+};
+
+})();
+
 App.init();
-</script>
+
+</script></script>
 </body>
 </html>
