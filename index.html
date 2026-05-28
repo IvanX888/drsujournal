@@ -1143,26 +1143,93 @@ const STORAGE_KEYS = {
 };
 
 const Storage = {
+  _db: null,
+  _dbName: 'DRSU_Journal_v19',
+  _dbVersion: 1,
+  _storeName: 'data',
+
+  _openDB(){
+    const self = this;
+    return new Promise((resolve, reject) => {
+      if(self._db){ resolve(self._db); return; }
+      const req = indexedDB.open(self._dbName, self._dbVersion);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => { self._db = req.result; resolve(self._db); };
+      req.onupgradeneeded = (ev) => {
+        const db = ev.target.result;
+        if(!db.objectStoreNames.contains(self._storeName)){
+          db.createObjectStore(self._storeName);
+        }
+      };
+    });
+  },
+
   async save(key, value){
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-    catch(e){ console.error('Storage save error', e); return false; }
+    try {
+      const db = await this._openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this._storeName, 'readwrite');
+        const store = tx.objectStore(this._storeName);
+        const req = store.put(value, key);
+        req.onsuccess = () => resolve(true);
+        req.onerror = () => reject(req.error);
+      });
+    } catch(e){ console.error('Storage save error', e); return false; }
   },
+
   async load(key, defaultValue){
-    try { const v = localStorage.getItem(key); return v === null ? defaultValue : JSON.parse(v); }
-    catch(e){ return defaultValue; }
+    try {
+      const db = await this._openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this._storeName, 'readonly');
+        const store = tx.objectStore(this._storeName);
+        const req = store.get(key);
+        req.onsuccess = () => {
+          const result = req.result;
+          resolve(result !== undefined ? result : defaultValue);
+        };
+        req.onerror = () => reject(req.error);
+      });
+    } catch(e){ return defaultValue; }
   },
+
   async saveAll(data){
     try {
-      for(let k in data){ const sk = STORAGE_KEYS[k]; if(sk) localStorage.setItem(sk, JSON.stringify(data[k])); }
-      return true;
+      const db = await this._openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this._storeName, 'readwrite');
+        const store = tx.objectStore(this._storeName);
+        let pending = 0;
+        let hasError = false;
+        for(let k in data){
+          const sk = STORAGE_KEYS[k];
+          if(sk){ pending++; const req = store.put(data[k], sk); req.onerror = () => { hasError = true; }; req.onsuccess = () => { pending--; if(pending === 0) resolve(!hasError); }; }
+        }
+        tx.oncomplete = () => { if(pending === 0) resolve(!hasError); };
+        tx.onerror = () => {
+          console.error('saveAll tx error', tx.error);
+          setTimeout(() => { const t = document.getElementById('toast'); if(t){ t.textContent = '⚠️ Ошибка сохранения. Проверьте режим инкогнито или лимит хранилища. Используйте экспорт данных!'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 4000); } }, 100);
+          resolve(false);
+        };
+      });
     } catch(e){
       console.error('saveAll error', e);
       setTimeout(() => { const t = document.getElementById('toast'); if(t){ t.textContent = '⚠️ Ошибка сохранения. Проверьте режим инкогнито или лимит хранилища. Используйте экспорт данных!'; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 4000); } }, 100);
       return false;
     }
   },
-  clearAll(){
-    Object.values(STORAGE_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+
+  async clearAll(){
+    try {
+      const db = await this._openDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(this._storeName, 'readwrite');
+        const store = tx.objectStore(this._storeName);
+        const req = store.clear();
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    } catch(e){ console.error('clearAll error', e); }
   }
 };
 
@@ -2767,7 +2834,7 @@ async function loadDraft(){
   }
   return false;
 }
-function clearDraft(){ try { localStorage.removeItem(STORAGE_KEYS.draft); } catch(e){} Storage.save(STORAGE_KEYS.draft, null); Utils.$('draftBadge').style.display = 'none'; }
+function clearDraft(){ Storage.save(STORAGE_KEYS.draft, null); Utils.$('draftBadge').style.display = 'none'; }
 
 function calcSquadPlanHtml(sq){
   const workers = State.get('workers');
@@ -5879,6 +5946,6 @@ return {
 
 App.init();
 
-</script></script>
+</script>
 </body>
 </html>
