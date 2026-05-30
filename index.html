@@ -529,6 +529,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
 
   <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -1312,6 +1313,7 @@ const Storage = {
     } catch(e) { this._memory[key] = value; }
 
     // FALLBACK 1: try IndexedDB
+    let idbOk = false;
     try {
       const db = await this._openDB();
       await new Promise((resolve, reject) => {
@@ -1321,22 +1323,35 @@ const Storage = {
         req.onsuccess = () => resolve(true);
         req.onerror = () => reject(req.error);
       });
-      return true;
-    } catch(e) {
-      // FALLBACK 2: try localStorage
-      this._fallbackSave(key, value);
-      return true; // Memory always succeeds
-    }
+      idbOk = true;
+    } catch(e) {}
+
+    // FALLBACK 2: try localStorage
+    let lsOk = false;
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      lsOk = true;
+    } catch(e) {}
+
+    // FALLBACK 3: sessionStorage (survives page refresh, critical for file://)
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value));
+    } catch(e) {}
+
+    return true; // Memory always succeeds
   },
 
   async load(key, defaultValue){
-    // PRIORITY 1: in-memory (fastest, works offline)
+    // CRITICAL FIX: On page reload, _memory is always empty.
+    // We MUST check persistent storage first, then populate _memory.
+
+    // PRIORITY 1: Check if we already loaded this key into _memory during this session
     if(this._memory[key] !== undefined) {
       try { return JSON.parse(JSON.stringify(this._memory[key])); }
       catch(e) { return this._memory[key]; }
     }
 
-    // PRIORITY 2: IndexedDB
+    // PRIORITY 2: IndexedDB (most reliable persistent storage)
     try {
       const db = await this._openDB();
       const result = await new Promise((resolve, reject) => {
@@ -1346,18 +1361,33 @@ const Storage = {
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
       });
-      if(result !== undefined) {
+      if(result !== undefined && result !== null) {
         try { this._memory[key] = JSON.parse(JSON.stringify(result)); } catch(e){ this._memory[key] = result; }
         return result;
       }
     } catch(e) {}
 
     // PRIORITY 3: localStorage fallback
-    const v = this._fallbackLoad(key, defaultValue);
-    if(v !== defaultValue) {
-      try { this._memory[key] = JSON.parse(JSON.stringify(v)); } catch(e){ this._memory[key] = v; }
-    }
-    return v;
+    try {
+      const v = localStorage.getItem(key);
+      if(v !== null) {
+        const parsed = JSON.parse(v);
+        try { this._memory[key] = JSON.parse(JSON.stringify(parsed)); } catch(e){ this._memory[key] = parsed; }
+        return parsed;
+      }
+    } catch(e) {}
+
+    // PRIORITY 4: sessionStorage (survives page refresh, good for file:// protocol)
+    try {
+      const v = sessionStorage.getItem(key);
+      if(v !== null) {
+        const parsed = JSON.parse(v);
+        try { this._memory[key] = JSON.parse(JSON.stringify(parsed)); } catch(e){ this._memory[key] = parsed; }
+        return parsed;
+      }
+    } catch(e) {}
+
+    return defaultValue;
   },
 
   async saveAll(data){
@@ -1370,6 +1400,7 @@ const Storage = {
     }
 
     // Try IndexedDB
+    let idbOk = false;
     try {
       const db = await this._openDB();
       await new Promise((resolve, reject) => {
@@ -1388,11 +1419,31 @@ const Storage = {
         tx.oncomplete = () => { if(pending === 0) resolve(!hasError); };
         tx.onerror = () => resolve(false);
       });
-    } catch(e) {
-      // Fallback to localStorage
-      let ok = true;
-      for(let k in data){ const sk = STORAGE_KEYS[k]; if(sk) ok = this._fallbackSave(sk, data[k]) && ok; }
-    }
+      idbOk = true;
+    } catch(e) {}
+
+    // Fallback to localStorage
+    let lsOk = false;
+    try {
+      for(let k in data){ 
+        const sk = STORAGE_KEYS[k]; 
+        if(sk) {
+          localStorage.setItem(sk, JSON.stringify(data[k]));
+          lsOk = true;
+        }
+      }
+    } catch(e) {}
+
+    // CRITICAL: Also save to sessionStorage (survives page refresh for file://)
+    try {
+      for(let k in data){ 
+        const sk = STORAGE_KEYS[k]; 
+        if(sk) {
+          sessionStorage.setItem(sk, JSON.stringify(data[k]));
+        }
+      }
+    } catch(e) {}
+
     return true;
   },
 
@@ -1729,27 +1780,72 @@ async function init(){
   window.addEventListener('beforeunload', function(e) {
     const data = State.getAllForSave();
     try {
+      // Save to localStorage (may be cleared on file:// protocol)
       localStorage.setItem('drsu_emergency_backup', JSON.stringify(data));
     } catch(e) {}
-  });
-
-  // Try to restore from emergency backup on load (if normal storage failed)
-  (async function(){
     try {
-      const emergency = localStorage.getItem('drsu_emergency_backup');
-      if(emergency) {
-        const parsed = JSON.parse(emergency);
-        const entries = State.get('entries');
-        if((!entries || entries.length === 0) && parsed.entries && parsed.entries.length > 0) {
-          if(confirm('📦 Найдена аварийная резервная копия (' + parsed.entries.length + ' записей). Восстановить?')) {
-            State.setAllFromImport(parsed);
-            await Storage.saveAll(State.getAllForSave());
-            renderEntries(); renderCatalogs(); renderStock(); renderTasks(); renderCalendar();
-            Utils.showToast('✅ Данные восстановлены из аварийной копии');
-          }
+      // CRITICAL: Also save to sessionStorage - survives page refresh for file://
+      sessionStorage.setItem('drsu_emergency_backup', JSON.stringify(data));
+      // Also save individual keys for redundancy
+      for(let k in STORAGE_KEYS) {
+        if(data[k] !== undefined) {
+          sessionStorage.setItem(STORAGE_KEYS[k], JSON.stringify(data[k]));
         }
       }
     } catch(e) {}
+  });
+
+  // AUTO-RESTORE: Try to restore from emergency backup immediately
+  // This is critical for file:// protocol where localStorage may be cleared on refresh
+  (async function(){
+    try {
+      // Check ALL possible backup sources in order of reliability
+      let backup = null;
+      let source = '';
+
+      // 1. Check emergency backup in localStorage
+      const emergency = localStorage.getItem('drsu_emergency_backup');
+      if(emergency) {
+        try { backup = JSON.parse(emergency); source = 'localStorage emergency'; } catch(e) {}
+      }
+
+      // 2. Check sessionStorage (survives page refresh for file://)
+      if(!backup) {
+        const session = sessionStorage.getItem('drsu_emergency_backup');
+        if(session) {
+          try { backup = JSON.parse(session); source = 'sessionStorage'; } catch(e) {}
+        }
+      }
+
+      // 3. Check individual keys in sessionStorage
+      if(!backup) {
+        const sessionEntries = sessionStorage.getItem(STORAGE_KEYS.entries);
+        if(sessionEntries) {
+          try {
+            const entries = JSON.parse(sessionEntries);
+            if(entries && entries.length > 0) {
+              backup = {};
+              for(let k in STORAGE_KEYS) {
+                const v = sessionStorage.getItem(STORAGE_KEYS[k]);
+                if(v) backup[k] = JSON.parse(v);
+              }
+              source = 'sessionStorage keys';
+            }
+          } catch(e) {}
+        }
+      }
+
+      if(backup && backup.entries && backup.entries.length > 0) {
+        const entries = State.get('entries');
+        // Only restore if current data is empty (fresh page load)
+        if(!entries || entries.length === 0) {
+          State.setAllFromImport(backup);
+          await Storage.saveAll(State.getAllForSave());
+          renderEntries(); renderCatalogs(); renderStock(); renderTasks(); renderCalendar();
+          Utils.showToast('✅ Данные автоматически восстановлены из ' + source + ' (' + backup.entries.length + ' записей)');
+        }
+      }
+    } catch(e) { console.error('Auto-restore error:', e); }
   })();
 
   initDefaultData();
