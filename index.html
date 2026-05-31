@@ -81,7 +81,14 @@
 }
 
 
-.dark-mode{ --bg:#121212; --card:#1e1e1e; --text:#eeeeee; --text-secondary:#aaaaaa; --border:#333333; --shadow:0 2px 12px rgba(0,0,0,.40); }
+.dark-mode{ 
+  --bg:#121212; --card:#1e1e1e; --text:#eeeeee; --text-secondary:#aaaaaa; --border:#333333; --shadow:0 2px 12px rgba(0,0,0,.40);
+  --info-bg:#1e3a5f; --info:#42a5f5; --info-light:#64b5f6;
+  --warning-bg:#3d2b1f; --warning:#ffd54f; --warning-light:#ffe082;
+  --success-bg:#1b3a1b; --success:#81c784; --success-light:#a5d6a7;
+  --danger-bg:#3d1f1f; --danger:#ef5350; --danger-light:#e57373;
+  --brand-dark:#ff9800;
+}
 
 /* Dark mode: lighter text colors for readability */
 .dark-mode .text-info{color:#64b5f6 !important}
@@ -91,6 +98,21 @@
 .dark-mode .text-danger{color:#ef5350 !important}
 .dark-mode .text-edit{color:#4db6ac !important}
 .dark-mode .text-warning{color:#ffd54f !important}
+
+/* Dark mode: table readability fixes */
+.dark-mode .report-table th{background:var(--card);color:var(--text);font-weight:700}
+.dark-mode .report-table tr:nth-child(even){background:rgba(255,255,255,.03)}
+.dark-mode .timesheet-table th{background:var(--card);color:var(--text);font-weight:700}
+.dark-mode .timesheet-table td:first-child,.dark-mode .timesheet-table th:first-child{background:var(--card);color:var(--text)}
+
+/* Dark mode: people tags (worker names in entries) */
+.dark-mode .people-tag{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.dark-mode .people-tag.support{background:var(--card);color:var(--text);border:1px solid var(--warning)}
+.dark-mode .people-tag input.hours-inp{background:var(--bg);color:var(--text);border-color:var(--border)}
+
+/* Dark mode: form inputs */
+.dark-mode .form-group input,.dark-mode .form-group textarea,.dark-mode .form-group select{background:var(--bg);color:var(--text);border-color:var(--border)}
+.dark-mode .form-group input:focus,.dark-mode .form-group textarea:focus,.dark-mode .form-group select:focus{box-shadow:0 0 0 3px rgba(230,81,0,.25)}
 /* Links and work names need explicit light colors */
 .dark-mode .entry-details .text-info,
 .dark-mode .road-block .text-info,
@@ -3530,11 +3552,10 @@ function syncTimesheetFromEntry(entry, oldEntry){
       // Обычный случай — записываем часы из наряда
       // Убедимся, что нет висячего буквенного кода
       delete timesheetLetters[key];
-      // Округляем до 0.5
+      // Точные часы без округления (минимум 0.5)
       let rawHours = parseFloat(p.hours) || 8;
-      let roundedHours = Math.round(rawHours * 2) / 2;
-      if(roundedHours < 0.5) roundedHours = 0.5;
-      timesheetOverrides[key] = roundedHours;
+      if(rawHours < 0.5) rawHours = 0.5;
+      timesheetOverrides[key] = rawHours;
     });
   });
 }
@@ -5076,9 +5097,8 @@ function recalcTimesheetFromEntries(){
         } else {
           delete newLetters[key];
           let rawHours = parseFloat(p.hours) || 8;
-          let roundedHours = Math.round(rawHours * 2) / 2;
-          if(roundedHours < 0.5) roundedHours = 0.5;
-          newOverrides[key] = roundedHours;
+          if(rawHours < 0.5) rawHours = 0.5;
+          newOverrides[key] = rawHours;
         }
       });
     });
