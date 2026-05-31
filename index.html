@@ -1131,6 +1131,73 @@ const Utils = {
 };
 
 /* ==============================================
+   РАСПРЕДЕЛЕНИЕ ЧАСОВ ПО ОБЪЕКТАМ (по нормативной трудоёмкости)
+   ============================================== */
+// Распределяет фактические часы работника между объектами наряда
+// на основе нормативной трудоёмкости работ по каждому объекту.
+// Возвращает объект: { [objectName]: часы (округлённые до 0.5, минимум 0.5) }
+function distributeHoursByNorm(factHours, squadObjects, worksByObject, workNormMap) {
+  // 1. Если в наряде есть АБЗ — все часы отдаём АБЗ
+  const hasAbz = squadObjects.some(obj => {
+    const road = State.get('roads').find(r => r.name === obj);
+    return road && road.type === 'abz';
+  });
+  if (hasAbz) {
+    const abzObj = squadObjects.find(obj => {
+      const road = State.get('roads').find(r => r.name === obj);
+      return road && road.type === 'abz';
+    });
+    return { [abzObj]: factHours };
+  }
+
+  // 2. Вычисляем нормативную трудоёмкость для каждого объекта
+  const normHours = {};
+  for (const obj of squadObjects) {
+    let totalNorm = 0;
+    const works = worksByObject[obj] || [];
+    for (const w of works) {
+      const laborCost = workNormMap[w.workName] || 0;
+      const nv = normalizeVolume(w.volume, w.unit);
+      totalNorm += laborCost * (nv.value / getUnitBase(w.unit));
+    }
+    if (totalNorm > 0) normHours[obj] = totalNorm;
+  }
+
+  // 3. Если нет нормативных часов — возвращаем пусто
+  if (Object.keys(normHours).length === 0) return {};
+
+  // 4. Распределяем фактические часы пропорционально нормативным
+  const totalNorm = Object.values(normHours).reduce((a,b) => a + b, 0);
+  let rawDistribution = {};
+  for (const [obj, norm] of Object.entries(normHours)) {
+    let hours = (norm / totalNorm) * factHours;
+    // Округляем до 0.5 вверх (потолок), минимум 0.5
+    if (hours > 0) {
+      hours = Math.ceil(hours * 2) / 2;
+      if (hours < 0.5) hours = 0.5;
+    }
+    rawDistribution[obj] = hours;
+  }
+
+  // 5. Корректируем сумму, чтобы не превышала factHours
+  let sum = Object.values(rawDistribution).reduce((a,b) => a + b, 0);
+  if (sum > factHours) {
+    let diff = sum - factHours;
+    const sorted = Object.entries(rawDistribution).sort((a,b) => b[1] - a[1]);
+    for (let [obj, val] of sorted) {
+      if (diff <= 0) break;
+      let dec = Math.min(diff, val - 0.5);
+      if (dec < 0) dec = 0;
+      rawDistribution[obj] -= dec;
+      diff -= dec;
+      if (rawDistribution[obj] < 0.5 && rawDistribution[obj] > 0) rawDistribution[obj] = 0.5;
+    }
+  }
+
+  return rawDistribution;
+}
+
+/* ==============================================
    ХРАНИЛИЩЕ (localStorage + sessionStorage + emergency backup)
    ============================================== */
 const STORAGE_KEYS = {
@@ -3324,7 +3391,7 @@ function validateSquad(sq){
   if(!sq.people || !sq.people.length){ return {valid: false, message: 'Добавьте работников в наряд'}; }
   for(let p of sq.people){ 
     const h = parseFloat(p.hours); 
-    if(isNaN(h) || h <= 0 || h > 24){ return {valid: false, message: 'Часы работника ' + p.name + ' должны быть от 0.5 до 24'}; } 
+    if(isNaN(h) || h < 0.5 || h > 24){ return {valid: false, message: 'Часы работника ' + p.name + ' должны быть от 0.5 до 24'}; } 
   }
   for(let w of (sq.works || [])){ 
     if(w.volume <= 0){ return {valid: false, message: 'Объём работы "' + w.name + '" должен быть больше 0'}; }
@@ -3463,7 +3530,11 @@ function syncTimesheetFromEntry(entry, oldEntry){
       // Обычный случай — записываем часы из наряда
       // Убедимся, что нет висячего буквенного кода
       delete timesheetLetters[key];
-      timesheetOverrides[key] = parseFloat(p.hours) || 8;
+      // Округляем до 0.5
+      let rawHours = parseFloat(p.hours) || 8;
+      let roundedHours = Math.round(rawHours * 2) / 2;
+      if(roundedHours < 0.5) roundedHours = 0.5;
+      timesheetOverrides[key] = roundedHours;
     });
   });
 }
@@ -5004,7 +5075,10 @@ function recalcTimesheetFromEntries(){
           delete newOverrides[key];
         } else {
           delete newLetters[key];
-          newOverrides[key] = parseFloat(p.hours) || 8;
+          let rawHours = parseFloat(p.hours) || 8;
+          let roundedHours = Math.round(rawHours * 2) / 2;
+          if(roundedHours < 0.5) roundedHours = 0.5;
+          newOverrides[key] = roundedHours;
         }
       });
     });
@@ -5157,6 +5231,32 @@ function generatePUReport(){
 
   filtered.forEach(e => {
     e.squads?.forEach(sq => {
+      // 1. Подготовка: нормы и работы по объекту — один раз на squad
+      const worksCatalog = State.get('works');
+      const workNormMap = {};
+      worksCatalog.forEach(w => { workNormMap[w.name] = w.laborCost || 0; });
+
+      const worksByObj = {};
+      sq.works?.forEach(w => {
+        const wObj = w.road || (sq.objects?.[0] || '');
+        if(!wObj) return;
+        if(!worksByObj[wObj]) worksByObj[wObj] = [];
+        worksByObj[wObj].push({
+          workName: w.name,
+          volume: w.volume,
+          unit: w.unit,
+          laborCost: workNormMap[w.name] || 0
+        });
+      });
+
+      // 2. Распределение часов для каждого работника — один раз на squad
+      const workerDistributions = new Map();
+      sq.people?.forEach(p => {
+        const factHours = parseFloat(p.hours) || 8;
+        workerDistributions.set(p.name, distributeHoursByNorm(factHours, sq.objects || [], worksByObj, workNormMap));
+      });
+
+      // 3. Цикл по объектам — используем готовые распределения
       sq.objects?.forEach(objName => {
         if(!puRoadNames.has(objName)) return;
         if(!roadData[objName]){
@@ -5185,18 +5285,24 @@ function generatePUReport(){
         });
 
         sq.people?.forEach(p => {
-          const hours = parseFloat(p.hours) || 8;
+          const factHours = parseFloat(p.hours) || 8;
+          const dist = workerDistributions.get(p.name);
+          const objHours = dist?.[objName] || 0;
+
           if(!workerData[p.name]){
             const wInfo = workers.find(x => x.name === p.name);
             workerData[p.name] = { name: p.name, category: wInfo?.category || 'other', grade: wInfo?.grade || 0, rate: wInfo?.rate || 0, totalHours: 0, days: new Set(), roads: new Set() };
           }
-          workerData[p.name].totalHours += hours;
+          workerData[p.name].totalHours += factHours;
           workerData[p.name].days.add(e.date);
           workerData[p.name].roads.add(objName);
-          roadData[objName].workers[p.name] = (roadData[objName].workers[p.name] || 0) + hours;
-          roadData[objName].totalHours += hours;
-          totalHoursAll += hours;
-          totalPeopleDays++;
+
+          if(objHours > 0) {
+            roadData[objName].workers[p.name] = (roadData[objName].workers[p.name] || 0) + objHours;
+            roadData[objName].totalHours += objHours;
+            totalHoursAll += objHours;
+          }
+          if(objName === (sq.objects?.[0] || objName)) totalPeopleDays++;
         });
       });
     });
