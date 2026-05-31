@@ -4122,28 +4122,79 @@ function addCatalogItem(type){
 }
 
 function editCatalogItem(type, idx){
-  State.setUI('catalogType', type); State.setUI('catalogEditingId', idx);
+  // Получаем элемент
   let item;
   if(type === 'worker') item = State.get('workers')[idx];
   else if(type === 'work') item = State.get('works')[idx];
   else if(type === 'tool') item = State.get('tools')[idx];
   else if(type === 'road') item = State.get('roads')[idx];
   if(!item) return;
-  addCatalogItem(type);
-  if(Utils.$('catInp1')) Utils.$('catInp1').value = item.name || '';
-  if(Utils.$('catInp2')) Utils.$('catInp2').value = item.type || 'road';
-  if(Utils.$('catInp3')) Utils.$('catInp3').value = item.length || '';
-  if(Utils.$('catInp4')){
-    if(type === 'worker') Utils.$('catInp4').value = item.rate || '';
-    else if(item.plan) Utils.$('catInp4').value = item.plan;
+
+  // Устанавливаем флаг редактирования (НЕ вызываем addCatalogItem!)
+  State.setUI('catalogType', type);
+  State.setUI('catalogEditingId', idx);
+
+  // Заголовок модалки
+  const titleMap = { worker: 'Редактировать работника', work: 'Редактировать вид работы', tool: 'Редактировать инструмент', road: 'Редактировать дорогу / объект' };
+  Utils.$('catalogModalTitle').textContent = titleMap[type];
+
+  // Генерируем форму с заполненными значениями
+  let html = '';
+  if(type === 'worker'){
+    html = `<div class="form-group"><label>ФИО</label><input type="text" id="catInp1" value="${Utils.escapeHtml(item.name || '')}"></div>
+      <div class="form-group"><label>Категория</label><select id="catInp2">${Object.keys(CATEGORIES).map(k => `<option value="${k}" ${(item.category || 'road') === k ? 'selected' : ''}>${CATEGORIES[k].name}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Разряд</label><input type="number" id="catInp3" value="${item.grade || 0}" min="0" max="7"></div>
+      <div class="form-group"><label>Тарифная ставка (руб/ч)</label><input type="number" id="catInp4" step="0.01" value="${item.rate || 0}"></div>
+      <div style="font-size:.75rem;color:var(--text-secondary);margin-top:-4px">💡 Рекомендуемые ставки: 3р = 2.11, 4р = 2.46, 5р = 2.93, 6р = 3.47, 7р = 4.12 т/с</div>`;
+  } else if(type === 'work'){
+    html = `<div class="form-group"><label>Название</label><input type="text" id="catInp1" value="${Utils.escapeHtml(item.name || '')}"></div>
+      <div class="form-group"><label>Единица измерения</label><input type="text" id="catInp2" value="${Utils.escapeHtml(item.unit || '')}"></div>
+      <div class="form-group"><label>Трудоёмкость (чел-ч на единицу)</label><input type="number" id="catInp3" step="0.01" value="${item.laborCost || 0}"></div>
+      <div class="form-group"><label>Прямая расценка (руб. на единицу)</label><input type="number" id="catInp4" step="0.01" value="${item.directCost || 0}"></div>
+      <div class="form-group"><label>Расходы на инструмент (руб. на единицу)</label><input type="number" id="catInp5" step="0.01" value="${item.toolCost || 0}"></div>
+      <div style="margin-top:12px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+        <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📦 Нормы расхода ТМЦ (на единицу работы)</div>
+        <div id="workNormsList"></div>
+        <button type="button" class="btn btn-small btn-info" onclick="App.addWorkNormRow()" style="margin-top:6px">➕ Добавить норму</button>
+      </div>`;
+  } else if(type === 'tool'){
+    html = `<div class="form-group"><label>Название</label><input type="text" id="catInp1" value="${Utils.escapeHtml(item.name || '')}"></div>
+      <div class="form-group"><label>Расход топлива (л/час)</label><input type="number" id="catInp2" step="0.1" value="${item.fuelConsumption || 0}"></div>
+      <div class="form-group"><label>Стоимость 1 машино-часа (руб.)</label><input type="number" id="catInp3" step="0.01" value="${item.machineCostPerHour || 0}"></div>
+      <div class="form-group"><label>Зарплата машиниста (руб/ч)</label><input type="number" id="catInp4" step="0.01" value="${item.salaryPerHour || 0}"></div>`;
+  } else if(type === 'road'){
+    const puOpts = (State.get('settings').puList || ['ПУ-1','ПУ-2','ПУ-3','АБЗ','База']).map(p => `<option value="${Utils.escapeHtml(p)}" ${item.pu === p ? 'selected' : ''}>${Utils.escapeHtml(p)}</option>`).join('');
+    html = `<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" value="${Utils.escapeHtml(item.name || '')}"></div>
+      <div class="form-group"><label>Производственный участок (ПУ)</label><select id="catInpPu">${puOpts}</select></div>
+      <div class="form-group"><label>Тип</label><select id="catInp2" onchange="App.togglePlanWorksUI()">
+        <option value="road" ${item.type === 'road' ? 'selected' : ''}>🛣️ Дорога (есть км)</option>
+        <option value="object" ${item.type === 'object' ? 'selected' : ''}>📍 Объект (без км)</option>
+        <option value="abz" ${item.type === 'abz' ? 'selected' : ''}>🏭 АБЗ</option>
+        <option value="base" ${item.type === 'base' ? 'selected' : ''}>🏢 База</option>
+      </select></div>
+      <div class="form-group"><label>Протяжённость (км) — только для дорог</label><input type="number" id="catInp3" step="0.1" value="${item.length || 0}"></div>
+      <div id="planWorksBox" style="${item.type === 'road' ? 'display:none' : 'display:block'};margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;border:1.5px solid var(--border)">
+        <div style="font-weight:600;color:var(--brand);margin-bottom:6px;font-size:.85rem">📋 План работ (объём)</div>
+        <div id="planWorksList"></div>
+        <button type="button" class="btn btn-small btn-info" onclick="App.openRoadWorksModal()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">🔧 Выбрать виды работ</button>
+        <button type="button" class="btn btn-small btn-secondary" onclick="App.addPlanWork()" style="margin-top:6px;padding:6px 12px;font-size:.8rem">➕ Добавить вручную</button>
+      </div>
+      <div class="form-group" id="oldPlanBox" style="${item.type === 'road' ? 'display:none' : 'display:block'}"><label>Примечание</label><input type="text" id="catInp4" value="${Utils.escapeHtml(item.plan || '')}"></div>`;
   }
-  if(Utils.$('catInpPu')) Utils.$('catInpPu').value = item.pu || '';
-  if(Utils.$('catInpContentType')) Utils.$('catInpContentType').value = item.contentType || 'content';
+
+  Utils.$('catalogForm').innerHTML = html;
+  Utils.$('catalogModal').classList.add('active');
+
+  // Заполняем нормы/планы через setTimeout (DOM уже создан)
   if(type === 'work' && item.materialNorms){
-    item.materialNorms.forEach(n => addWorkNormRow(n));
+    setTimeout(() => item.materialNorms.forEach(n => addWorkNormRow(n)), 50);
   }
-  togglePlanWorksUI();
-  if(item.planWorks) item.planWorks.forEach(pw => addPlanWork(pw));
+  if(type === 'road'){
+    setTimeout(() => {
+      togglePlanWorksUI();
+      if(item.planWorks) item.planWorks.forEach(pw => addPlanWork(pw));
+    }, 50);
+  }
 }
 
 function togglePlanWorksUI(){
