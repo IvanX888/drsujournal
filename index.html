@@ -5167,6 +5167,8 @@ function generatePUReport(){
         roadData[objName].days.add(e.date);
 
         sq.works?.forEach(w => {
+          // Работа идёт только к объекту, указанному в w.road (если задано)
+          if(w.road && w.road !== objName) return;
           const wkey = w.name + '|' + (w.unit || 'ед.');
           if(!workData[wkey]){
             workData[wkey] = { name: w.name, unit: w.unit || 'ед.', totalVolume: 0, totalLabor: 0, roads: new Set() };
