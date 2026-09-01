@@ -439,6 +439,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
   <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -3830,7 +3831,7 @@ function exportStockWriteOffCSV(){
 /* ==============================================
    ТАБЕЛЬ + СКВОЗНОЕ РЕДАКТИРОВАНИЕ
    ============================================== */
-function renderTimesheet(){
+function renderTimesheet() {
   const month = Utils.$('tsMonth').value || Utils.todayStr().slice(0, 7);
   const cat = Utils.$('tsCategory').value;
   const [y, m] = month.split('-').map(Number);
@@ -3838,65 +3839,103 @@ function renderTimesheet(){
   const entries = State.get('entries');
   const timesheetOverrides = State.get('timesheetOverrides');
   const timesheetLetters = State.get('timesheetLetters');
+  const workersCatalog = State.get('workers');
 
+  // Собираем всех работников из нарядов (без фильтра по категории наряда)
   const dayWorkers = {};
   entries.forEach(e => {
-    if(!e.date || !e.date.startsWith(month)) return;
+    if (!e.date || !e.date.startsWith(month)) return;
     e.squads?.forEach(sq => {
-      if(cat !== 'all' && sq.category !== cat) return;
       sq.people?.forEach(p => {
-        if(!dayWorkers[p.name]) dayWorkers[p.name] = { name: p.name, days: {}, total: 0 };
+        if (!dayWorkers[p.name]) {
+          dayWorkers[p.name] = { name: p.name, days: {}, total: 0 };
+        }
         const d = parseInt(e.date.slice(8), 10);
-        dayWorkers[p.name].days[d] = (dayWorkers[p.name].days[d] || 0) + (parseFloat(p.hours) || 8);
-        dayWorkers[p.name].total += (parseFloat(p.hours) || 8);
+        const hours = parseFloat(p.hours) || 8;
+        dayWorkers[p.name].days[d] = (dayWorkers[p.name].days[d] || 0) + hours;
+        dayWorkers[p.name].total += hours;
       });
     });
   });
 
+  // Ручные корректировки
   Object.keys(timesheetOverrides).forEach(key => {
-    if(!key.startsWith(month + '|')) return;
+    if (!key.startsWith(month + '|')) return;
     const parts = key.split('|');
-    const name = parts[1]; const dstr = parts[2];
-    if(!dayWorkers[name]) dayWorkers[name] = { name, days: {}, total: 0 };
+    const name = parts[1];
+    const dstr = parts[2];
+    if (!dayWorkers[name]) {
+      dayWorkers[name] = { name, days: {}, total: 0 };
+    }
     const d = parseInt(dstr, 10);
     const val = timesheetOverrides[key];
-    if(typeof val === 'number') dayWorkers[name].days[d] = val;
+    if (typeof val === 'number') {
+      dayWorkers[name].days[d] = val;
+    }
   });
 
-  Object.values(dayWorkers).forEach(dw => { dw.total = Object.values(dw.days).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0); });
+  // Фильтруем по категории работника, если выбрана не 'all'
+  let filteredWorkers = {};
+  if (cat === 'all') {
+    filteredWorkers = dayWorkers;
+  } else {
+    Object.keys(dayWorkers).forEach(name => {
+      const wInfo = workersCatalog.find(w => w.name === name);
+      if (wInfo && wInfo.category === cat) {
+        filteredWorkers[name] = dayWorkers[name];
+      }
+    });
+  }
 
-  const workersList = Object.values(dayWorkers).sort((a, b) => a.name.localeCompare(b.name));
-  if(!workersList.length){ Utils.$('timesheetResult').innerHTML = '<div class="empty-state">Нет данных за выбранный месяц</div>'; Utils.$('tsControls').style.display = 'none'; return; }
+  // Пересчёт итогов
+  Object.values(filteredWorkers).forEach(dw => {
+    dw.total = Object.values(dw.days).reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+  });
 
+  const workersList = Object.values(filteredWorkers).sort((a, b) => a.name.localeCompare(b.name));
+
+  if (!workersList.length) {
+    Utils.$('timesheetResult').innerHTML = '<div class="empty-state">Нет данных за выбранный месяц' +
+      (cat !== 'all' ? ' для категории «' + (CATEGORIES[cat]?.name || cat) + '»' : '') +
+      '</div>';
+    Utils.$('tsControls').style.display = 'none';
+    return;
+  }
+
+  // Отрисовка таблицы (без изменений)
   let html = '<div class="timesheet-wrap"><table class="timesheet-table"><thead><tr><th>ФИО</th>';
-  for(let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
+  for (let d = 1; d <= daysInMonth; d++) html += `<th>${d}</th>`;
   html += '<th>Дни</th><th>Итого</th></tr></thead><tbody>';
+
   workersList.forEach(dw => {
     html += `<tr><td>${Utils.escapeHtml(dw.name)}</td>`;
-    for(let d = 1; d <= daysInMonth; d++){
+    for (let d = 1; d <= daysInMonth; d++) {
       const key = month + '|' + dw.name + '|' + d;
       const val = timesheetOverrides[key];
       const letter = timesheetLetters[key];
       const display = letter || ((val !== undefined && val !== null) ? val : (dw.days[d] || ''));
       let cls = 'ts-cell-editable';
-      if(letter) cls += ' text-accent';
-      else if(dw.days[d]) cls += ' text-primary';
+      if (letter) cls += ' text-accent';
+      else if (dw.days[d]) cls += ' text-primary';
       html += `<td class="${cls}" onclick="App.editTimesheetCell('${Utils.jsAttr(dw.name)}',${d},this)">${display !== undefined && display !== null ? display : ''}</td>`;
     }
     const daysWorked = Object.values(dw.days).filter(v => typeof v === 'number' && v > 0).length;
     html += `<td><b>${daysWorked}</b></td><td><b>${dw.total}</b></td></tr>`;
   });
+
   html += '</tbody>';
   const grandTotal = workersList.reduce((s, w) => s + w.total, 0);
   const grandDays = workersList.reduce((s, w) => s + Object.values(w.days).filter(v => typeof v === 'number' && v > 0).length, 0);
   html += `<tfoot><tr><td style="text-align:left;padding-left:10px;font-weight:700">ВСЕГО</td>`;
-  for(let d = 1; d <= daysInMonth; d++){ const dayTotal = workersList.reduce((s, w) => s + (typeof w.days[d] === 'number' ? w.days[d] : 0), 0); html += `<td>${dayTotal > 0 ? dayTotal : ''}</td>`; }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayTotal = workersList.reduce((s, w) => s + (typeof w.days[d] === 'number' ? w.days[d] : 0), 0);
+    html += `<td>${dayTotal > 0 ? dayTotal : ''}</td>`;
+  }
   html += `<td>${grandDays}</td><td>${grandTotal}</td></tr></tfoot></table></div>`;
   Utils.$('timesheetResult').innerHTML = html;
   Utils.$('tsControls').style.display = 'flex';
 }
 
-let tsEditCurrentName = '', tsEditCurrentDay = 0, tsEditCurrentKey = '';
 function editTimesheetCell(name, day, td){
   tsEditCurrentName = name; tsEditCurrentDay = day;
   const month = Utils.$('tsMonth').value || Utils.todayStr().slice(0, 7);
