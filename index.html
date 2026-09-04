@@ -596,43 +596,45 @@ body.dark-mode .entry-details a{color:#64b5f6}
      ============================================== -->
 <div class="page" id="pageReports">
   <div class="subtabs">
-    <button class="subtab active" onclick="App.showReportTab('repAnalytics',this)">📊 Аналитика</button>
+    <button class="subtab active" onclick="App.showReportTab('repSummary',this)">📊 Сводный отчёт за период</button>
     <button class="subtab" onclick="App.showReportTab('repDocs',this)">📋 Документы</button>
     <button class="subtab" onclick="App.showReportTab('repRoads',this)">🛣️ Дороги</button>
-    
     <button class="subtab" onclick="App.showReportTab('repSalary',this)">💰 Зарплата по часовой</button>
     <button class="subtab" onclick="App.showReportTab('repNorms',this)">📏 Нормы выполнения</button>
-    <button class="subtab" onclick="App.showReportTab('repPU',this)">🏭 Отчёт по ПУ</button>
   </div>
-  <div class="subpanel active" id="repAnalytics">
+    <div class="subpanel active" id="repSummary">
     <div class="card">
-      <div class="card-title">📊 Формирование отчётов</div>
-      <div class="form-group"><label>Период с</label><input type="date" id="reportFrom"></div>
-      <div class="form-group"><label>Период по</label><input type="date" id="reportTo"></div>
-      <div class="form-group"><label>Категория</label><select id="reportCategory"><option value="all">Все категории</option><option value="road">Дорожные рабочие</option><option value="gazelle">Водители Газели</option><option value="tractor">Трактористы</option><option value="maz">Водители МАЗ</option><option value="other">Прочие</option></select></div>
-      <div class="form-group" id="objectSelectGroup">
-        <label>Объекты для отчёта</label>
-        <div class="hint">Выберите объекты или оставьте пустым для всех</div>
-        <div id="objectCheckboxes" style="max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--card);"></div>
-        <div style="margin-top:8px">
-          <button class="btn btn-small btn-secondary" onclick="App.toggleAllObjects(true)">☑️ Все</button>
-          <button class="btn btn-small btn-secondary" onclick="App.toggleAllObjects(false)">⬜️ Снять</button>
-        </div>
+      <div class="card-title">📊 Сводный отчёт за период</div>
+      <div class="form-group"><label>Период с</label><input type="date" id="sumFrom"></div>
+      <div class="form-group"><label>Период по</label><input type="date" id="sumTo"></div>
+      <div class="form-group"><label>Тип объектов</label>
+        <select id="sumType">
+          <option value="all">Все типы</option>
+          <option value="road">🛣️ Дороги</option>
+          <option value="object">📍 Объекты</option>
+          <option value="abz">🏭 АБЗ</option>
+          <option value="base">🏢 База</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Производственный участок (ПУ)</label>
+        <select id="sumPu">
+          <option value="">Все ПУ</option>
+          <option value="ПУ-1">ПУ-1</option>
+          <option value="ПУ-2">ПУ-2</option>
+          <option value="ПУ-3">ПУ-3</option>
+          <option value="АБЗ">АБЗ</option>
+          <option value="База">База</option>
+        </select>
       </div>
       <div class="row-btns">
-        <button class="btn btn-primary" onclick="App.generateSummaryReport()">📊 Сводный</button>
-        <button class="btn btn-accent" onclick="App.generateWorkersReport()">👷 По людям</button>
-        <button class="btn btn-success" onclick="App.generateObjectsReport()">📍 По объектам</button>
+        <button class="btn btn-primary" onclick="App.generateSummaryPeriodReport()">📊 Сформировать</button>
+        <button class="btn btn-secondary" onclick="App.exportSummaryCSV()">📄 CSV</button>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button>
       </div>
-    </div>
-    <div id="reportResult"></div>
-    <div class="row-btns" id="reportExports" style="display:none;margin-top:12px">
-      <button class="btn btn-secondary" onclick="App.exportCSV()">📄 CSV</button>
-      <button class="btn btn-secondary" onclick="App.exportJSON()">💾 JSON</button>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button>
+      <div id="summaryPeriodResult" style="margin-top:16px"></div>
     </div>
   </div>
-  <div class="subpanel" id="repDocs">
+<div class="subpanel" id="repDocs">
     <div class="card" style="border:2px solid var(--brand)">
       <div class="card-title">📋 Наряд по объекту / ПУ за месяц (по шаблону)</div>
       <div class="form-group"><label>Месяц</label><input type="month" id="naryadMonth"></div>
@@ -674,32 +676,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
   </div>
 
   <!-- 🏭 Отчёт по ПУ -->
-  <div class="subpanel" id="repPU">
-    <div class="card">
-      <div class="card-title">🏭 Отчёт по производственному участку (ПУ)</div>
-      <div class="form-group"><label>Месяц</label><input type="month" id="puMonth"></div>
-      <div class="form-group"><label>Производственный участок</label><select id="puSelect" onchange="App.updatePuFilterVisibility()"><option value="">— Выберите ПУ / проект —</option><optgroup label="Содержание"><option value="ПУ-1">ПУ-1 — Содержание</option><option value="ПУ-2">ПУ-2 — Содержание</option><option value="ПУ-3">ПУ-3 — Содержание</option></optgroup><optgroup label="Прочие"><option value="АБЗ">🏭 АБЗ</option><option value="База">🏢 База</option></optgroup></select></div>
-      <div class="form-group" id="puFilterGroup" style="display:none"><label>Фильтр объектов</label>
-        <div class="filter-bar" id="puFilterBar" style="margin-bottom:8px">
-          <button class="filter-chip active" onclick="App.setPuFilter('all',this)">Все</button>
-          <button class="filter-chip" onclick="App.setPuFilter('roads',this)">🛣️ Дороги</button>
-          <button class="filter-chip" onclick="App.setPuFilter('objects',this)">📍 Объекты</button>
-        </div>
-      <div class="form-group" id="puItemsSelectGroup">
-        <label>Дороги / объекты для отчёта</label>
-        <div class="hint">Выберите конкретные дороги/объекты или оставьте пустым для всех</div>
-        <div id="puItemsCheckboxes" style="max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;padding:8px;background:var(--card);"></div>
-        <div style="margin-top:8px">
-          <button class="btn btn-small btn-secondary" onclick="App.toggleAllPuItems(true)">☑️ Все</button>
-          <button class="btn btn-small btn-secondary" onclick="App.toggleAllPuItems(false)">⬜️ Снять</button>
-        </div>
-      </div>
-      </div>
-      <button class="btn btn-primary" onclick="App.generatePUReport()">Сформировать отчёт по ПУ</button>
-      <div id="puResult" style="margin-top:16px"></div>
-    </div>
   </div>
-</div>
 
 <!-- ==============================================
      ЕЩЁ (Справочники, Задачи, Склад, Настройки)
@@ -1387,7 +1364,6 @@ const UI = {
     const panel = document.getElementById(id);
     if(panel) panel.classList.add('active');
     btn.classList.add('active');
-    if(id === 'repAnalytics') renderObjectCheckboxes();
   },
   renderCalendarGrid(containerId, year, month, options){
     const container = document.getElementById(containerId);
@@ -1622,15 +1598,14 @@ async function init(){
   if(Utils.$('tsMonth')) Utils.$('tsMonth').value = Utils.todayStr().slice(0, 7);
   if(Utils.$('docMonth')) Utils.$('docMonth').value = Utils.todayStr().slice(0, 7);
   if(Utils.$('naryadMonth')) Utils.$('naryadMonth').value = Utils.todayStr().slice(0, 7);
-  if(Utils.$('reportFrom')) Utils.$('reportFrom').value = Utils.todayStr().slice(0, 7) + '-01';
-  if(Utils.$('reportTo')) Utils.$('reportTo').value = Utils.todayStr();
   if(Utils.$('machFrom')) Utils.$('machFrom').value = Utils.todayStr().slice(0, 7) + '-01';
   if(Utils.$('machTo')) Utils.$('machTo').value = Utils.todayStr();
   if(Utils.$('salaryFrom')) Utils.$('salaryFrom').value = Utils.todayStr().slice(0, 7) + '-01';
   if(Utils.$('salaryTo')) Utils.$('salaryTo').value = Utils.todayStr();
   if(Utils.$('normFrom')) Utils.$('normFrom').value = Utils.todayStr().slice(0, 7) + '-01';
   if(Utils.$('normTo')) Utils.$('normTo').value = Utils.todayStr();
-  if(Utils.$('puMonth')) Utils.$('puMonth').value = Utils.todayStr().slice(0, 7);
+  if(Utils.$('sumFrom')) Utils.$('sumFrom').value = Utils.todayStr().slice(0, 7) + '-01';
+  if(Utils.$('sumTo')) Utils.$('sumTo').value = Utils.todayStr();
 
   const settings = State.get('settings');
   if(Utils.$('settingOrg')) Utils.$('settingOrg').value = settings.org || '';
@@ -6430,6 +6405,207 @@ function recalcTimesheetFull(){
   renderTimesheet();
   Utils.showToast('✅ Табель пересчитан: ' + result.overrides + ' записей, ' + result.letters + ' буквенных кодов');
 }
+
+
+
+
+/* ==============================================
+   СВОДНЫЙ ОТЧЁТ ЗА ПЕРИОД
+   ============================================== */
+function generateSummaryPeriodReport(){
+  const from = document.getElementById('sumFrom').value;
+  const to = document.getElementById('sumTo').value;
+  const typeFilter = document.getElementById('sumType').value;
+  const puFilter = document.getElementById('sumPu').value;
+
+  if(!from || !to){ Utils.showToast('Укажите период'); return; }
+
+  const entries = State.get('entries').filter(e => e.date >= from && e.date <= to);
+  if(!entries.length){
+    document.getElementById('summaryPeriodResult').innerHTML = '<div class="empty-state">Нет записей за указанный период</div>';
+    return;
+  }
+
+  const objectSet = new Map();
+  const workSummary = {};
+  const puStats = {};
+
+  entries.forEach(entry => {
+    entry.squads.forEach(sq => {
+      const objs = sq.objects || [];
+      objs.forEach(objName => {
+        const roadDef = State.get('roads').find(r => r.name === objName);
+        const objType = roadDef?.type || 'road';
+        const objPu = roadDef?.pu || '';
+
+        if(typeFilter !== 'all' && objType !== typeFilter) return;
+        if(puFilter && objPu !== puFilter) return;
+
+        if(!objectSet.has(objName)){
+          objectSet.set(objName, {
+            name: objName, type: objType, pu: objPu,
+            totalVolume: 0, totalLabor: 0, totalHours: 0,
+            days: new Set(), works: {}
+          });
+        }
+        const objData = objectSet.get(objName);
+        objData.days.add(entry.date);
+
+        sq.works.forEach(w => {
+          const nv = normalizeVolume(w.volume, w.unit);
+          const labor = (w.laborCost || 0) * (nv.value / getUnitBase(w.unit));
+          objData.totalVolume += nv.value;
+          objData.totalLabor += labor;
+
+          if(!objData.works[w.name]){
+            objData.works[w.name] = { volume: 0, labor: 0, unit: w.unit || 'ед.' };
+          }
+          objData.works[w.name].volume += nv.value;
+          objData.works[w.name].labor += labor;
+
+          if(!workSummary[w.name]){
+            workSummary[w.name] = { volume: 0, labor: 0, unit: w.unit || 'ед.' };
+          }
+          workSummary[w.name].volume += nv.value;
+          workSummary[w.name].labor += labor;
+        });
+      });
+
+      sq.people.forEach(p => {
+        const h = parseFloat(p.hours) || 8;
+        const objs2 = sq.objects || [];
+        objs2.forEach(objName => {
+          const roadDef = State.get('roads').find(r => r.name === objName);
+          const objType = roadDef?.type || 'road';
+          const objPu = roadDef?.pu || '';
+          if(typeFilter !== 'all' && objType !== typeFilter) return;
+          if(puFilter && objPu !== puFilter) return;
+          const objData = objectSet.get(objName);
+          if(objData) objData.totalHours += h;
+        });
+      });
+    });
+  });
+
+  if(!objectSet.size){
+    document.getElementById('summaryPeriodResult').innerHTML = '<div class="empty-state">Нет данных по выбранным фильтрам</div>';
+    return;
+  }
+
+  objectSet.forEach(o => {
+    if(!puStats[o.pu]) puStats[o.pu] = { count: 0, volume: 0, labor: 0, hours: 0 };
+    puStats[o.pu].count++;
+    puStats[o.pu].volume += o.totalVolume;
+    puStats[o.pu].labor += o.totalLabor;
+    puStats[o.pu].hours += o.totalHours;
+  });
+
+  let totalVolumeAll = 0, totalLaborAll = 0, totalHoursAll = 0;
+  objectSet.forEach(o => {
+    totalVolumeAll += o.totalVolume;
+    totalLaborAll += o.totalLabor;
+    totalHoursAll += o.totalHours;
+  });
+
+  const overallPct = totalHoursAll > 0 ? (totalLaborAll / totalHoursAll) * 100 : 0;
+
+  let html = `<div style="margin-bottom:16px;padding:12px;background:var(--bg);border-radius:12px;border:2px solid var(--brand)">
+    <div style="font-size:1.2rem;font-weight:700;color:var(--brand);margin-bottom:8px">📊 Сводка за ${Utils.formatDate(from)} — ${Utils.formatDate(to)}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;font-size:.9rem">
+      <div>📋 Записей: <b>${entries.length}</b></div>
+      <div>📍 Объектов/дорог: <b>${objectSet.size}</b></div>
+      <div>🔧 Видов работ: <b>${Object.keys(workSummary).length}</b></div>
+      <div>⏱️ Всего часов: <b>${totalHoursAll.toFixed(1)}</b></div>
+      <div>📏 Норма чел-ч: <b>${totalLaborAll.toFixed(1)}</b></div>
+      <div>📈 % выполнения: <b style="color:${overallPct >= 90 && overallPct <= 110 ? 'var(--success)' : (overallPct < 90 ? 'var(--warning)' : 'var(--danger)')}">${overallPct.toFixed(1)}%</b></div>
+    </div>
+  </div>`;
+
+  if(Object.keys(puStats).length > 0){
+    html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">🏭 Распределение по ПУ</div>`;
+    html += `<table class="report-table"><thead><tr><th>ПУ</th><th>Объектов</th><th>Объём (норм.)</th><th>Норма чел-ч</th><th>Факт часов</th><th>% выполнения</th></tr></thead><tbody>`;
+    Object.keys(puStats).sort().forEach(puName => {
+      const p = puStats[puName];
+      const pct = p.hours > 0 ? (p.labor / p.hours) * 100 : 0;
+      const color = pct >= 90 && pct <= 110 ? 'var(--success)' : (pct < 90 ? 'var(--warning)' : 'var(--danger)');
+      html += `<tr><td><b>${puName || '—'}</b></td><td>${p.count}</td><td>${p.volume.toFixed(2)}</td><td>${p.labor.toFixed(1)}</td><td>${p.hours.toFixed(1)}</td><td style="color:${color};font-weight:700">${pct.toFixed(1)}%</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">📍 Объекты и дороги (${objectSet.size})</div>`;
+  html += `<table class="report-table" id="summaryTable"><thead><tr>
+    <th>Название</th><th>Тип</th><th>ПУ</th><th>Дней</th><th>Объём (норм.)</th><th>Норма чел-ч</th><th>Факт часов</th><th>% выполнения</th>
+  </tr></thead><tbody>`;
+
+  const objArray = Array.from(objectSet.values()).sort((a,b) => a.name.localeCompare(b.name));
+  objArray.forEach(o => {
+    const pct = o.totalHours > 0 ? (o.totalLabor / o.totalHours) * 100 : 0;
+    const pctColor = pct >= 90 && pct <= 110 ? 'var(--success)' : (pct < 90 ? 'var(--warning)' : 'var(--danger)');
+    const typeIcon = {road:'🛣️',object:'📍',abz:'🏭',base:'🏢'}[o.type] || '📍';
+    html += `<tr>
+      <td><b>${Utils.escapeHtml(o.name)}</b></td>
+      <td>${typeIcon}</td>
+      <td>${o.pu || '—'}</td>
+      <td>${o.days.size}</td>
+      <td>${o.totalVolume.toFixed(2)}</td>
+      <td>${o.totalLabor.toFixed(1)}</td>
+      <td>${o.totalHours.toFixed(1)}</td>
+      <td style="color:${pctColor};font-weight:700">${pct.toFixed(1)}%</td>
+    </tr>`;
+  });
+  html += `<tfoot><tr style="font-weight:700;background:var(--bg)">
+    <td colspan="4">ИТОГО</td>
+    <td>${totalVolumeAll.toFixed(2)}</td>
+    <td>${totalLaborAll.toFixed(1)}</td>
+    <td>${totalHoursAll.toFixed(1)}</td>
+    <td>${overallPct.toFixed(1)}%</td>
+  </tr></tfoot></tbody></table></div>`;
+
+  html += `<div style="margin-bottom:16px"><div style="font-weight:700;color:var(--brand);margin-bottom:10px;font-size:1rem">🔧 Виды работ (${Object.keys(workSummary).length})</div>`;
+  html += `<table class="report-table"><thead><tr><th>Вид работы</th><th>Объём</th><th>Ед.</th><th>Норма чел-ч</th></tr></thead><tbody>`;
+  Object.keys(workSummary).sort().forEach(wName => {
+    const w = workSummary[wName];
+    html += `<tr><td>${Utils.escapeHtml(wName)}</td><td>${w.volume.toFixed(2)}</td><td>${w.unit}</td><td>${w.labor.toFixed(1)}</td></tr>`;
+  });
+  html += `</tbody></table></div>`;
+
+  html += `<div class="row-btns" style="margin-top:12px">
+    <button class="btn btn-secondary" onclick="App.exportSummaryCSV()">📄 Экспорт CSV</button>
+    <button class="btn btn-secondary" onclick="window.print()">🖨️ Печать</button>
+  </div>`;
+
+  document.getElementById('summaryPeriodResult').innerHTML = html;
+  window._summaryData = { objArray, workSummary, puStats, totalVolumeAll, totalLaborAll, totalHoursAll, overallPct, from, to };
+}
+
+function exportSummaryCSV(){
+  if(!window._summaryData){ Utils.showToast('Сначала сформируйте отчёт'); return; }
+  const { objArray, workSummary, puStats, totalVolumeAll, totalLaborAll, totalHoursAll, overallPct, from, to } = window._summaryData;
+  let csv = '﻿Название;Тип;ПУ;Дней;Объём;Норма чел-ч;Факт часов;% выполнения\n';
+  objArray.forEach(o => {
+    const pct = o.totalHours > 0 ? (o.totalLabor / o.totalHours) * 100 : 0;
+    csv += `${o.name};${o.type};${o.pu || ''};${o.days.size};${o.totalVolume.toFixed(2)};${o.totalLabor.toFixed(1)};${o.totalHours.toFixed(1)};${pct.toFixed(1)}\n`;
+  });
+  csv += `ИТОГО;;;${objArray.reduce((s,o) => s + o.days.size, 0)};${totalVolumeAll.toFixed(2)};${totalLaborAll.toFixed(1)};${totalHoursAll.toFixed(1)};${overallPct.toFixed(1)}\n`;
+  if(Object.keys(puStats).length){
+    csv += '\nПУ;Объектов;Объём;Норма чел-ч;Факт часов;% выполнения\n';
+    Object.keys(puStats).sort().forEach(puName => {
+      const p = puStats[puName];
+      const pct = p.hours > 0 ? (p.labor / p.hours) * 100 : 0;
+      csv += `${puName || '—'};${p.count};${p.volume.toFixed(2)};${p.labor.toFixed(1)};${p.hours.toFixed(1)};${pct.toFixed(1)}\n`;
+    });
+  }
+  csv += '\nВид работы;Объём;Ед.;Норма чел-ч\n';
+  Object.keys(workSummary).sort().forEach(wName => {
+    const w = workSummary[wName];
+    csv += `${wName};${w.volume.toFixed(2)};${w.unit};${w.labor.toFixed(1)}\n`;
+  });
+  Utils.downloadFile(csv, `Сводный_отчёт_${from}_${to}.csv`, 'text/csv;charset=utf-8');
+}
+
+window.App.generateSummaryPeriodReport = generateSummaryPeriodReport;
+window.App.exportSummaryCSV = exportSummaryCSV;
 
 </script>
 
