@@ -441,7 +441,6 @@ body.dark-mode .entry-details a{color:#64b5f6}
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -809,6 +808,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
         <div id="writeOffStockList"></div>
         <div class="row-btns" style="margin-top:12px">
           <button class="btn btn-secondary btn-small" onclick="App.exportStockWriteOffCSV()">📄 CSV</button>
+          <button class="btn btn-danger btn-small" onclick="App.clearStock()">🗑️ Очистить склад</button>
           <button class="btn btn-warning btn-small" onclick="App.recalcStockCurrentMonth()">🔄 Пересчитать текущий месяц</button>
           <button class="btn btn-info btn-small" onclick="App.recalcStockByMonth()">📅 Пересчитать за месяц...</button>
         </div>
@@ -1267,15 +1267,14 @@ const Utils = {
 // Возвращает объект: { [objectName]: часы (округлённые до 0.5, минимум 0.5) }
 function distributeHoursByNorm(factHours, squadObjects, worksByObject, workNormMap) {
   // 1. Если в наряде есть АБЗ — все часы отдаём АБЗ
-  const hasAbz = squadObjects.some(obj => {
+  // v19.17.31: тип из справочника + подстрока как fallback (как в syncTimesheetFromEntry)
+  const _isAbz = obj => {
     const road = State.get('roads').find(r => r.name === obj);
-    return road && road.type === 'abz';
-  });
+    return (road && road.type === 'abz') || obj.includes('АБЗ') || obj.includes('🏭');
+  };
+  const hasAbz = squadObjects.some(_isAbz);
   if (hasAbz) {
-    const abzObj = squadObjects.find(obj => {
-      const road = State.get('roads').find(r => r.name === obj);
-      return road && road.type === 'abz';
-    });
+    const abzObj = squadObjects.find(_isAbz);
     return { [abzObj]: factHours };
   }
 
@@ -1389,7 +1388,7 @@ const Storage = {
         while(snaps.length > 5) snaps.pop();
         localStorage.setItem('drsu_auto_snapshots', JSON.stringify(snaps));
         if(typeof refreshSnapshotsUI === 'function') refreshSnapshotsUI();
-      } catch(e3) {}
+      } catch(e3) { Utils.showToast('⚠️ Автоснапшот не сохранён (квота localStorage) — экспортируйте JSON чаще'); }
       return true;
     } catch(e){
       console.error('saveAll error', e);
@@ -2055,7 +2054,7 @@ function renderMonthDashboard(){
         if(w.machineId){ const mm = (State.get('machines') || []).find(x => String(x.id) === String(w.machineId)); if(mm && mm.mtype) grp = (mm.mtype === 'МАЗ' || mm.mtype === 'Кран') ? 'maz' : (mm.mtype === 'Газель' ? null : 'tractor'); }
         if(!grp){ const exW0 = def ? (def.executor || 'road') : 'road'; grp = exW0 === 'road' ? null : exW0; }
         if(grp === null){ catStats.road.norm += nh; }
-        else { catStats[grp].norm += (parseFloat((def && def.machineLaborCost) || 0) || 0) * w.volume; catStats[grp].fact += parseFloat(w.toolHours) || 0; }
+        else { catStats[grp].norm += (parseFloat((def && def.machineLaborCost) || 0) || 0) * w.volume; catStats[grp].fact += effToolHours(w, null, def); } // v19.17.33
         const obj = w.road || (sq.objects && sq.objects[0]) || '—';
         if(!worksByObj[obj]) worksByObj[obj] = [];
         worksByObj[obj].push({ workName: w.name, volume: w.volume, unit: w.unit });
@@ -2102,7 +2101,8 @@ function renderMonthDashboard(){
     if(!cs || (cs.norm <= 0 && cs.fact <= 0 && ex !== 'road')) return;
     const fct = ex === 'road' ? totalFact : cs.fact;
     if(cs.norm <= 0 && fct <= 0) return;
-    const pct = cs.norm > 0 ? (fct / cs.norm) * 100 : 0;
+    // v19.17.31: % выполнения нормы = норма/факт (как в карточке записи и наряде ПУ), не наоборот
+    const pct = fct > 0 ? (cs.norm / fct) * 100 : 0;
     const wBar = Math.min(100, pct / 1.3);
     catHtml += `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:2px"><b>${label}</b><span>норма <b>${cs.norm.toFixed(1)}</b> / факт <b>${fct.toFixed(1)}</b> · <b style="color:${color}">${pct.toFixed(0)}%</b></span></div><div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden;border:1.5px solid var(--border)"><div style="width:${wBar}%;height:100%;background:${color}"></div></div></div>`;
   });
@@ -2565,6 +2565,19 @@ function normalizeVolume(volume, unit){
   if(u.includes('крон')){ const match = u.match(/(\d+)/); const mult = match ? parseInt(match[1]) : 1; return {value: volume * mult, unit: 'крон', display: `${(volume*mult).toFixed(0)} крон`}; }
   return {value: volume, unit: unit || 'ед.', display: `${volume} ${unit || 'ед.'}`};
 }
+// v19.17.33: эффективные часы инструмента — ФАКТ, если мастер вбил; иначе НОРМА из расценки
+function effToolHours(w, tool, workDef){
+  const th = parseFloat(w.toolHours);
+  if(th > 0) return th;
+  const vol = parseFloat(w.volume) || 0;
+  const mlc = parseFloat(workDef && workDef.machineLaborCost) || 0;
+  if(mlc > 0) return mlc * vol; // «Норма на технику», машино-ч/ед × объём
+  const tc = (w.toolCost != null ? parseFloat(w.toolCost) : (parseFloat(workDef && workDef.toolCost) || 0)) || 0;
+  const rate = tool ? (parseFloat(tool.machineCostPerHour) || 0) : 0;
+  if(tc > 0 && rate > 0) return (tc * vol) / rate; // стоимость инструмента в расценке → часы по вашей ставке машино-часа
+  return 0;
+}
+
 function getUnitBase(unit){
   if(!unit) return 1; // v19.17.26: единица без множителя — иначе норма занижалась в 1000 раз
   const m = unit.toString().trim().match(/^(\d+)/);
@@ -2826,7 +2839,7 @@ function updateKPIsMonth(){
   if(Utils.$('statWorkers')) Utils.$('statWorkers').textContent = entries.length;
   if(Utils.$('statWorkersList')) Utils.$('statWorkersList').innerHTML = '<div>👷 нарядов: <b>' + squads + '</b><br>' + MONTH_NAMES[cm.getMonth()] + ' ' + cm.getFullYear() + '</div>';
   if(Utils.$('statObjects')) Utils.$('statObjects').textContent = factH.toFixed(0);
-  if(Utils.$('statObjectsNorm')) Utils.$('statObjectsNorm').innerHTML = 'норма: <b>' + normH.toFixed(0) + '</b> чел-ч<br>выполнение: <b>' + (normH > 0 ? (factH / normH * 100).toFixed(0) : 0) + '%</b>';
+  if(Utils.$('statObjectsNorm')) Utils.$('statObjectsNorm').innerHTML = 'норма: <b>' + normH.toFixed(0) + '</b> чел-ч<br>выполнение: <b>' + (factH > 0 ? (normH / factH * 100).toFixed(0) : 0) + '%</b>';
   if(Utils.$('statWorks')) Utils.$('statWorks').textContent = fund.toFixed(0);
   if(Utils.$('statWorksList')) Utils.$('statWorksList').innerHTML = '<div>руб. за месяц</div>';
 }
@@ -2887,6 +2900,15 @@ async function deleteMonth(month){
     // Откат списаний перед удалением
     const removed = entries.filter(e => e.date.startsWith(month));
     removed.forEach(e => rollbackWriteOff(e.id));
+    // v19.17.31: чистим табель месяца — иначе сиротские часы/буквы приоритетнее новых нарядов
+    const _to = State.get('timesheetOverrides'), _tl = State.get('timesheetLetters');
+    removed.forEach(e => {
+      const _m = e.date.slice(0, 7), _d = parseInt(e.date.slice(8, 10), 10);
+      (e.squads || []).forEach(sq => (sq.people || []).forEach(p => {
+        delete _to[_m + '|' + p.name + '|' + _d];
+        delete _tl[_m + '|' + p.name + '|' + _d];
+      }));
+    });
     State.set('entries', entries.filter(e => !e.date.startsWith(month)));
     await Storage.saveAll(State.getAllForSave());
     renderEntries(); renderCalendar(); 
@@ -2937,7 +2959,8 @@ function renderEntryDetails(e){
         html += `<div class="road-block"><div class="road-title">🛣️ <span class="text-success">${Utils.escapeHtml(road)}</span></div>`;
         byRoad[road].forEach(w => {
           const tool = tools.find(t => t.id === w.toolId);
-          const machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
+          const _wd = State.get('works').find(x => x.name === w.name);
+          const machineCost = tool ? (tool.machineCostPerHour || 0) * effToolHours(w, tool, _wd) : 0; // v19.17.33: факт или норма расценки
           const workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
           const kmInfo2 = (w.kmFrom !== undefined && w.kmTo !== undefined && w.kmFrom !== null && w.kmTo !== null && !isNaN(w.kmFrom) && !isNaN(w.kmTo)) ? ` | 🛣️ <span class="text-info">${w.kmFrom}–${w.kmTo} км</span>` : '';
           html += `<div style="font-size:.85rem;margin-bottom:6px">• <span class="text-info">${Utils.escapeHtml(w.name)}</span> — <b>${w.volume} ${w.unit || ''}</b>${kmInfo2}${w.laborCost ? `<br>&nbsp;&nbsp;Норма: <span class="text-secondary">${(w.laborCost * w.volume).toFixed(1)} чел-ч</span>` : ''}${workerCost ? `<br>&nbsp;&nbsp;Рабочие: <span class="text-success">${workerCost.toFixed(2)} руб.</span>` : ''}${machineCost ? `<br>&nbsp;&nbsp;Инстр.: <span class="text-secondary">${machineCost.toFixed(2)} руб.</span>` : ''}</div>`;
@@ -3323,7 +3346,7 @@ function calcSquadPlanHtml(sq){
     totalToolCost += (w.toolCost || 0) * w.volume;
     totalFuel += w.fuelLiters || 0;
     const tool = tools.find(t => t.id === w.toolId);
-    if(tool) totalMachineCost += (tool.machineCostPerHour || 0) * (w.toolHours || 0);
+    if(tool){ const _wd2 = State.get('works').find(x => x.name === w.name); totalMachineCost += (tool.machineCostPerHour || 0) * effToolHours(w, tool, _wd2); } // v19.17.33
   });
   const pct = totalPeopleHours > 0 ? (totalLaborNorm / totalPeopleHours) * 100 : 0;
   const diff = totalLaborNorm - totalPeopleHours;
@@ -3363,7 +3386,7 @@ function calcSquadPlanHtml(sq){
         if(grpOf(w) !== ex) return;
         const wc = worksCat.find(x => x.name === w.name);
         nrm += (parseFloat(wc && wc.machineLaborCost) || 0) * w.volume;
-        fct += parseFloat(w.toolHours) || 0;
+        fct += effToolHours(w, null, wc); // v19.17.33: факт или норма расценки
       });
       if(nrm <= 0 && fct <= 0) return;
       const pctM = nrm > 0 ? (fct / nrm) * 100 : 0;
@@ -3445,7 +3468,8 @@ function renderSquads(){
         if(showExHeaders) worksHtml += `<div style="font-size:.72rem;font-weight:700;color:${exMeta[ex][1]};margin:4px 0 2px">${exMeta[ex][0]}</div>`;
         gw.forEach((w) => {
           const tool = tools.find(t => t.id === w.toolId);
-          const machineCost = tool ? (tool.machineCostPerHour || 0) * (w.toolHours || 0) : 0;
+          const _wd = State.get('works').find(x => x.name === w.name);
+          const machineCost = tool ? (tool.machineCostPerHour || 0) * effToolHours(w, tool, _wd) : 0; // v19.17.33: факт или норма расценки
           const workerCost = ((w.directCost || 0) - (w.toolCost || 0)) * w.volume;
           const kmBadge = (w.kmFrom !== undefined && w.kmTo !== undefined && w.kmFrom !== null && w.kmTo !== null && !isNaN(w.kmFrom) && !isNaN(w.kmTo)) ? `<span style="display:inline-block;background:var(--brand);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:8px">${w.kmFrom}–${w.kmTo} км</span>` : '';
           const machBadge = (w.machineLabel) ? `<span style="display:inline-block;background:var(--edit);color:#fff;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:600;margin-left:6px" title="Закреплено за техникой">${Utils.escapeHtml(w.machineLabel)}</span>` : '';
@@ -3842,7 +3866,12 @@ function applyWriteOff(entry){
     sq.works?.forEach(w => {
       const workDef = worksCatalog.find(x => x.id === w.id || x.name === w.name);
       if(!workDef || !workDef.materialNorms || !workDef.materialNorms.length) return;
+      // v19.17.35: работы с техникой — не списываем ТОЛЬКО ГСМ/масла (это топливо машин, склад его не ведёт);
+      // материалы работы (асфальт, щебень, эмульсия…) списываются в любом случае
+      const _isFuel = n => /бензин|дизель|соляр|топливо|гсм|масло/i.test(n.name || '');
+      const skipFuelOnly = !!(w.machineId || w.machineLabel);
       workDef.materialNorms.forEach(norm => {
+        if(skipFuelOnly && _isFuel(norm)) return; // v19.17.35: ГСМ техники на склад не списываем
         const qty = norm.qtyPerUnit * w.volume; // норма * объём работы (unit работы и unit нормы должны совпадать по масштабу)
         // Обновляем агрегат
         const existing = stockWriteOff.find(s => s.tmcId === norm.tmcId && s.name === norm.name);
@@ -4226,6 +4255,7 @@ async function duplicateEntry(idx){
   });
   entries.unshift(e);
   applyWriteOff(e);
+  syncTimesheetFromEntry(e, null); // v19.17.31: авто-буквы АБЗ/База и часы в табель
   await Storage.saveAll(State.getAllForSave());
   renderEntries(); renderCalendar(); renderRoadsKmSummary(); renderStock();
   const selectedRoadDup = State.getUI('selectedRoadForScale');
@@ -4442,6 +4472,18 @@ async function addStockRow(type){
   }
 }
 
+// v19.17.34: полная очистка склада (поступления + списания + история), журнал/табель/справочники не трогает
+async function clearStock(){
+  if(!confirm('Очистить ВЕСЬ склад?\n\nУдалятся все поступления, списания и история. Журнал, табель и справочники не затрагиваются.\n\nРекомендуется сначала «Экспорт всех данных».')) return;
+  if(!confirm('Точно очистить? Восстановить можно только из экспортированного JSON.')) return;
+  State.set('stockReceipt', []);
+  State.set('stockWriteOff', []);
+  State.set('stockWriteOffHistory', []);
+  await Storage.saveAll(State.getAllForSave());
+  renderStock();
+  Utils.showToast('🗑️ Склад очищен');
+}
+
 async function editStockQty(type, idOrTmcId){
   if(type === 'receipt'){
     // idOrTmcId = tmcId (строка)
@@ -4453,10 +4495,18 @@ async function editStockQty(type, idOrTmcId){
     if(isNaN(newQty)) return;
     // корректируем ПОСЛЕДНЮЮ запись на разницу, чтобы сумма сошлась с введённым остатком
     const delta = newQty - cur;
-    if(Math.abs(delta) > 0.0001){
+    // v19.17.31: списываем дельту по записям с конца; если прихода не хватает — предупреждение, а не молчаливый обрез в 0
+    if(delta > 0.0001){
       const last = list[list.length - 1];
       last.qty = Math.round((last.qty + delta) * 1000) / 1000;
-      if(last.qty < 0) last.qty = 0;
+    } else if(delta < -0.0001){
+      let rem = Math.round(-delta * 1000) / 1000;
+      for(let i = list.length - 1; i >= 0 && rem > 0.0001; i--){
+        const take = Math.min(list[i].qty, rem);
+        list[i].qty = Math.round((list[i].qty - take) * 1000) / 1000;
+        rem = Math.round((rem - take) * 1000) / 1000;
+      }
+      if(rem > 0.0001){ Utils.showToast('⚠️ Прихода не хватает на ' + rem.toFixed(2) + ' ' + (list[0].unit || '') + ' — проверьте остаток вручную'); }
     }
     await Storage.saveAll(State.getAllForSave());
     renderStock();
@@ -4632,7 +4682,7 @@ function editTimesheetCell(name, day, td){
     if(!e.date.startsWith(month)) return;
     const dNum = parseInt(e.date.slice(8), 10);
     if(dNum !== day) return;
-    e.squads?.forEach(sq => { sq.people?.forEach(p => { if(p.name === name){ entryHours = parseFloat(p.hours) || 8; foundInEntry = true; } }); });
+    e.squads?.forEach(sq => { sq.people?.forEach(p => { if(p.name === name){ const _hh = parseFloat(p.hours) || 8; if(_hh > entryHours) entryHours = _hh; foundInEntry = true; } }); }); // v19.17.31: max за день, как показывает табель
   });
 
   const overrideVal = State.get('timesheetOverrides')[tsEditCurrentKey];
@@ -5716,13 +5766,18 @@ function generateSalaryReport(){
         const rate = parseFloat(w.rate) || 0;
         const earnings = hours * rate;
         if(!workerStats[p.name]){
-          workerStats[p.name] = { name: p.name, category: w.category, grade: w.grade || 0, rate: rate, hours: 0, earnings: 0, days: 0 };
+          // v19.17.31: дни — по уникальным датам, часы — max за день (единая логика с табелем)
+          workerStats[p.name] = { name: p.name, category: w.category, grade: w.grade || 0, rate: rate, hours: 0, earnings: 0, days: 0, daysSet: new Set(), dayHours: {} };
         }
-        workerStats[p.name].hours += hours;
-        workerStats[p.name].earnings += earnings;
-        workerStats[p.name].days += 1;
+        workerStats[p.name].daysSet.add(e.date);
+        workerStats[p.name].dayHours[e.date] = Math.max(workerStats[p.name].dayHours[e.date] || 0, hours);
       });
     });
+  });
+  Object.values(workerStats).forEach(x => {
+    x.days = x.daysSet.size;
+    x.hours = Object.values(x.dayHours).reduce((s, v) => s + v, 0);
+    x.earnings = Math.round(x.hours * x.rate * 100) / 100;
   });
 
   const list = Object.values(workerStats).sort((a,b) => b.earnings - a.earnings);
@@ -5785,13 +5840,18 @@ function exportSalaryCSV(){
         const rate = parseFloat(w.rate) || 0;
         const earnings = hours * rate;
         if(!workerStats[p.name]){
-          workerStats[p.name] = { name: p.name, category: w.category, grade: w.grade || 0, rate: rate, hours: 0, earnings: 0, days: 0 };
+          // v19.17.31: дни — по уникальным датам, часы — max за день (единая логика с табелем)
+          workerStats[p.name] = { name: p.name, category: w.category, grade: w.grade || 0, rate: rate, hours: 0, earnings: 0, days: 0, daysSet: new Set(), dayHours: {} };
         }
-        workerStats[p.name].hours += hours;
-        workerStats[p.name].earnings += earnings;
-        workerStats[p.name].days += 1;
+        workerStats[p.name].daysSet.add(e.date);
+        workerStats[p.name].dayHours[e.date] = Math.max(workerStats[p.name].dayHours[e.date] || 0, hours);
       });
     });
+  });
+  Object.values(workerStats).forEach(x => {
+    x.days = x.daysSet.size;
+    x.hours = Object.values(x.dayHours).reduce((s, v) => s + v, 0);
+    x.earnings = Math.round(x.hours * x.rate * 100) / 100;
   });
 
   const list = Object.values(workerStats).sort((a,b) => b.earnings - a.earnings);
@@ -6585,13 +6645,20 @@ async function generateNaryad(entry) {
         ws.getCell("M" + rowNum).value = parseFloat(w.laborCost) || 0;
         ws.getCell("P" + rowNum).value = parseFloat(w.directCost) || 0;
         ws.getCell("U" + rowNum).value = (parseFloat(w.laborCost) || 0) * (parseFloat(w.volume) || 0);
-        ws.getCell("AG" + rowNum).value = i + 1;
+        // v19.17.31: денежные суммы строки (иначе ИТОГО=0): V — «Задано», AE — «Исполнено»
+        ws.getCell("V" + rowNum).value = Math.round((parseFloat(w.directCost) || 0) * (parseFloat(w.volume) || 0) * 100) / 100;
+        ws.getCell("AE" + rowNum).value = Math.round((parseFloat(w.directCost) || 0) * (parseFloat(w.volume) || 0) * 100) / 100;
+        
       } else {
-        ["A","B","G","I","M","P","U","AG"].forEach(function(c) {
+        ["A","B","G","I","M","P","U","V","AE","AG"].forEach(function(c) {
           ws.getCell(c + rowNum).value = "";
         });
       }
     }
+    // v19.17.31: очистка битых ссылок шаблона (иначе #REF! в Excel) — как в наряде ПУ
+    ws.getCell("B38").value = null;
+    ws.getCell("B79").value = null;
+    ws.getCell("Z80").value = null;
 
     // --- ТАБЕЛЬ: только дорожные рабочие (до 14 чел.) ---
     var workers = State.get("workers");
@@ -6877,7 +6944,7 @@ async function generateMachineNaryad(){
         if(!inObjOld) return;
       }
       const drv = (r.sq.people || []).find(p => p.name === driver);
-      if(drv){ const d = parseInt(r.date.slice(8, 10)); dayHours[d] = (dayHours[d] || 0) + (parseFloat(drv.hours) || 0); }
+      if(drv){ const d = parseInt(r.date.slice(8, 10)); const _h = parseFloat(drv.hours) || 0; dayHours[d] = Math.max(dayHours[d] || 0, _h); } // v19.17.31: max за день, как в табеле
       tied.forEach(w => {
         const wc = worksCatalog.find(x => x.name === w.name);
         if(!wc) return;
@@ -6892,6 +6959,8 @@ async function generateMachineNaryad(){
     const works = Object.keys(worksAgg).map(k => ({ name: k, ...worksAgg[k] }));
     const totalHours = Object.values(dayHours).reduce((s, h) => s + h, 0);
     if(!works.length && !totalHours){ Utils.showToast('Нет данных по этому объекту'); return; }
+  // v19.17.31: предупреждение о молчаливой обрезке (в шаблон 12 видимых строк)
+  if(works.length > 12){ Utils.showToast('⚠️ Работ ' + works.length + ', в наряд входит 12. Не вошло: ' + works.slice(12).map(w => w.name).join(', ')); }
 
     const workbook = new ExcelJS.Workbook();
     const binary = atob(MACHINE_TEMPLATE_B64);
@@ -6941,7 +7010,7 @@ async function generateMachineNaryad(){
       ws.getCell("AA" + rowNum).value = Math.round(w.labor * 100) / 100;
       ws.getCell("AC" + rowNum).value = w.laborUnit || "";
       ws.getCell("AE" + rowNum).value = Math.round(w.amount * 100) / 100;
-      ws.getCell("AG" + rowNum).value = i + 1;
+      
       rowNum++;
     });
     // v19.16.6: строка «отработано по часам» — фиксированно строка 26 (после всех работ 14–25), там ей место по шаблону
@@ -7333,7 +7402,7 @@ async function _generateNaryadForPU(month, target, deal = false) {
   ws.getCell('AG74').value = totPay;                               // всего к оплате
   ws.getCell('W108').value = totTariff;                            // итого расчёт: по тарифу
   ws.getCell('AE108').value = totPay;                              // итого расчёт: сумма
-  ws.getCell('AE109').value = Math.round(payroll * 100) / 100;  // «начислено» = ИТОГО фонд
+  ws.getCell('AE109').value = Math.round((dealApplied ? payroll : totPay) * 100) / 100;  // v19.17.31: «начислено» = Σ работникам (почасовой — тарифный фонд, сделка — сдельный)
   // месяцы/годы значениями: «Табель расчёт за …», «Расчёт заработной платы за …», строки подписей
   const _yy = month.split('-')[0];
   ws.getCell('J42').value = monthName; ws.getCell('P42').value = _yy;
@@ -7386,7 +7455,8 @@ window.App = {
   generateOrderDoc, generateTimesheetDoc, generateS29Doc,
   renderCatalogs, addCatalogItem, addFromSquad, saveCatalogItem, closeCatalogModal, editCatalogItem, deleteCatalogItem, importCatalogCSV,
   renderTasks, addTask, toggleTask, deleteTask, setTaskFilter,
-  renderStock, addStockRow, editStockQty, recalcStock, openStockModal, closeStockModal, addStockRowField, toggleNewTmc, saveStockModal, hintYesterday,
+  renderStock, addStockRow, clearStock,
+  editStockQty, recalcStock, openStockModal, closeStockModal, addStockRowField, toggleNewTmc, saveStockModal, hintYesterday,
   saveAppSettings, setTheme, refreshSnapshotsUI, restoreSnapshot, exportAllData, importAllData, clearAllData, importNormsData, exportNormsTemplate,
   generateRoadKmReport, toggleEntry, toggleMonth, deleteMonth,
   renderEntries, renderCalendar, renderRoadSelector, renderRoadsKmSummary,
