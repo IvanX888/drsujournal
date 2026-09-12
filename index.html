@@ -441,6 +441,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
 <base target="_blank">
 <base target="_blank">
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 <button class="fab-top" id="fabTop">↑</button>
@@ -958,7 +959,7 @@ body.dark-mode .entry-details a{color:#64b5f6}
   <div class="modal">
     <div class="modal-header"><span>🔧 Выбрать виды работ и указать объём</span><button class="close-modal" onclick="App.closeSWorksModal()">×</button></div>
     <div class="modal-body">
-      <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.</b></div>
+      <div class="hint" style="margin-bottom:10px"><b>💡 Для каждой работы выберите объект/дорогу из наряда, укажите объём, участок (км) и часы инструмента.<br>Одну и ту же работу можно добавить несколько раз — для разных объектов и с разными объёмами: после «Добавить выбранные» окно остаётся открытым.</b></div>
       <div id="sWorksList"></div>
     </div>
     <div class="modal-footer"><button type="button" class="btn btn-info" onclick="App.addFromSquad('work')">➕ Новый вид работ</button><button type="button" class="btn btn-primary" onclick="App.applySWorks()">✅ Добавить выбранные</button><button type="button" class="btn btn-secondary" onclick="App.closeSWorksModal()">❌ Отмена</button></div>
@@ -2054,7 +2055,7 @@ function renderMonthDashboard(){
         if(w.machineId){ const mm = (State.get('machines') || []).find(x => String(x.id) === String(w.machineId)); if(mm && mm.mtype) grp = (mm.mtype === 'МАЗ' || mm.mtype === 'Кран') ? 'maz' : (mm.mtype === 'Газель' ? null : 'tractor'); }
         if(!grp){ const exW0 = def ? (def.executor || 'road') : 'road'; grp = exW0 === 'road' ? null : exW0; }
         if(grp === null){ catStats.road.norm += nh; }
-        else { catStats[grp].norm += (parseFloat(def.machineLaborCost) || 0) * w.volume; catStats[grp].fact += parseFloat(w.toolHours) || 0; }
+        else { catStats[grp].norm += (parseFloat((def && def.machineLaborCost) || 0) || 0) * w.volume; catStats[grp].fact += parseFloat(w.toolHours) || 0; }
         const obj = w.road || (sq.objects && sq.objects[0]) || '—';
         if(!worksByObj[obj]) worksByObj[obj] = [];
         worksByObj[obj].push({ workName: w.name, volume: w.volume, unit: w.unit });
@@ -2565,7 +2566,7 @@ function normalizeVolume(volume, unit){
   return {value: volume, unit: unit || 'ед.', display: `${volume} ${unit || 'ед.'}`};
 }
 function getUnitBase(unit){
-  if(!unit) return 1000;
+  if(!unit) return 1; // v19.17.26: единица без множителя — иначе норма занижалась в 1000 раз
   const m = unit.toString().trim().match(/^(\d+)/);
   return m ? parseInt(m[1], 10) : 1;
 }
@@ -3675,8 +3676,10 @@ function openSWorksModal(squadId){
     const planBadgeHtml = planBadges ? `<div style="margin-top:2px">${planBadges}</div>` : '';
     const planLabel = isPlanned ? `<span style="display:inline-block;margin-left:4px;padding:1px 5px;background:var(--success);color:#fff;border-radius:4px;font-size:.65rem;font-weight:600">план</span>` : '';
 
-    return `<div style="${((w.executor || 'road') !== needExec) ? 'display:none;' : ''}${itemStyle}" class="sw-item" data-exec="${w.executor || 'road'}">
-      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-wrap:wrap"><input type="checkbox" class="work-cb" data-id="${w.id}" data-name="${Utils.escapeHtml(w.name)}" data-unit="${Utils.escapeHtml(w.unit || '')}" data-labor="${w.laborCost || 0}" data-direct="${w.directCost || 0}" data-toolcost="${w.toolCost || 0}"> <strong class="text-info">${Utils.escapeHtml(w.name)}</strong>${w.executor === 'tractor' ? ' <span title="Работа трактора">🚜</span>' : w.executor === 'maz' ? ' <span title="Работа МАЗа">🚚</span>' : ''} <small style="color:var(--text-secondary)">(${(w.unit || 'ед.')})</small>${planLabel}</label>
+    const _addedN = (sq.works || []).filter(x => x.name === w.name).length;
+    const _addedBadge = _addedN ? ` <span class="norm-badge ok" style="cursor:pointer" title="Уже в наряде — нажмите, чтобы быстро изменить" onclick="event.preventDefault();App.editAddedWork('${Utils.jsAttr(sq.id)}', this.dataset.nm)" data-nm="${Utils.escapeHtml(w.name)}">✓ в наряде ×${_addedN}</span>` : '';
+    return `<div style="${((w.executor || 'road') !== needExec) ? 'display:none;' : ''}${itemStyle}${_addedN ? 'border-left:3px solid var(--success);' : ''}" class="sw-item" data-exec="${w.executor || 'road'}">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;flex-wrap:wrap"><input type="checkbox" class="work-cb" data-id="${w.id}" data-name="${Utils.escapeHtml(w.name)}" data-unit="${Utils.escapeHtml(w.unit || '')}" data-labor="${w.laborCost || 0}" data-direct="${w.directCost || 0}" data-toolcost="${w.toolCost || 0}"> <strong class="text-info" style="cursor:pointer;text-decoration:underline dotted" title="Нажмите, чтобы изменить уже добавленную" onclick="App.editAddedWork('${Utils.jsAttr(sq.id)}', this.dataset.nm)" data-nm="${Utils.escapeHtml(w.name)}">${Utils.escapeHtml(w.name)}</strong>${_addedBadge}${w.executor === 'tractor' ? ' <span title="Работа трактора">🚜</span>' : w.executor === 'maz' ? ' <span title="Работа МАЗа">🚚</span>' : ''} <small style="color:var(--text-secondary)">(${(w.unit || 'ед.')})</small>${planLabel}</label>
       ${planBadgeHtml}
       <div style="margin-left:20px;margin-top:3px">${objectsSelectHtml}
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px">
@@ -3700,6 +3703,19 @@ function switchWorksTab(v, btn){
   document.querySelectorAll('#sWorksTabs .filter-chip').forEach(c => c.classList.toggle('active', c === btn));
   document.querySelectorAll('#sWorksList .sw-item').forEach(el => { el.style.display = (v === 'all' || el.dataset.exec === v) ? 'block' : 'none'; });
 }
+// v19.17.28: быстрое редактирование уже добавленной в наряд работы (из окна выбора)
+function editAddedWork(sid, name){
+  const sq = State.getUI('formSquads').find(s => s.id === sid);
+  if(!sq) return;
+  const matches = (sq.works || []).filter(x => x.name === name);
+  if(!matches.length){ Utils.showToast('Этой работы ещё нет в наряде'); return; }
+  if(matches.length === 1){ editWorkVolume(sid, matches[0].workId); return; }
+  const list = matches.map((m, i) => (i + 1) + '. ' + (m.road || '—') + ': ' + m.volume + ' ' + (m.unit || '') + (m.kmFrom != null && m.kmTo != null ? ' (' + m.kmFrom + '–' + m.kmTo + ' км)' : '')).join('\n');
+  const sel = parseInt(prompt('Эта работа в наряде ' + matches.length + ' раз(а). Какую позицию изменить?\n' + list, '1'), 10);
+  if(isNaN(sel) || sel < 1 || sel > matches.length) return;
+  editWorkVolume(sid, matches[sel - 1].workId);
+}
+
 // v19.17.5: вкладки категорий в модалке работников
 function switchWorkersTab(v, btn){
   document.querySelectorAll('#swTabs .filter-chip').forEach(c => c.classList.toggle('active', c === btn));
@@ -3709,6 +3725,7 @@ function applySWorks(){
   const sq = State.getUI('formSquads').find(s => s.id === State.getUI('currentSquadId'));
   if(!sq) return;
   const tools = State.get('tools');
+  const addedEntries = [];
   document.querySelectorAll('#sWorksList .work-cb').forEach(cb => {
     if(!cb.checked) return;
     const id = cb.dataset.id;
@@ -3762,7 +3779,9 @@ function applySWorks(){
     const mIds = mSel ? Array.from(mSel.selectedOptions).map(o => o.value).filter(Boolean) : [];
     const pushWork = (mid, vol) => {
       const mm = mid ? (sq.machines || []).find(x => String(x.machineId) === String(mid)) : null;
-      sq.works.push({ workId: Utils.generateId(), id, name, unit, laborCost, directCost, toolCost, volume: vol, road, toolId: isNaN(toolIdSel) ? undefined : toolIdSel, toolHours, fuelLiters, kmFrom, kmTo, machineId: mm ? mm.machineId : (mid || null), machineLabel: mm ? mm.machineLabel : '' });
+      const rec = { workId: Utils.generateId(), id, name, unit, laborCost, directCost, toolCost, volume: vol, road, toolId: isNaN(toolIdSel) ? undefined : toolIdSel, toolHours, fuelLiters, kmFrom, kmTo, machineId: mm ? mm.machineId : (mid || null), machineLabel: mm ? mm.machineLabel : '' };
+      sq.works.push(rec);
+      addedEntries.push(rec);
     };
     if(mIds.length <= 1){
       pushWork(mIds[0] || null, volume);
@@ -3772,7 +3791,19 @@ function applySWorks(){
       mIds.forEach(mid => { const share = totH > 0 ? volume * hoursOf(mid) / totH : volume / mIds.length; pushWork(mid, Math.round(share * 1000) / 1000); });
     }
   });
-  renderSquads(); closeSWorksModal(); scheduleDraftSave();
+  renderSquads(); scheduleDraftSave();
+  // v19.17.28: работа заведена не на все объекты наряда — предлагаем добавить для остальных (тем же составом)
+  addedEntries.forEach(a => {
+    const others = (sq.objects || []).filter(o => o !== a.road);
+    if(!others.length) return;
+    if(confirm('«' + a.name + '» добавлена для «' + (a.road || '—') + '». Добавить ещё и для: ' + others.join(', ') + '? (объём и параметры те же)')){
+      others.forEach(o => sq.works.push(Object.assign({}, a, { workId: Utils.generateId(), road: o })));
+    }
+  });
+  renderSquads(); scheduleDraftSave();
+  // окно обновляем — пометки «✓ в наряде» и автоподстановка объёма всегда актуальны
+  openSWorksModal(State.getUI('currentSquadId'));
+  Utils.showToast('✅ Добавлено. Пометки «✓ в наряде» обновлены — нажмите на работу, чтобы быстро изменить. Закрыть: ✕ или «Отмена».');
 }
 
 function openSTmcModal(squadId){
@@ -4020,7 +4051,8 @@ async function doSaveEntry(scope){
     applyWriteOff(entry);
 
     // Сквозное: обновить табель (oldEntry теперь передаётся!)
-    if(scope === 'entry-ts' || scope === 'all'){
+    // v19.17.26: для НОВОЙ записи синхронизируем всегда — иначе буквы АБЗ/База не ставились
+    if(scope === 'entry-ts' || scope === 'all' || editingEntryIndex < 0){
       syncTimesheetFromEntry(entry, oldEntry);
     }
 
@@ -4058,9 +4090,10 @@ function syncTimesheetFromEntry(entry, oldEntry){
 
     oldWorkers.forEach(workerName => {
       const oldKey = oldMonth + '|' + workerName + '|' + oldDay;
-      // УДАЛЯЕМ ОБА хранилища БЕЗУСЛОВНО
+      // v19.17.26: числа перезаписываем (зеркалят наряд), РУЧНЫЕ буквы (Б, П, ОТП...) сохраняем
       delete timesheetOverrides[oldKey];
-      delete timesheetLetters[oldKey];
+      const _l = timesheetLetters[oldKey];
+      if(_l === 'АБЗ' || _l === 'База') delete timesheetLetters[oldKey];
     });
   }
 
@@ -4072,8 +4105,16 @@ function syncTimesheetFromEntry(entry, oldEntry){
 
   entry.squads?.forEach(sq => {
     // Проверяем — есть ли в наряде АБЗ или База?
-    const hasAbz = sq.objects?.some(o => o.includes('АБЗ') || o.includes('🏭'));
-    const hasBase = sq.objects?.some(o => o.includes('База') || o.includes('🏢'));
+    // v19.17.26: единый критерий с distributeHoursByNorm — тип из справочника, подстрока — запасной вариант
+    const _roadsR = State.get('roads') || [];
+    const hasAbz = sq.objects?.some(o => {
+      const r = _roadsR.find(x => x.name === o);
+      return (r && r.type === 'abz') || o.includes('АБЗ') || o.includes('🏭');
+    });
+    const hasBase = sq.objects?.some(o => {
+      const r = _roadsR.find(x => x.name === o);
+      return (r && r.type === 'base') || o.includes('База') || o.includes('🏢');
+    });
 
     sq.people?.forEach(p => {
       const key = month + '|' + p.name + '|' + day;
@@ -4155,6 +4196,15 @@ async function deleteEntry(idx){
   const entries = State.get('entries');
   const delEntry = entries[idx];
   if(delEntry) rollbackWriteOff(delEntry.id);
+  // v19.17.26: убираем запись из табеля — не остаётся сиротских часов/букв
+  if(delEntry){
+    const _m = delEntry.date.slice(0, 7), _d = parseInt(delEntry.date.slice(8, 10), 10);
+    const _to = State.get('timesheetOverrides'), _tl = State.get('timesheetLetters');
+    (delEntry.squads || []).forEach(sq => (sq.people || []).forEach(p => {
+      delete _to[_m + '|' + p.name + '|' + _d];
+      delete _tl[_m + '|' + p.name + '|' + _d];
+    }));
+  }
   entries.splice(idx, 1);
   await Storage.saveAll(State.getAllForSave());
   renderEntries(); renderCalendar(); renderRoadsKmSummary(); renderStock();
@@ -6516,9 +6566,13 @@ async function generateNaryad(entry) {
       });
     }
 
+    // v19.17.26: видимые строки шаблона — только 14–25 (26–31 скрыты): пишем максимум 12 работ и предупреждаем
+    if (works.length > 12) {
+      Utils.showToast('⚠️ Работ ' + works.length + ', в наряд-задание видны первые 12. Не вошло: ' + works.slice(12).map(function(w){ return w.name; }).join(', '));
+    }
     for (let i = 0; i < 18; i++) {
       var rowNum = 14 + i;
-      if (i < works.length) {
+      if (i < works.length && rowNum <= 25) {
         var w = works[i];
         var shifr = "";
         var desc = w.name || "";
@@ -6663,6 +6717,63 @@ function renderNaryadTargetSelect(){
   sel.innerHTML = html;
 }
 
+// v19.17.28: единый отбор работ, выполненных техникой конкретного водителя
+// (та же логика привязки, что при заполнении наряда: явная машина → владелец;
+//  машина не выбрана → единственной машине бригады или по исполнителю работы 🚜/🚚)
+function machineWorksForDriver(sq, driver, worksCatalog){
+  const msq = sq.machines || [];
+  return (sq.works || []).filter(w => {
+    const wc = (worksCatalog || []).find(x => x.name === w.name);
+    if(w.machineId){
+      // v19.17.29: машина выбрана явно — работа идёт в наряд её водителя, даже если «норма на технику» = 0
+      const owner = msq.find(m => String(m.machineId) === String(w.machineId));
+      return !!(owner && owner.driver === driver);
+    }
+    if(!(wc && parseFloat(wc.machineLaborCost) > 0)) return false; // ручные работы в наряд на технику не идут
+    let onlyDriver = msq.length === 1 ? msq[0].driver : (msq.length === 0 ? sq.driverName : null);
+    if(onlyDriver === null && wc.executor){
+      const needMaz = wc.executor === 'maz';
+      const machinesCat = State.get('machines') || [];
+      const m = msq.find(mm => {
+        const mc = machinesCat.find(x => String(x.id) === String(mm.machineId));
+        const t = mc ? (mc.mtype || '') : ((mm.machineLabel || '').split(' ')[0]);
+        return needMaz ? t === 'МАЗ' : (t && t !== 'МАЗ' && t !== 'Газель');
+      });
+      if(m) onlyDriver = m.driver;
+    }
+    return onlyDriver === driver;
+  });
+}
+
+// v19.17.29: объекты, где водитель реально работал своей техникой (в т.ч. работы без нормы на технику):
+// явная машина → владелец; машина не выбрана → исполнитель работы + тип его машины (🚜/🚚)
+function driverWorkObjects(sq, driver, worksCatalog){
+  const msq = sq.machines || [];
+  const machinesCat = State.get('machines') || [];
+  const mineM = msq.find(m => m.driver === driver);
+  let myType = '';
+  if(mineM){
+    const mc = machinesCat.find(x => String(x.id) === String(mineM.machineId));
+    myType = mc ? (mc.mtype || '') : ((mineM.machineLabel || '').split(' ')[0]);
+  }
+  const isMaz = myType === 'МАЗ';
+  const isTractor = myType && myType !== 'МАЗ' && myType !== 'Газель';
+  const objs = new Set();
+  (sq.works || []).forEach(w => {
+    const o = w.road || ((sq.objects || [])[0] || '');
+    if(!o) return;
+    if(w.machineId){
+      const owner = msq.find(m => String(m.machineId) === String(w.machineId));
+      if(owner && owner.driver === driver) objs.add(o);
+    } else if(mineM){
+      const wc = (worksCatalog || []).find(x => x.name === w.name);
+      const ex = wc ? (wc.executor || 'road') : 'road';
+      if((ex === 'maz' && isMaz) || (ex === 'tractor' && isTractor)) objs.add(o);
+    }
+  });
+  return [...objs];
+}
+
 function getMonthSquadsWithTech(month){
   const rows = [];
   State.get('entries').forEach(e => {
@@ -6705,7 +6816,15 @@ function fillMachObjects(){
   const osel = Utils.$('machObj');
   if(!osel) return;
   if(!driver){ osel.innerHTML = '<option value="">— выберите водителя —</option>'; return; }
+  // v19.17.28: объекты водителя — только те, где реально работала ЕГО техника (а не вся бригада);
+  // если машинных работ нет — наряд «только по часам», берём объекты бригады как раньше
+  const wcat0 = State.get('works') || [];
   const objs = [...new Set(getMonthSquadsWithTech(month).filter(r => r.driver === driver).flatMap(r => {
+    const mine = machineWorksForDriver(r.sq, driver, wcat0);
+    if(mine.length) return mine.map(w => w.road || ((r.sq.objects || [])[0] || '')).filter(Boolean);
+    // v19.17.29: «только по часам» — только объекты, где реально работал ЭТОТ водитель (а не вся бригада)
+    const dObjs = driverWorkObjects(r.sq, driver, wcat0);
+    if(dObjs.length) return dObjs;
     const set = new Set(r.sq.objects || []);
     (r.sq.works || []).forEach(w => { if(w.road) set.add(w.road); });
     return [...set];
@@ -6740,34 +6859,28 @@ async function generateMachineNaryad(){
     }
     getMonthSquadsWithTech(month).filter(r => r.driver === driver).forEach(r => {
       if(!machineLabel && r.machineLabel) machineLabel = r.machineLabel;
-      const inObj = targetNames
-        ? ((r.sq.objects || []).some(o => targetNames.has(o)) || (r.sq.works || []).some(w => w.road && targetNames.has(w.road)))
-        : ((r.sq.objects || []).includes(obj) || (r.sq.works || []).some(w => w.road === obj));
-      if(!inObj) return;
+      // v19.17.28: в документ идут только работы ЕГО техники ПО ЭТОМУ объекту (своя дорога w.road, иначе первый объект наряда);
+      // часы — только с дней/бригад, где его техника реально работала на этом объекте (раньше часы и работы падали на ВСЕ объекты бригады)
+      const mine = machineWorksForDriver(r.sq, driver, worksCatalog);
+      const objOf = w => w.road || ((r.sq.objects || [])[0] || '');
+      const tied = mine.filter(w => targetNames ? targetNames.has(objOf(w)) : objOf(w) === obj);
+      if(!tied.length){
+        // наряд «только по часам»: машинных работ у водителя нет, но он с машиной был в бригаде на этом объекте
+        if(mine.length) return;
+        // v19.17.29: часы «по часам» — только объекты, где реально работал ЭТОТ водитель (иначе 12 ч падали на все объекты бригады)
+        const dObjs = driverWorkObjects(r.sq, driver, worksCatalog);
+        const inObjOld = dObjs.length
+          ? (targetNames ? dObjs.some(o => targetNames.has(o)) : dObjs.includes(obj))
+          : (targetNames
+              ? ((r.sq.objects || []).some(o => targetNames.has(o)) || (r.sq.works || []).some(w => w.road && targetNames.has(w.road)))
+              : ((r.sq.objects || []).includes(obj) || (r.sq.works || []).some(w => w.road === obj)));
+        if(!inObjOld) return;
+      }
       const drv = (r.sq.people || []).find(p => p.name === driver);
       if(drv){ const d = parseInt(r.date.slice(8, 10)); dayHours[d] = (dayHours[d] || 0) + (parseFloat(drv.hours) || 0); }
-      (r.sq.works || []).forEach(w => {
+      tied.forEach(w => {
         const wc = worksCatalog.find(x => x.name === w.name);
-        if(!(wc && parseFloat(wc.machineLaborCost) > 0)) return;
-        const msq = r.sq.machines || [];
-        if(w.machineId){
-          const owner = msq.find(m => String(m.machineId) === String(w.machineId));
-          if(!owner || owner.driver !== driver) return;
-        } else {
-          let onlyDriver = msq.length === 1 ? msq[0].driver : (msq.length === 0 ? r.sq.driverName : null);
-          // v19.16.2: машин несколько — работу без выбранной машины отдаём водителю по исполнителю работы (🚜 → МТЗ/грейдер/погрузчик, 🚚 → МАЗ)
-          if(onlyDriver === null && wc.executor){
-            const needMaz = wc.executor === 'maz';
-            const machinesCat = State.get('machines') || [];
-            const m = msq.find(mm => {
-              const mc = machinesCat.find(x => String(x.id) === String(mm.machineId));
-              const t = mc ? (mc.mtype || '') : ((mm.machineLabel || '').split(' ')[0]);
-              return needMaz ? t === 'МАЗ' : (t && t !== 'МАЗ' && t !== 'Газель');
-            });
-            if(m) onlyDriver = m.driver;
-          }
-          if(onlyDriver !== driver) return;
-        }
+        if(!wc) return;
         const key = w.name;
         if(!worksAgg[key]) worksAgg[key] = { unit: w.unit || wc.unit || '', volume: 0, labor: 0, amount: 0, direct: parseFloat(wc.directCost) || 0, mlabor: parseFloat(wc.machineLaborCost) || 0, laborUnit: parseFloat(wc.laborCost) || 0 };
         const vol = parseFloat(w.volume) || 0;
@@ -6855,8 +6968,11 @@ async function generateMachineNaryad(){
     // v19.17.9/20: подписанты из Настроек — ФИО в КОНЦЕ строки (после линии), как на бумажной форме
     const _signM = State.get('settings') || {};
     if(_signM.master){
-      ws.getCell("B28").value = "Задание выдал прораб (мастер) _____________ " + _signM.master;
-      ws.getCell("B30").value = "Прораб (мастер) ______________ " + _signM.master;
+      // v19.17.30: линия остаётся в B28/B30 (чистая, для подписи), ФИО — в СЛЕДУЮЩЕЙ ячейке, дата — после (как на бумажной форме)
+      ws.getCell("G28").value = _signM.master;
+      ws.getCell("K28").value = monthUp + " " + yy + " г.";
+      ws.getCell("F30").value = _signM.master;
+      ws.getCell("J30").value = monthUp + " " + yy + " г.";
     }
     if(_signM.tabler) ws.getCell("T46").value = "Табель вёл: (бригадир, прораб, мастер) ____________________ " + _signM.tabler;
     if(_signM.engineer) ws.getCell("AB54").value = "Гл. инженер ___________________ " + _signM.engineer;
@@ -6868,7 +6984,9 @@ async function generateMachineNaryad(){
     // v19.16.4: итоги табеля — значениями (как в наряде дорожных рабочих), чтобы были видны в любом просмотрщике без пересчёта формул
     const drvDays = Object.keys(dayHours).length;
     ws.getCell("T40").value = totalHours;
+    ws.getCell("X40").value = totalHours; // v19.17.30: «всего» часов (как в наряде дорожных)
     ws.getCell("Y40").value = drvDays;
+    ws.getCell("AA40").value = drvDays;   // v19.17.30: «всего» дней
     ws.getCell("AG40").value = Math.round(totalHours * rate * 100) / 100;
     ws.getCell("I70").value = drvInfo.grade || "";
     ws.getCell("L70").value = rate || "";
@@ -7017,7 +7135,9 @@ async function _generateNaryadForPU(month, target, deal = false) {
   const normPct = (fundNormHours > 0 && totalFactHours > 0) ? (fundNormHours / totalFactHours) * 100 : 0;
   if (deal && totalTariffFund > 0 && fundNormHours > 0 && normPct >= 100 && normPct <= 130) {
     dealApplied = true;
-    const koeff = payroll / totalTariffFund;
+    // v19.17.26: нормировка на Σ(тариф×КТУ) — Σ зарплат сходится с «начислено» (раньше расходилось при КТУ≠1)
+    const tariffKtuFund = workerList.reduce((s, w) => s + (w.totalHours || 0) * (w.rate || 0) * (w.ktu || 1), 0);
+    const koeff = tariffKtuFund > 0 ? payroll / tariffKtuFund : 0;
     workerList.forEach(w => {
       w.koeff = koeff * (w.ktu || 1);
       w.salary = Math.round(w.totalHours * (w.rate || 0) * w.koeff * 100) / 100;
@@ -7055,6 +7175,13 @@ async function _generateNaryadForPU(month, target, deal = false) {
   ws.getCell('A6').value = 'Прорабство: ' + target;
   ws.getCell('A7').value = 'Бригада: Дорожная бригада';
 
+  // v19.17.26: предупреждение о молчаливой обрезке — раньше данные терялись без уведомления
+  if(workList.length > 11){
+    Utils.showToast('⚠️ Работ ' + workList.length + ', в наряд входит 11. Не вошло: ' + workList.slice(11).map(w => w.name).join(', '));
+  }
+  if(workerList.length > 14){
+    Utils.showToast('⚠️ Рабочих ' + workerList.length + ', в наряд входит 14. Не вошли: ' + workerList.slice(14).map(w => w.name).join(', '));
+  }
   // Таблица работ (строки 14–24; строка 25 — ИТОГО, 26–31 скрыты в шаблоне)
   const maxWorks = 11;
   for (let i = 0; i < maxWorks; i++) {
@@ -7239,7 +7366,8 @@ async function _generateNaryadForPU(month, target, deal = false) {
 window.App = {
   init, generateNaryad, generateNaryadFromDoc, generateNaryadForPU, getMonthSquadsWithTech, fillMachDrivers, fillMachObjects, generateMachineNaryad, saveMachineAssign, closeMachineModal, addMachineFromAssign, openMachineEditor, removeSquadMachine, _generateNaryadForPU, setPuFilterType, generateStockMonthReport, renderNaryadTargetSelect, showPage, showSubtab, showCatalog, showStockTab, showReportTab,
   setFilter, changeDynamicMonth, changeStaticMonth, showDayDetails, addEntryFromCalendar, addTaskFromCalendar, closeDayModal,
-  dashMonth, renderMonthDashboard, globalMonth, switchWorksTab, switchWorkersTab, gotoMore,
+  dashMonth, renderMonthDashboard, globalMonth, editAddedWork,
+  switchWorksTab, switchWorkersTab, gotoMore,
   addSquad, removeSquad, duplicateSquad, changeSquadCategory, updateSquadField,
   addObject, removeObject, removeWork, editWorkVolume, removeTmc, updateWorkerHours,
   saveWorkEdit, closeWorkEditModal,
@@ -7545,7 +7673,8 @@ function generateSummaryPeriodReport(){
       const worksByObject = {}; const workNormMap = {};
       worksList.forEach(w => {
         const o = (w.road && objs.includes(w.road)) ? w.road : (objs[0] || '—');
-        (worksByObject[o] = worksByObject[o] || []).push(w);
+        // v19.17.26.1: формат {workName} — такой ждёт distributeHoursByNorm (иначе часы = 0)
+        (worksByObject[o] = worksByObject[o] || []).push({ workName: w.name, name: w.name, volume: w.volume, unit: w.unit, laborCost: w.laborCost });
         const defW = State.get('works').find(x => x.id === w.id || x.name === w.name);
         workNormMap[w.name] = defW ? (defW.laborCost || 0) : (w.laborCost || 0);
       });
