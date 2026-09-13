@@ -678,9 +678,9 @@ body.dark-mode .entry-details a{color:#64b5f6}
     </div>
     <div class="card" style="margin-top:14px;border:2px solid var(--brand)">
       <div class="card-title">📄 Форма С-29 — расход материалов за месяц</div>
-      <div style="font-size:.78rem;color:var(--text-secondary);margin-bottom:8px">Бланк НРР-2022 (встроен). Только материалы на работы; ГСМ и расходники — отдельными отчётами. При «Все ПУ» скачается файл на каждый участок.</div>
-      <div class="form-group"><label>Месяц</label><input type="month" id="s29Month" onchange="App.globalMonth(this.value)"></div>
-      <div class="form-group"><label>Производственный участок</label><select id="s29Pu"><option value="all">Все ПУ (лист на каждый)</option><option>ПУ-1</option><option>ПУ-2</option><option>ПУ-3</option><option>АБЗ</option><option>База</option></select></div>
+      <div style="font-size:.78rem;color:var(--text-secondary);margin-bottom:8px">Бланк НРР-2022 (встроен). Только материалы на работы; ГСМ и расходники — отдельными отчётами. «Все ПУ» — один общий файл: разбивка по ПУ и по объектам. В списке — только участки с работами месяца.</div>
+      <div class="form-group"><label>Месяц</label><input type="month" id="s29Month" onchange="App.globalMonth(this.value);App.updateS29PuList()"></div>
+      <div class="form-group"><label>ПУ / объект (только с работами месяца)</label><select id="s29Pu"><option value="all">Все ПУ (общий файл)</option></select></div>
       <button class="btn btn-primary" onclick="App.generateS29Doc()">📄 Сформировать С-29 (Excel)</button>
     </div>
   </div>
@@ -981,7 +981,16 @@ body.dark-mode .entry-details a{color:#64b5f6}
     <div class="modal-body">
       <div id="sTmcList"></div>
     </div>
-    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button type="button" class="btn btn-secondary" onclick="App.closeSTmcModal()">❌ Отмена</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-info" onclick="App.addTmcFromSquad()">➕ Новый материал</button><button type="button" class="btn btn-primary" onclick="App.applySTmc()">✅ Добавить ТМЦ</button><button type="button" class="btn btn-secondary" onclick="App.closeSTmcModal()">❌ Отмена</button></div>
+  </div>
+</div>
+
+<!-- Объекты / дороги (v19.17.46): дороги по ПУ + объекты по ПУ, создание новой — тут же -->
+<div class="modal-overlay" id="sObjectsModal">
+  <div class="modal">
+    <div class="modal-header"><span>📍 Выбрать объекты / дороги</span><button class="close-modal" onclick="App.closeSObjectsModal()">×</button></div>
+    <div class="modal-body"><div id="sObjectsList"></div></div>
+    <div class="modal-footer"><button type="button" class="btn btn-info" onclick="App.addRoadFromObjects()">➕ Новая дорога/объект</button><button type="button" class="btn btn-primary" onclick="App.applySObjects()">✅ Добавить</button><button type="button" class="btn btn-secondary" onclick="App.closeSObjectsModal()">❌ Отмена</button></div>
   </div>
 </div>
 
@@ -1039,9 +1048,9 @@ body.dark-mode .entry-details a{color:#64b5f6}
 <!-- Назначение техники водителю -->
 <div class="modal-overlay" id="machineModal">
   <div class="modal">
-    <div class="modal-header"><span>🚜 Назначить технику</span><button class="close-modal" onclick="App.closeMachineModal()">×</button></div>
+    <div class="modal-header"><span>🚜 Назначить технику</span></div>
     <div class="modal-body"><div id="machineAssignList"></div></div>
-    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.saveMachineAssign()">✅ Назначить</button><button type="button" class="btn btn-secondary" onclick="App.closeMachineModal()">🕐 Позже</button></div>
+    <div class="modal-footer"><button type="button" class="btn btn-primary" onclick="App.saveMachineAssign()">✅ Назначить</button></div>
   </div>
 </div>
 
@@ -3498,7 +3507,7 @@ function renderSquads(){
       <div class="squad-header"><div class="squad-title">Наряд #${index + 1}</div><div style="display:flex;align-items:center;gap:8px"><span class="squad-category" style="background:${catInfo.color}">${catInfo.name}</span><button type="button" style="margin-left:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.8rem;cursor:pointer;color:var(--text);font-weight:500" onclick="App.duplicateSquad('${Utils.jsAttr(sq.id)}')">📋</button></div></div>
       ${machinesHtml}
     <div class="form-group"><label>Категория наряда</label><select onchange="App.changeSquadCategory('${Utils.jsAttr(sq.id)}',this.value)">${Object.keys(CATEGORIES).map(k => `<option value="${k}"${sq.category === k ? ' selected' : ''}>${CATEGORIES[k].name}</option>`).join('')}</select></div>
-      <div class="form-group"><label>Объекты / дороги</label><input type="text" list="roadsList" id="objInp_${sq.id}" placeholder="Выберите или введите объект" onkeydown="if(event.key==='Enter'){event.preventDefault();App.addObject('${Utils.jsAttr(sq.id)}')}"><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.addObject('${Utils.jsAttr(sq.id)}')">➕ Добавить объект</button><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.addFromSquad('road','${Utils.jsAttr(sq.id)}')">💾 В справочник дорог</button></div>
+      <div class="form-group"><label>Объекты / дороги</label><input type="text" list="roadsList" id="objInp_${sq.id}" placeholder="Быстрый ввод названия — Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();App.addObject('${Utils.jsAttr(sq.id)}')}"><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.openSObjectsModal('${Utils.jsAttr(sq.id)}')">📍 Выбрать объекты / дороги</button></div>
       <div class="object-tags" id="objTags_${sq.id}">${objTags}</div>
       ${planHintHtml}
       <div class="form-group"><label>Работники</label><div class="people-list" id="peopleList_${sq.id}">${peoplePreview}</div><button type="button" class="btn btn-small btn-secondary" style="margin-top:6px" onclick="App.openSwModal('${Utils.jsAttr(sq.id)}')">➕ Выбрать работников</button></div>
@@ -3514,9 +3523,63 @@ function renderSquads(){
   });
 }
 
-/* ==============================================
+/* =============================================
    МОДАЛЬНЫЕ ОКНА: РАБОТНИКИ, РАБОТЫ, ТМЦ
    ============================================== */
+// v19.17.46: единое окно выбора объектов — дороги по ПУ, под ними объекты/АБЗ/База по ПУ
+function openSObjectsModal(squadId){
+  State.setUI('currentSquadId', squadId);
+  const sq = State.getUI('formSquads').find(s => s.id === squadId);
+  if(!sq) return;
+  const roads = State.get('roads') || [];
+  const selected = new Set(sq.objects || []);
+  const puRoads = {}, puObjs = {};
+  roads.forEach(r => {
+    const k = r.pu || 'Без ПУ';
+    const g = (!r.type || r.type === 'road') ? puRoads : puObjs;
+    (g[k] = g[k] || []).push(r);
+  });
+  [puRoads, puObjs].forEach(g => Object.keys(g).sort().forEach(k => g[k].sort((a, b) => a.name.localeCompare(b.name))));
+  // v19.17.47: вкладки как в выборе людей — 🛣️ Дороги / 📍 Объекты / Все
+  const mkItems = (arr, cat) => arr.map(r => `<label data-cat="${cat}" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-bottom:1px solid var(--border);cursor:pointer"><input type="checkbox" data-name="${Utils.escapeHtml(r.name)}"${selected.has(r.name) ? ' checked' : ''} style="width:20px;height:20px;accent-color:var(--brand)"><span style="flex:1">${Utils.escapeHtml(r.name)}${(!r.type || r.type === 'road') && r.length ? ` <small style="color:var(--text-secondary)">${r.length} км</small>` : ''}${r.plan ? ` <small style="color:var(--text-secondary)">· ${Utils.escapeHtml(r.plan)}</small>` : ''}</span><small>${(!r.type || r.type === 'road') ? '🛣️' : r.type === 'abz' ? '🏭' : r.type === 'base' ? '🏢' : '📍'}</small></label>`).join('');
+  let html = `<div id="sObjTabs" style="position:sticky;top:-16px;z-index:6;background:var(--card);padding:8px 0 6px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1.5px solid var(--border);margin-bottom:6px">${[['road','🛣️ Дороги'],['obj','📍 Объекты'],['all','Все']].map(([v,l]) => `<button type="button" class="filter-chip${v==='road'?' active':''}" data-tab="${v}" onclick="App.switchSObjectsTab('${v}',this)">${l}</button>`).join('')}</div>`;
+  Object.keys(puRoads).forEach(pu => {
+    html += `<div data-cat="road" style="position:sticky;top:24px;z-index:5;background:var(--card);padding:6px 4px;font-weight:700;color:var(--brand);border-bottom:1.5px solid var(--border);font-size:.82rem">🛣️ ${Utils.escapeHtml(pu)}</div>` + mkItems(puRoads[pu], 'road');
+  });
+  const objKeys = Object.keys(puObjs);
+  if(objKeys.length){
+    objKeys.forEach(pu => {
+      html += `<div data-cat="obj" style="position:sticky;top:24px;z-index:5;background:var(--card);padding:5px 4px;font-weight:600;color:var(--accent);border-bottom:1px solid var(--border);font-size:.78rem">📍 ${Utils.escapeHtml(pu)}</div>` + mkItems(puObjs[pu], 'obj');
+    });
+  }
+  if(!Object.keys(puRoads).length && !objKeys.length) html += '<div class="empty-state">Справочник пуст — добавьте первую дорогу кнопкой ниже</div>';
+  Utils.$('sObjectsList').innerHTML = html;
+  Utils.$('sObjectsModal').classList.add('active');
+}
+function closeSObjectsModal(){ Utils.$('sObjectsModal').classList.remove('active'); }
+// v19.17.47: переключение вкладок дороги/объекты
+function switchSObjectsTab(v, btn){
+  document.querySelectorAll('#sObjTabs .filter-chip').forEach(c => c.classList.toggle('active', c === btn));
+  document.querySelectorAll('#sObjectsList [data-cat]').forEach(el => { el.style.display = (v === 'all' || el.dataset.cat === v) ? '' : 'none'; });
+}
+function applySObjects(){
+  const sq = State.getUI('formSquads').find(s => s.id === State.getUI('currentSquadId'));
+  if(!sq){ closeSObjectsModal(); return; }
+  sq.objects = Array.from(document.querySelectorAll('#sObjectsList input:checked')).map(cb => cb.dataset.name);
+  renderSquads(); closeSObjectsModal(); scheduleDraftSave();
+  Utils.showToast('✅ Объекты обновлены');
+}
+function addRoadFromObjects(){
+  State.setUI('catalogReturnTo', 'sObjectsModal');
+  closeSObjectsModal();
+  addCatalogItem('road');
+}
+// v19.17.49: новый материал прямо из окна ТМЦ — возврат сюда с отметкой новой позиции
+function addTmcFromSquad(){
+  State.setUI('catalogReturnTo', 'sTmcModal');
+  closeSTmcModal();
+  addCatalogItem('tmc');
+}
 function openSwModal(squadId){
   State.setUI('currentSquadId', squadId);
   const sq = State.getUI('formSquads').find(s => s.id === squadId);
@@ -3838,27 +3901,49 @@ function applySWorks(){
   Utils.showToast('✅ Добавлено. Пометки «✓ в наряде» обновлены — нажмите на работу, чтобы быстро изменить. Закрыть: ✕ или «Отмена».');
 }
 
+// v19.17.48: окно ТМЦ — вкладки (топливо/масла/все) и количество сразу в строке, без prompt
 function openSTmcModal(squadId){
   State.setUI('currentSquadId', squadId);
+  const sq = State.getUI('formSquads').find(s => s.id === squadId);
   const modal = Utils.$('sTmcModal');
   const list = Utils.$('sTmcList');
   const tmc = State.get('tmc');
-  list.innerHTML = tmc.map(t => `<label style="display:block;margin:8px 0;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer"><input type="checkbox" data-id="${t.id}" data-name="${Utils.escapeHtml(t.name)}" data-unit="${Utils.escapeHtml(t.unit || '')}" data-price="${t.price || 0}"> <b>${Utils.escapeHtml(t.name)}</b> <small style="color:var(--text-secondary)">(${t.unit || ''})</small></label>`).join('');
+  const _inSquad = id => (sq && (sq.tmc || []).some(t => String(t.tmcId ?? t.id) === String(id)));
+  const _cat = n => /бензин|дизель|соляр|топливо|гсм/i.test(n) ? 'fuel' : /масло|смазк/i.test(n) ? 'oil' : 'other';
+  list.innerHTML = `<div id="sTmcTabs" style="position:sticky;top:-16px;z-index:6;background:var(--card);padding:8px 0 6px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1.5px solid var(--border);margin-bottom:6px">${[['fuel','⛽ Топливо'],['oil','🛢 Масла'],['all','Все']].map(([v,l]) => `<button type="button" class="filter-chip${v==='fuel'?' active':''}" data-tab="${v}" onclick="App.switchSTmcTab('${v}',this)">${l}</button>`).join('')}</div>` +
+    tmc.map(t => {
+      const cat = _cat(t.name || '');
+      const added = _inSquad(t.id);
+      return `<div data-cat="${cat}" style="display:flex;align-items:center;gap:8px;padding:7px 8px;border-bottom:1px solid var(--border)"><input type="checkbox" class="tmc-cb" data-id="${t.id}" data-name="${Utils.escapeHtml(t.name)}" data-unit="${Utils.escapeHtml(t.unit || '')}" data-price="${t.price || 0}"${added ? ' checked' : ''} style="width:20px;height:20px;accent-color:var(--brand)"><span style="flex:1"><b>${Utils.escapeHtml(t.name)}</b> <small style="color:var(--text-secondary)">(${t.unit || ''})</small>${added ? ' <span class="norm-badge ok">✓ в наряде</span>' : ''}</span><input type="number" class="tmc-qty" min="0" step="0.01" placeholder="кол-во" style="width:80px;padding:4px 6px;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--text);font-size:.85rem"></div>`;
+    }).join('');
   modal.classList.add('active');
 }
 function closeSTmcModal(){ Utils.$('sTmcModal').classList.remove('active'); State.setUI('currentSquadId', null); }
+function switchSTmcTab(v, btn){
+  document.querySelectorAll('#sTmcTabs .filter-chip').forEach(c => c.classList.toggle('active', c === btn));
+  document.querySelectorAll('#sTmcList [data-cat]').forEach(el => { el.style.display = (v === 'all' || el.dataset.cat === v) ? '' : 'none'; });
+}
 function applySTmc(){
   const sq = State.getUI('formSquads').find(s => s.id === State.getUI('currentSquadId'));
   if(!sq) return;
-  document.querySelectorAll('#sTmcList input:checked').forEach(cb => {
+  let added = 0;
+  document.querySelectorAll('#sTmcList .tmc-cb:checked').forEach(cb => {
     const id = parseInt(cb.dataset.id);
-    if(!sq.tmc.some(t => t.id === id)){
-      const qty = parseFloat(prompt('Количество ' + cb.dataset.name + ':', '1'));
-      if(isNaN(qty) || qty <= 0) return;
-      sq.tmc.push({ id, name: cb.dataset.name, unit: cb.dataset.unit, qty, price: parseFloat(cb.dataset.price) || 0 });
+    const qtyInp = cb.closest('div').querySelector('.tmc-qty');
+    const qty = parseFloat((qtyInp && qtyInp.value) || '1');
+    if(isNaN(qty) || qty <= 0) return;
+    const existing = sq.tmc.find(t => t.id === id);
+    if(existing){ existing.qty = qty; }
+    else {
+      // v19.17.54: материал с нормой на работах списывается автоматически — предупреждаем о двойном списании
+      const hasNorm = (State.get('works') || []).some(w => (w.materialNorms || []).some(n => String(n.tmcId) === String(id)));
+      if(hasNorm && !confirm('«' + cb.dataset.name + '» списывается автоматически по норме работ.\nРучное добавление = двойное списание со склада.\n\nВсё равно добавить?')) return;
+      sq.tmc.push({ tmcId: id, id, name: cb.dataset.name, unit: cb.dataset.unit, qty, price: parseFloat(cb.dataset.price) || 0 });
+      added++;
     }
   });
   renderSquads(); closeSTmcModal(); scheduleDraftSave();
+  Utils.showToast(added ? '✅ ТМЦ добавлено: ' + added : '✅ Количества ТМЦ обновлены');
 }
 
 /* ==============================================
@@ -3888,6 +3973,17 @@ function applyWriteOff(entry){
         // История
         stockWriteOffHistory.push({ date: entry.date, entryId: entry.id, entryDate: entry.date, tmcId: norm.tmcId, name: norm.name, unit: norm.unit || w.unit, qty, workName: w.name, workId: w.id, object: w.road || (sq.objects && sq.objects[0]) || '' });
       });
+    });
+    // v19.17.54: ручной ТМЦ наряда списывается со склада (перчатки, лопаты, сверхнорматив);
+    // откат — по entryId при правке/удалении, как у нормативных списаний
+    (sq.tmc || []).forEach(t => {
+      const qty = parseFloat(t.qty) || 0;
+      if(qty <= 0) return;
+      const tid = t.tmcId != null ? t.tmcId : t.id;
+      const existing = stockWriteOff.find(s => String(s.tmcId) === String(tid) && s.name === t.name);
+      if(existing){ existing.qty += qty; }
+      else { stockWriteOff.push({ tmcId: tid, name: t.name, unit: t.unit || '', qty }); }
+      stockWriteOffHistory.push({ date: entry.date, entryId: entry.id, entryDate: entry.date, tmcId: tid, name: t.name, unit: t.unit || '', qty, workName: 'Ручное списание (ТМЦ наряда)', workId: null, object: (sq.objects && sq.objects[0]) || '', manual: true });
     });
   });
 }
@@ -4091,6 +4187,9 @@ async function doSaveEntry(scope){
     // v19.17.26: для НОВОЙ записи синхронизируем всегда — иначе буквы АБЗ/База не ставились
     if(scope === 'entry-ts' || scope === 'all' || editingEntryIndex < 0){
       syncTimesheetFromEntry(entry, oldEntry);
+    } else if(editingEntryIndex >= 0){
+      // v19.17.50: честно предупреждаем, что табель остался со старыми данными
+      Utils.showToast('⚠️ Табель не изменён — при расхождении правьте его вручную или пересохраните с «в записи и табеле»');
     }
 
     const saveResult = await Storage.saveAll(State.getAllForSave());
@@ -4864,7 +4963,7 @@ function renderCatalogs(){
 function addCatalogItem(type, presetName){
   State.setUI('catalogType', type);
   State.setUI('catalogEditingId', null);
-  const titleMap = { worker: 'Добавить работника', work: 'Добавить вид работы', tool: 'Добавить инструмент', road: 'Добавить дорогу / объект', machine: 'Добавить технику' };
+  const titleMap = { worker: 'Добавить работника', work: 'Добавить вид работы', tool: 'Добавить инструмент', road: 'Добавить дорогу / объект', machine: 'Добавить технику', tmc: 'Добавить материал (ТМЦ)' };
   Utils.$('catalogModalTitle').textContent = titleMap[type];
 
   let html = '';
@@ -4896,6 +4995,11 @@ function addCatalogItem(type, presetName){
   } else if(type === 'machine'){
     html = `<div class="form-group"><label>Гос. / инвентарный номер</label><input type="text" id="catInp1" placeholder="Например: 6255, АА1234-4"></div>
       <div class="form-group"><label>Тип техники</label><select id="catInp2">${['МТЗ','МАЗ','Грейдер','Погрузчик','Экскаватор','Кран','Газель','Прочая'].map(t => `<option value="${t}">${t}</option>`).join('')}</select></div>`;
+  } else if(type === 'tmc'){
+    // v19.17.49: материал добавляется прямо из окна ТМЦ наряда
+    html = `<div class="form-group"><label>Название материала</label><input type="text" id="catInp1" placeholder="Например: Эмульсия битумная"></div>
+      <div class="form-group"><label>Единица измерения</label><input type="text" id="catInp2" placeholder="л, кг, т, пар..."></div>
+      <div class="form-group"><label>Цена (руб.) — необязательно</label><input type="number" id="catInp3" step="0.01" placeholder="0"></div>`;
   } else if(type === 'road'){
     html = `<div class="form-group"><label>Название дороги / объекта</label><input type="text" id="catInp1" placeholder="Например: а/д ПУ-3"></div>
       <div class="form-group"><label>Производственный участок (ПУ)</label><input type="text" id="catInpPu" list="puList" placeholder="— Выберите или введите ПУ —" style="width:100%"><datalist id="puList"><option value="ПУ-1"><option value="ПУ-2"><option value="ПУ-3"><option value="ТР Н-6172"><option value="АБЗ"><option value="База"></datalist></div>
@@ -5099,13 +5203,13 @@ async function saveCatalogItem(){
 
   // Получаем старое имя для отслеживания переименования
   if(catalogEditingId !== null){
-    const oldArr = type === 'worker' ? State.get('workers') : type === 'work' ? State.get('works') : type === 'tool' ? State.get('tools') : type === 'machine' ? State.get('machines') : State.get('roads');
+    const oldArr = type === 'worker' ? State.get('workers') : type === 'work' ? State.get('works') : type === 'tool' ? State.get('tools') : type === 'machine' ? State.get('machines') : type === 'tmc' ? State.get('tmc') : State.get('roads');
     const old = oldArr[catalogEditingId];
     if(old){ oldName = old.name || old.id || null; oldId = old.id || null; }
   }
 
   if(type === 'worker'){
-    item = { name, category: Utils.$('catInp2').value, grade: parseInt(Utils.$('catInp3').value) || 0, rate: parseFloat(Utils.$('catInp4').value) || 0, ktu: parseFloat(document.getElementById('catInpKtu')?.value) || 1 };
+    item = { name, category: Utils.$('catInp2').value, grade: parseInt(Utils.$('catInp3').value) || 0, rate: parseFloat(Utils.$('catInp4').value) || GRADE_RATES[parseInt(Utils.$('catInp3').value) || 0] || GRADE_RATES[3], ktu: parseFloat(document.getElementById('catInpKtu')?.value) || 1 };
   } else if(type === 'work'){
     item = { id: oldId || Utils.generateId(), name, unit: Utils.$('catInp2').value.trim(), laborCost: parseFloat(Utils.$('catInp3').value) || 0, directCost: parseFloat(Utils.$('catInp4').value) || 0, toolCost: parseFloat(Utils.$('catInp5').value) || 0, machineLaborCost: parseFloat(Utils.$('catInp6')?.value) || 0, executor: Utils.$('catInp7') ? Utils.$('catInp7').value : 'road' };
     const norms = getWorkNorms();
@@ -5114,6 +5218,8 @@ async function saveCatalogItem(){
     item = { id: oldId || Utils.generateId(), name, fuelConsumption: parseFloat(Utils.$('catInp2').value) || 0, machineCostPerHour: parseFloat(Utils.$('catInp3').value) || 0, salaryPerHour: parseFloat(Utils.$('catInp4').value) || 0 };
   } else if(type === 'machine'){
     item = { id: oldId || (State.get('machines').reduce((mx, x) => Math.max(mx, x.id || 0), 0) + 1), number: name, mtype: Utils.$('catInp2').value };
+  } else if(type === 'tmc'){
+    item = { id: oldId || (State.get('tmc').reduce((mx, x) => Math.max(mx, x.id || 0), 0) + 1), name, unit: Utils.$('catInp2').value.trim(), price: parseFloat(Utils.$('catInp3').value) || 0 };
   } else if(type === 'road'){
     const roadType = Utils.$('catInp2').value || 'road';
     const len = parseFloat(Utils.$('catInp3').value) || 0;
@@ -5149,6 +5255,8 @@ async function saveCatalogItem(){
           const objIdx = sq.objects ? sq.objects.indexOf(oldName) : -1;
           if(objIdx >= 0){ sq.objects[objIdx] = name; updatedCount++; }
           sq.works?.forEach(w => { if(w.road === oldName){ w.road = name; updatedCount++; } });
+        } else if(type === 'tmc'){
+          (sq.tmc || []).forEach(t => { if(t.name === oldName){ t.name = name; updatedCount++; } });
         }
       });
     });
@@ -5169,12 +5277,14 @@ async function saveCatalogItem(){
     else if(type === 'work') State.get('works')[catalogEditingId] = item;
     else if(type === 'tool') State.get('tools')[catalogEditingId] = item;
     else if(type === 'machine') State.get('machines')[catalogEditingId] = item;
+    else if(type === 'tmc') State.get('tmc')[catalogEditingId] = item;
     else if(type === 'road') State.get('roads')[catalogEditingId] = item;
   } else {
     if(type === 'worker') State.get('workers').push(item);
     else if(type === 'work') State.get('works').push(item);
     else if(type === 'tool') State.get('tools').push(item);
     else if(type === 'machine') State.get('machines').push(item);
+    else if(type === 'tmc') State.get('tmc').push(item);
     else if(type === 'road') State.get('roads').push(item);
   }
 
@@ -5239,6 +5349,23 @@ function closeCatalogModal(){
   } else if(backTo === 'machineAssign'){
     const sid = State.getUI('currentSquadId');
     if(sid) maybeAssignMachine(sid);
+  } else if(backTo === 'sObjectsModal'){
+    const _sid = State.getUI('currentSquadId');
+    const _nm = State.getUI('catalogNewItemName'); State.setUI('catalogNewItemName', null);
+    if(_sid){
+      openSObjectsModal(_sid);
+      if(_nm){ document.querySelectorAll('#sObjectsList input[type="checkbox"]').forEach(cb => { if(cb.dataset.name === _nm) cb.checked = true; }); }
+    }
+  } else if(backTo === 'sTmcModal'){
+    const _sid2 = State.getUI('currentSquadId');
+    const _nm2 = State.getUI('catalogNewItemName'); State.setUI('catalogNewItemName', null);
+    if(_sid2){
+      openSTmcModal(_sid2);
+      if(_nm2){
+        const _row = Array.from(document.querySelectorAll('#sTmcList [data-cat]')).find(el => el.querySelector('.tmc-cb') && el.querySelector('.tmc-cb').dataset.name === _nm2);
+        if(_row){ const _cb = _row.querySelector('.tmc-cb'); _cb.checked = true; const _q = _row.querySelector('.tmc-qty'); if(_q) _q.focus(); }
+      }
+    }
   }
 }
 function importCatalogCSV(type){
@@ -5519,11 +5646,13 @@ function generateTimesheetDoc(){
     Utils.$('tsMonth').value = oldMonth; renderTimesheet();
   }, 50);
 }
-// v19.17.39: форма С-29 по встроенному официальному бланку; при "Все ПУ" — файл на каждый участок
+// v19.17.53: С-29 — тело без перечисления дорог/объектов: сведённые объёмы и виды работ с материалами.
+// Режимы: roads = все ПУ (только содержание дорог); pu|X = дороги ПУ-X; one|X = объект/дорога отдельно; all = всё вместе.
 async function generateS29Doc(){
   const month = (Utils.$('s29Month') || {}).value || '';
   if(!month){ Utils.showToast('Укажите месяц'); return; }
-  const puSel = ((Utils.$('s29Pu') || {}).value) || 'all';
+  updateS29PuList();
+  const sel = ((Utils.$('s29Pu') || {}).value) || 'roads';
   const [y, m] = month.split('-').map(Number);
   const monthGen = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][m - 1];
   const entries = State.get('entries').filter(e => e.date.startsWith(month)).sort((a, b) => a.date.localeCompare(b.date));
@@ -5532,7 +5661,14 @@ async function generateS29Doc(){
   const roads = State.get('roads') || [];
   const _isExcluded = n => /бензин|дизель|соляр|топливо|гсм|масло|перчатк|очки|расходник|цепь|свеч/i.test(n.name || '');
   const puOf = obj => { const r = roads.find(x => x.name === obj); return (r && r.pu) || 'Прочее'; };
-  const sheets = {};
+  const isRoad = obj => { const r = roads.find(x => x.name === obj); return !r || r.type === 'road'; };
+  // режим
+  let mode = 'roads', selPu = null, selOne = null;
+  if(sel === 'all'){ mode = 'all'; }
+  else if(sel.indexOf('pu|') === 0){ mode = 'pu'; selPu = sel.slice(3); }
+  else if(sel.indexOf('one|') === 0){ mode = 'one'; selOne = sel.slice(4); }
+  // сводная агрегация по виду работ (без разреза объектов)
+  const agg = new Map();
   entries.forEach(e => (e.squads || []).forEach(sq => {
     const objs = (sq.objects && sq.objects.length) ? sq.objects : ['—'];
     (sq.works || []).forEach(w => {
@@ -5540,16 +5676,18 @@ async function generateS29Doc(){
       if(!wc || !wc.materialNorms || !wc.materialNorms.length) return;
       const norms = wc.materialNorms.filter(n => !_isExcluded(n));
       if(!norms.length) return;
+      const objName = w.road || objs[0];
+      const pu = puOf(objName);
+      if(mode === 'roads' && !isRoad(objName)) return;          // только содержание дорог
+      if(mode === 'pu' && (!isRoad(objName) || pu !== selPu)) return; // только дороги этого ПУ
+      if(mode === 'one' && objName !== selOne) return;          // один объект/дорога
       const vol = parseFloat(w.volume) || 0;
-      const pu = puOf(w.road || objs[0]);
-      if(!sheets[pu]) sheets[pu] = new Map();
-      const smap = sheets[pu];
       let code = '', wname = w.name || '';
       const cm = wname.match(/^([А-ЯЁA-Z0-9][А-ЯЁA-Z0-9\/\.\-]{1,21})\s+(.+)$/);
       if(cm && /\d/.test(cm[1])){ code = cm[1]; wname = cm[2]; }
       const wkey = code + '|' + wname + '|' + (w.unit || wc.unit || '');
-      if(!smap.has(wkey)) smap.set(wkey, { code, name: wname, unit: w.unit || wc.unit || '', volume: 0, mats: new Map() });
-      const row = smap.get(wkey);
+      if(!agg.has(wkey)) agg.set(wkey, { code, name: wname, unit: w.unit || wc.unit || '', volume: 0, mats: new Map() });
+      const row = agg.get(wkey);
       row.volume += vol;
       norms.forEach(n => {
         const pu2 = parseFloat(n.qtyPerUnit) || 0;
@@ -5559,57 +5697,91 @@ async function generateS29Doc(){
       });
     });
   }));
-  let puList = Object.keys(sheets).filter(p => sheets[p].size);
-  if(puSel !== 'all'){
-    puList = puList.filter(p => p === puSel);
-    if(!puList.length){ Utils.showToast('В выбранном ПУ нет работ с нормами материалов за ' + monthGen); return; }
+  if(!agg.size){
+    const what = mode === 'one' ? ('объект «' + selOne + '»') : mode === 'pu' ? ('ПУ ' + selPu) : 'выбранный режим';
+    Utils.showToast('Нет работ с нормами материалов: ' + what + ', ' + monthGen + ' ' + y);
+    return;
   }
-  if(!puList.length){ Utils.showToast('В ' + monthGen + ' нет работ с нормами материалов'); return; }
   const R = v => Math.round(v * 10000) / 10000;
   const cs = v => { const s = String(R(v)); return s.indexOf('.') >= 0 ? s.replace('.', ',') : s; };
   const q = Math.ceil(m / 3);
   const _s = State.get('settings') || {};
+  const lines = [];
+  agg.forEach(row => {
+    lines.push({ t: 'w', code: row.code, name: row.name, unit: row.unit, d: cs(row.volume), e: '' });
+    row.mats.forEach(mr => lines.push({ t: 'm', code: '', name: mr.name, unit: mr.unit, d: cs(mr.perUnit), e: cs(mr.qty) }));
+  });
   const bin = atob(S29_TEMPLATE_B64);
   const bytes = new Uint8Array(bin.length);
   for(let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  for(const pu of puList.sort()){
-    const smap = sheets[pu];
-    const lines = [];
-    smap.forEach(row => {
-      lines.push({ t: 'w', code: row.code, name: row.name, unit: row.unit, d: cs(row.volume), e: '' });
-      row.mats.forEach(mr => lines.push({ t: 'm', code: '', name: mr.name, unit: mr.unit, d: cs(mr.perUnit), e: cs(mr.qty) }));
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.load(bytes.buffer);
+  const ws = wb.worksheets[0];
+  const scopeName = mode === 'all' ? 'все-ПУ-и-объекты' : mode === 'pu' ? selPu : mode === 'one' ? selOne : 'содержание';
+  ws.name = ('С-29 ' + scopeName).slice(0, 31);
+  ws.getCell('A11').value = 'за ' + monthGen + ' ' + y + ' года (Ведомость №' + q + ')';
+  ws.getCell('A12').value = mode === 'all' ? 'Объект: Содержание а/д — все ПУ и объекты'
+    : mode === 'pu' ? ('Объект: Содержание а/д ' + selPu)
+    : mode === 'one' ? ('Объект: ' + selOne)
+    : 'Объект: Содержание а/д (все ПУ)';
+  ws.getCell('A13').value = 'Материально ответственное лицо  Мастер ' + (_s.master || '');
+  if(_s.engineer) ws.getCell('A6').value = 'Главный инженер ' + _s.engineer;
+  let footerRow = 0;
+  ws.eachRow((row, n) => { if(!footerRow && n >= 20 && row.getCell(1).value && String(row.getCell(1).value).indexOf('Материально ответственное лицо') >= 0) footerRow = n; });
+  if(!footerRow) footerRow = ws.rowCount + 1;
+  const capacity = footerRow - 20;
+  const st = [1, 2, 3, 4, 5].map(ci => { const c = ws.getRow(20).getCell(ci); return { border: c.border, font: c.font, alignment: c.alignment }; });
+  if(lines.length > capacity) ws.insertRows(footerRow, lines.length - capacity);
+  lines.forEach((L, i) => {
+    const r = 20 + i;
+    const row = ws.getRow(r);
+    [L.code || '', L.name, L.unit || '', L.d || '', L.e || ''].forEach((val, ci) => {
+      const cell = row.getCell(ci + 1);
+      cell.value = (val === '' || val == null) ? null : String(val);
+      if(i >= capacity){ cell.border = st[ci].border; cell.font = st[ci].font; cell.alignment = st[ci].alignment; cell.numFmt = '@'; }
     });
-    const wb = new ExcelJS.Workbook();
-    await wb.xlsx.load(bytes.buffer);
-    const ws = wb.worksheets[0];
-    ws.name = 'С-29 ' + pu;
-    ws.getCell('A11').value = 'за ' + monthGen + ' ' + y + ' года (Ведомость №' + q + ')';
-    ws.getCell('A12').value = 'Объект Содержание а/д ' + pu;
-    ws.getCell('A13').value = 'Материально ответственное лицо  Мастер ' + (_s.master || '');
-    if(_s.engineer) ws.getCell('A6').value = 'Главный инженер ' + _s.engineer;
-    let footerRow = 0;
-    ws.eachRow((row, n) => { if(!footerRow && n >= 20 && row.getCell(1).value && String(row.getCell(1).value).indexOf('Материально ответственное лицо') >= 0) footerRow = n; });
-    if(!footerRow) footerRow = ws.rowCount + 1;
-    const capacity = footerRow - 20;
-    const st = [1, 2, 3, 4, 5].map(ci => { const c = ws.getRow(20).getCell(ci); return { border: c.border, font: c.font, alignment: c.alignment }; });
-    if(lines.length > capacity) ws.insertRows(footerRow, lines.length - capacity);
-    lines.forEach((L, i) => {
-      const r = 20 + i;
-      const row = ws.getRow(r);
-      [L.code, L.name, L.unit, L.d, L.e].forEach((val, ci) => {
-        const cell = row.getCell(ci + 1);
-        cell.value = (val === '' || val == null) ? null : String(val);
-        if(i >= capacity){ cell.border = st[ci].border; cell.font = st[ci].font; cell.alignment = st[ci].alignment; cell.numFmt = '@'; }
-      });
+  });
+  const lastData = 20 + lines.length;
+  const fr = footerRow + Math.max(0, lines.length - capacity);
+  for(let r = lastData; r < fr; r++){ const row = ws.getRow(r); for(let ci = 1; ci <= 5; ci++) row.getCell(ci).value = null; }
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'С-29_' + month + '_' + scopeName + '.xlsx'; a.click(); URL.revokeObjectURL(a.href);
+  Utils.showToast('✅ С-29: ' + ws.getCell('A12').value + ' — работ ' + agg.size);
+}
+
+// v19.17.53: список режимов С-29 — только то, что было в отчётном месяце
+function updateS29PuList(){
+  const sel = Utils.$('s29Pu');
+  if(!sel) return;
+  const month = (Utils.$('s29Month') || {}).value || '';
+  const roads = State.get('roads') || [];
+  const puOf = obj => { const r = roads.find(x => x.name === obj); return (r && r.pu) || 'Прочее'; };
+  const isRoad = obj => { const r = roads.find(x => x.name === obj); return !r || r.type === 'road'; };
+  const worksCatalog = State.get('works') || [];
+  const _isExcluded = n => /бензин|дизель|соляр|топливо|гсм|масло|перчатк|очки|расходник|цепь|свеч/i.test(n.name || '');
+  const puRoads = new Set(), objSet = new Set(), roadSet = new Set();
+  State.get('entries').filter(e => e.date.startsWith(month)).forEach(e => (e.squads || []).forEach(sq => {
+    const objs = (sq.objects && sq.objects.length) ? sq.objects : ['—'];
+    (sq.works || []).forEach(w => {
+      const wc = worksCatalog.find(x => String(x.id) === String(w.id) || x.name === w.name);
+      if(!wc || !wc.materialNorms || !wc.materialNorms.some(n => !_isExcluded(n))) return;
+      const objName = w.road || objs[0];
+      if(isRoad(objName)){ puRoads.add(puOf(objName)); roadSet.add(objName); }
+      else objSet.add(objName);
     });
-    const lastData = 20 + lines.length;
-    const fr = footerRow + Math.max(0, lines.length - capacity);
-    for(let r = lastData; r < fr; r++){ const row = ws.getRow(r); for(let ci = 1; ci <= 5; ci++) row.getCell(ci).value = null; }
-    const buf = await wb.xlsx.writeBuffer();
-    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'С-29_' + month + '_' + pu + '.xlsx'; a.click(); URL.revokeObjectURL(a.href);
-  }
-  Utils.showToast('✅ С-29 сформирован: ' + puList.length + ' файл(а)');
+  }));
+  const prev = sel.value || 'roads';
+  const puL = [...puRoads].sort();
+  const objL = [...objSet].sort((a, b) => a.localeCompare(b));
+  const roadL = [...roadSet].sort((a, b) => a.localeCompare(b));
+  sel.innerHTML = '<option value="roads">Все ПУ — содержание (без объектов)</option>' +
+    '<option value="all">Все вместе (дороги + объекты)</option>' +
+    puL.map(p => `<option value="pu|${Utils.escapeHtml(p)}">🏭 ${Utils.escapeHtml(p)} (дороги)</option>`).join('') +
+    objL.map(o => `<option value="one|${Utils.escapeHtml(o)}">📍 ${Utils.escapeHtml(o)}</option>`).join('') +
+    roadL.map(o => `<option value="one|${Utils.escapeHtml(o)}">🛣️ ${Utils.escapeHtml(o)}</option>`).join('');
+  const _vals = ['roads', 'all', ...puL.map(p => 'pu|' + p), ...objL.map(o => 'one|' + o), ...roadL.map(o => 'one|' + o)];
+  sel.value = _vals.includes(prev) ? prev : 'roads';
 }
 
 function renderReportRoadSelect(){
@@ -6496,11 +6668,18 @@ function exportPUCSV(){
   const filtered = entries.filter(e => e.date.startsWith(month) && e.squads?.some(sq => sq.objects?.some(o => puRoadNames.has(o))));
 
   let csv = '\uFEFFДата;Объект;Вид работы;Объём;Ед.;Км от;Км до;Работник;Часы;Категория;ПУ\n';
+  // v19.17.50: работа идёт только к СВОЕМУ объекту (w.road), иначе — к первому объекту наряда (без перемножения строк)
   filtered.forEach(e => {
     e.squads?.forEach(sq => {
+      const worksByObj = {};
+      (sq.works || []).forEach(w => {
+        const wObj = w.road || (sq.objects?.[0] || '');
+        if(!wObj || !puRoadNames.has(wObj)) return;
+        (worksByObj[wObj] = worksByObj[wObj] || []).push(w);
+      });
       sq.objects?.forEach(objName => {
         if(!puRoadNames.has(objName)) return;
-        sq.works?.forEach(w => {
+        (worksByObj[objName] || []).forEach(w => {
           sq.people?.forEach(p => {
             const wInfo = workers.find(x => x.name === p.name);
             csv += `${e.date};${objName};${w.name};${w.volume};${w.unit || ''};${w.kmFrom !== undefined ? w.kmFrom : ''};${w.kmTo !== undefined ? w.kmTo : ''};${p.name};${p.hours || 8};${wInfo?.category || ''};${pu}\n`;
@@ -6945,8 +7124,16 @@ function fillMachDrivers(){
   if(!dsel) return;
   if(!month){ dsel.innerHTML = '<option value="">— выберите месяц —</option>'; osel.innerHTML = '<option value="">— выберите водителя —</option>'; return; }
   const drivers = [...new Set(getMonthSquadsWithTech(month).map(r => r.driver))].sort((a, b) => a.localeCompare(b));
-  dsel.innerHTML = drivers.length
-    ? '<option value="">— выберите водителя —</option>' + drivers.map(d => `<option value="${Utils.escapeHtml(d)}">${Utils.escapeHtml(d)}</option>`).join('')
+  // v19.17.50: и трактористы/мазисты месяца БЕЗ привязанной техники — с пометкой (объекты возьмутся из бригад)
+  const _wc = State.get('workers') || [];
+  const _noTech = new Set();
+  State.get('entries').filter(e => e.date.startsWith(month)).forEach(e => (e.squads || []).forEach(sq => (sq.people || []).forEach(p => {
+    const w = _wc.find(x => x.name === p.name);
+    if(w && (w.category === 'tractor' || w.category === 'maz') && !drivers.includes(p.name)) _noTech.add(p.name);
+  })));
+  const _noTechArr = [..._noTech].sort((a, b) => a.localeCompare(b));
+  dsel.innerHTML = (drivers.length || _noTechArr.length)
+    ? '<option value="">— выберите водителя —</option>' + drivers.map(d => `<option value="${Utils.escapeHtml(d)}">${Utils.escapeHtml(d)}</option>`).join('') + _noTechArr.map(d => `<option value="${Utils.escapeHtml(d)}">${Utils.escapeHtml(d)} ⚠ без техники</option>`).join('')
     : '<option value="">За месяц техника не назначалась</option>';
   osel.innerHTML = '<option value="">— выберите водителя —</option>';
   Utils.$('machPreview').textContent = '';
@@ -7514,6 +7701,11 @@ window.App = {
   addSquad, removeSquad, duplicateSquad, changeSquadCategory, updateSquadField,
   addObject, removeObject, removeWork, editWorkVolume, removeTmc, updateWorkerHours,
   saveWorkEdit, closeWorkEditModal,
+  updateS29PuList,
+  addTmcFromSquad,
+  switchSTmcTab,
+  switchSObjectsTab,
+  openSObjectsModal, closeSObjectsModal, applySObjects, addRoadFromObjects,
   openSwModal, closeSwModal, selectAllWorkers, applySw,
   openSWorksModal, closeSWorksModal, applySWorks,
   openSTmcModal, closeSTmcModal, applySTmc,
